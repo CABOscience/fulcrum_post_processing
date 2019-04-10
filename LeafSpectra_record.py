@@ -1,0 +1,892 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Local Modules
+import parameters as PA
+import records as RE
+import tools as TO
+import logs as LO
+import LeafSpectra_measurements as LSM
+import SpectroscopyPanels_calibrations as SPC
+
+# System
+import os, sys
+import multiprocessing as mp
+# Spectroscopy
+import specdal
+# Data Science
+import math
+import pandas as pd
+import numpy as np
+np.set_printoptions(threshold='nan')
+
+##############################################
+# Record
+##############################################
+
+# OBJECT
+#########################
+
+class LeafSpectrum(RE.Records):
+  """ Leaf spectrum object
+  Leaf spectrum object is containing a list of LeafSpectra Object
+  """
+  def add_record(self,LeafSpectra):
+    self.records.append(LeafSpectra)
+    self.recordsDict[LeafSpectra.ID]=LeafSpectra
+
+class LeafSpectra(RE.Record):
+  """ Leaf spectra object
+  Leaf spectra object is a Records + its form values
+  """
+  def __init__(self, record, bfn='',dm='',ii='',lltp='',lsm='',manu='',mb='',measurements=[],paID='',pdir='',pm='',sai='',sn='',spi='',stt='',wf=''):
+    super(LeafSpectra,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    self.fv_base_file_name = bfn
+    self.fv_calibration = SPC.SpectroscopyPanels_calibration()
+    self.fv_date_measured = dm
+    self.fv_figs = []
+    self.fv_instrumentation_id = ii
+    self.fv_leaf_larger_than_port = lltp
+    self.fv_leaf_side_measured = lsm
+    self.fv_manufacturer_short_name_sphere = manu
+    self.fv_measured_by = mb
+    self.fv_measurements = measurements
+    self.fv_panel_id = paID
+    self.fv_parent_directory = pdir
+    self.fv_properties_measured = pm
+    self.fv_reflecAverage = pd.Series()
+    self.fv_reflecDiffRef = pd.Series()
+    self.fv_reflecLeaves  = {}
+    self.fv_reflecRef     = pd.Series()
+    self.fv_reflecStadDev = pd.Series()
+    self.fv_sample_id = sai
+    self.fv_scientific_name = sn
+    self.fv_spectroradiometer_id = spi
+    self.fv_spectroradiometer_start_time = stt
+    self.fv_working_folder = wf
+    self.fv_transAverage  = pd.Series()
+    self.fv_transDiffRef  = pd.Series()
+    self.fv_transLeaves    = {}
+    self.fv_transStadDev  = pd.Series()
+    self.fv_processedPath = "" # it will be PA.ProjectWebsitePath+self.project_name+'/spectra/processed/'+self.fv_working_folder+'/'+self.fv_sample_id
+    self.fv_extFile = ""
+    self.fv_measureType = ""
+    self.fv_event_remarks = ''
+    self.fv_computer = ''
+    self.fv_computer_type = ''
+    self.fv_serial_number = ''
+    self.fv_instrumentation_type = ''
+    self.fv_manufacturer_short_name = ''
+    self.fv_protocol = ''
+    self.fv_protocols = ''
+    self.fv_protocol_url = ''
+    self.fv_leaf_photos = ''
+    self.fv_number_of_measurements = ''
+    self.fv_deleted_by = ''
+    self.fv_date_deleted = ''
+    self.fv_rejected_by = ''
+    self.fv_date_rejected = ''
+    self.fv_verified_by = ''
+    self.fv_date_verified = ''
+    self.fv_submitted_by = ''
+    self.fv_date_submitted = ''
+    self.fv_approved_by = ''
+    self.fv_date_approved = ''
+    self.fv_published_by = ''
+    self.fv_date_published = ''
+    
+  def to_csv(self):
+    #return super(LeafSpectra, self).to_csv()+[self.ID, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id, self.fv_leaf_side_measured]
+    return [self.ID, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id, self.fv_leaf_side_measured]
+
+  def to_info(self):
+    #return super(LeafSpectra, self).to_info()+[self.ID,self.fv_sample_id,self.fv_scientific_name,self.fv_date_measured,self.fv_measured_by]
+    return [self.ID,self.fv_sample_id,self.fv_scientific_name,self.fv_date_measured,self.fv_measured_by]
+
+  def whoami(self):
+    return type(self).__name__
+    
+  def is_record():
+    return True
+    
+
+##############################################
+# LOAD Record
+##############################################
+def load_leafspectra_webhook_Records(calibrations,projects):
+  """ This will load Leaf spectra object from webhook
+  
+  :param arg1: calibrations
+  :type arg1: Calibrations object
+
+  :param arg2: projects dictionnary
+  :type arg2: projects[projectID] = projectName
+
+  :return: LeafSpectrum object full of LeafSpectra processible
+  :rtype: LeafSpectrum
+  """
+  leafSpectraForm = TO.load_json_file(PA.LeafSpectraFormFile)
+  leafSpectraFormID = leafSpectraForm['id']
+  webhookRecords = RE.load_webhook_records(projects)
+  spectrum = LeafSpectrum()
+  for record_raw in webhookRecords.records[:]:
+    if leafSpectraFormID not in record.form_id:
+      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.ID))
+    else:
+      record = LeafSpectra(record_raw)
+      LO.l_info('Start update record {} with measurments'.format(record.ID))
+      if extract_leafspectra_record(record):
+        LO.l_info('Start update record {} with calibration and date {}'.format(record.ID,record.fv_date_measured))
+        if link_leafspectra_record_and_calibration(calibrations,record):
+          LO.l_war('The record {} is complete for processing'.format(record.ID))
+          spectrum.add_record(record)
+        else:
+          LO.l_war('The record {} will not be used'.format(record.ID))
+      else:
+        LO.l_war('The record {} will not be used'.format(record.ID))
+  return spectrum
+
+def load_leafspectra_Records(calibrations,projects):
+  """ This will load Leaf spectra object from the Leaf Spectra Backup
+  
+  :param arg1: calibrations
+  :type arg1: Calibrations object
+
+  :param arg2: projects dictionnary
+  :type arg2: projects[projectID] = projectName
+
+  :return: LeafSpectrum object full of LeafSpectra processible
+  :rtype: LeafSpectrum
+  """
+  spectrum = LeafSpectrum()
+  # Load records
+  rec = load_leafspectra_Records_from_file(projects)
+  # Add calibrations
+  my_list = add_Records_in_spectrum(calibrations,rec)
+  
+  my_list2 = []
+  if len(my_list)>0:
+    # update measurments
+    my_list2 = update_leafspectra_records_measurements(my_list)
+
+  if len(my_list2)>0:
+    for wrap in my_list2[:]:
+      # Add in spectrum
+      spectrum.add_record(wrap)
+  return spectrum
+
+def load_leafspectra_Records_from_file(projects):
+  fname = PA.LeafSpectraRecordsFile
+  if TO.file_is_here(fname):
+    LO.l_info('The leaf spectra file is {}'.format(fname))
+    return RE.load_records_from_json(fname,projects)
+  else:
+    LO.l_war('The leaf spectra file ({}) is available. Program will die'.format(fname))
+    sys.exit(1)
+
+
+#########################
+# Add
+#########################
+def add_Records_in_spectrum(calibrations,rec):
+  """
+  This parallelisation of add_Record_in_spectrum
+  """
+  output = mp.Queue()
+  my_list = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  results = [pool.apply_async(add_Record_in_spectrum, args=(calibrations,record_raw)) for record_raw in rec.records[:]]
+  pool.close()
+  pool.join()
+  for r in results:
+    b = r.get()
+    if b:
+      my_list.append(b)
+  return my_list
+  
+def add_Record_in_spectrum(calibrations,record_raw):
+  """ This will add a valid leaf spectra record
+  
+  :param arg1: calibrations
+  :type arg1: Calibrations object
+
+  :param arg2: a record
+  :type arg2: Record Object
+
+  :return: Valid LeafSpectra
+  :rtype: LeafSpectra Object
+  """
+  record = LeafSpectra(record_raw)
+  validate_leafspectra_record(calibrations,record)
+  if record.isValid:
+    LO.l_info('The record id {} is complete for processing'.format(record.ID))
+    record.add_toLog('The record id {} is complete for processing'.format(record.ID))
+  else:
+    LO.l_war('The record id {} is incomplete and will not be used'.format(record.ID))
+    record.add_toLog('The record id {} is incomplete and will not be used'.format(record.ID))
+  return record
+
+##
+def validate_leafspectra_record(calibrations,record):
+  """ This will validate a record a leaf spectra record
+  
+  :param arg1: calibrations
+  :type arg1: Calibrations object
+
+  :param arg2: a record
+  :type arg2: Record Object
+
+  :return: True if is a valid record False if it's not a LeafSpectra record
+  :rtype: boolean (True,False)
+  """
+  extract_leafspectra_record(record)
+  link_leafspectra_record_and_calibration(calibrations,record)
+  validate_leafspectra_record_measurements(record)
+  return record.isValid
+
+###
+def extract_leafspectra_record(record):
+  """ This will append a leaf spectra record data from a record "form values" if it's a valid leaf spectra record
+  
+  :param arg1: a LeafSpectra to be tested
+  :type arg1: LeafSpectra
+  """
+  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  rv  = record.form_values
+  if 'base_file_name' in rv \
+    and 'working_folder' in rv \
+    and 'scientific_name' in rv \
+    and 'properties_measured' in rv:
+    record.fv_base_file_name     = rv['base_file_name']
+    record.fv_date_measured      = rv['date_measured']
+    record.fv_instrumentation_id = rv['instrumentation_id'][0]['record_id']
+    record.fv_leaf_larger_than_port = rv['leaf_larger_than_port']
+    record.fv_choice_values      = rv['leaf_sides_measured']['choice_values'][0]
+    record.fv_manufacturer_short_name_sphere = rv['manufacturer_short_name_sphere']
+    record.fv_measured_by        = TO.get_fulcrum_multiple_choice_in_string(rv['measured_by'])
+    record.fv_measurements       = LSM.extract_leaf_spectra_measurements(rv['measurements']) # all measurements
+    record.fv_panel_id           = rv['panel_id'][0]['record_id']
+    record.fv_parent_directory   = rv['parent_directory']
+    record.fv_properties_measured= rv['properties_measured']
+    record.fv_sample_id          = rv['sample_id']
+    record.fv_scientific_name    = rv['scientific_name']
+    record.fv_spectroradiometer_id = rv['spectroradiometer_id'][0]['record_id']
+    record.fv_spectroradiometer_start_time = rv['spectroradiometer_start_time']
+    record.fv_working_folder = rv['working_folder']
+    record.fv_processedPath = PA.ProjectWebsitePath+record.project_name+'/spectra/processed/'+record.fv_working_folder+'/'+record.fv_sample_id
+    if 'event_remarks'  in rv: record.fv_event_remarks  = rv['event_remarks']
+    if 'computer'       in rv: record.fv_computer  = rv['computer']
+    if 'computer_type'  in rv: record.fv_computer_type  = rv['computer_type']
+    if 'serial_number'  in rv: record.fv_serial_number  = rv['serial_number']
+    if 'instrumentation_type' in rv: record.fv_instrumentation_type  = rv['instrumentation_type']
+    if 'manufacturer_short_name' in rv: record.fv_manufacturer_short_name  = rv['manufacturer_short_name']
+    if 'protocol'       in rv: record.fv_protocol  = rv['protocol']
+    if 'protocols'      in rv: record.fv_protocols  = rv['protocols']
+    if 'protocol_url'   in rv: record.fv_protocol_url  = rv['protocol_url']
+    if 'leaf_photos'    in rv: record.fv_leaf_photos  = rv['leaf_photos']
+    if 'number_of_measurements' in rv: record.fv_number_of_measurements  = rv['number_of_measurements']
+    if 'deleted_by'     in rv: record.fv_deleted_by  = rv['deleted_by']
+    if 'date_deleted'   in rv: record.fv_date_deleted  = rv['date_deleted']
+    if 'rejected_by'    in rv: record.fv_rejected_by  = rv['rejected_by']
+    if 'date_rejected'  in rv: record.fv_date_rejected  = rv['date_rejected']
+    if 'verified_by'    in rv: record.fv_verified_by  = rv['verified_by']
+    if 'date_verified'  in rv: record.fv_date_verified  = rv['date_verified']
+    if 'submitted_by'   in rv: record.fv_submitted_by  = rv['submitted_by']
+    if 'date_submitted' in rv: record.fv_date_submitted  = rv['date_submitted']
+    if 'approved_by'    in rv: record.fv_approved_by  = rv['approved_by']
+    if 'date_approved'  in rv: record.fv_date_approved  = rv['date_approved']
+    if 'published_by'   in rv: record.fv_published_by  = rv['published_by']
+    if 'date_published' in rv: record.fv_date_published  = rv['date_published']    
+    if record.fv_manufacturer_short_name_sphere == 'SVC':
+      record.fv_extFile = '.sig'
+      record.fv_measureType = 'tgt_counts'
+  else:
+    tab = ['base_file_name','working_folder','scientific_name','properties_measured']
+    s = ""
+    for t in tab:
+      if not t in rv:
+        if s:
+          s+=', '
+        s += t
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    record.isValid = False
+    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+
+###
+def link_leafspectra_record_and_calibration(calibrations,record):
+  """ This will link calibration and a leaf spectra record
+  
+  :param arg1: a Calibrations list
+  :type arg1: Calibrations
+
+  :param arg2: a fulcrum measurements list
+  :type arg2: LeafSpectra
+
+  :return: True if a calibration has been found, false if the calibration has not been found
+  :rtype: boolean (True/False)
+  """
+  rID     = record.ID
+  panel_id= record.fv_panel_id
+  temp    = record.fv_date_measured
+  calibs  = calibrations.calibrations
+  calib   = SPC.get_calibration_for_record_time(panel_id, calibs, temp)
+  LO.l_info('Start update record {} with calibration and date {}'.format(rID,temp))
+  
+  
+  if calib:
+    record.fv_calibration = calib
+    LO.l_info("The record calibration file path is: {}".format(calib.cFilePath))
+    record.add_toLog("The record calibration file path is: {}".format(calib.cFilePath))
+  else:
+    LO.l_war("The record id {} with the time {} with calibration panel {} was not found. Please update calibrations.".format(rID,temp,panel_id))
+    record.isValid = False
+    record.add_toLog("The record id {} with the time {} with calibration panel {} was not found. Please update calibrations.".format(rID,temp,panel_id))
+
+###
+def validate_leafspectra_record_measurements(record):
+  """ This will validate the leaf spectra record link measurments
+  
+  :param arg1: a LeafSpectra to be tested
+  :type arg1: LeafSpectra
+
+  :return: True if is a valid record False if it's not a LeafSpectra record
+  :rtype: boolean (True,False)
+  """
+  # from record object
+  pname = record.project_name
+  rid   = record.ID
+  # from leaf spectra object
+  ext  = record.fv_extFile
+  measurements=record.fv_measurements
+  wf    = record.fv_working_folder
+  
+  measurmentsDone = True
+  LO.l_info('Start validate record {} measurments'.format(record.ID))
+  for measurement in measurements:
+    fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''+ext
+    measurement.file_path = fName
+    if not TO.file_is_here(fName):
+      measurmentsDone = False
+      record.add_toLog("The record id {} has not {} available.".format(rid,fName))
+  if not measurmentsDone:
+    record.isValid = False
+
+#########################
+# Record measurments updated
+#########################
+def update_leafspectra_records_measurements(my_records):
+  """
+  This parallelisation of update_leafspectra_record_measurements
+  """
+  my_list = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  results = [pool.apply_async(update_leafspectra_record_measurements, args=(record_raw,)) for record_raw in my_records[:]]
+  pool.close()
+  pool.join()
+  for r in results:
+    b = r.get()
+    if b:
+      my_list.append(b)
+  return my_list
+
+def update_leafspectra_record_measurements(record):
+  """ This will link metadata and data extracted from files of a leaf spectra record
+  It will also prepare "interpolated_files" form processing
+  
+  :param arg1: a LeafSpectra to be tested
+  :type arg1: LeafSpectra
+  
+  :return: a record 
+  :rtype: LeafSpectra (with measurments updated)
+  """
+  if record.isValid:
+    # from record object
+    pname = record.project_name
+    rid   = record.ID
+    # from leaf spectra object
+    ext         = record.fv_extFile
+    measurements=record.fv_measurements
+    measureType = record.fv_measureType
+    wf          = record.fv_working_folder
+    
+    measurmentsDone = True
+    for measurement in measurements:
+      fName = measurement.file_path
+      if TO.file_is_here(fName):
+        LO.l_info("\tStart spectre extraction for {}".format(fName))
+        spect = specdal.Spectrum(filepath=fName, measure_type= measureType)
+        measurement.spectre = spect
+        measurement.spectre.interpolate(method='cubic')
+        TO.create_directory(record.fv_processedPath+'/interpolated_files/')
+        spectreProcessed = record.fv_processedPath+'/interpolated_files/'+measurement.file_name+ext+'.txt'
+        s = '{}'.format(measurement.spectre)
+        s += '###############\nALL DATA\n###############\n'
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+          s += '{}'.format(measurement.spectre.measurement)
+        TO.string_to_file(spectreProcessed,'{}'.format(s))
+      else:
+        record.add_toLog("The record id {} has not {} available.".format(rid,fName))
+        measurmentsDone = False
+    if not measurmentsDone:
+        LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
+        record.add_toLog("The record id {} will not be used because it has not all its spectre available.".format(rid))
+        record.isValid = False
+  return record
+
+##############################################
+## Process record
+##############################################
+def process_leafspectra_records(rec):
+  """
+  This parallelisation of process_record
+  """
+  # parallelisation here
+  output = mp.Queue()
+  wraps = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  results = [pool.apply_async(process_leafspectra_record, args=(record,)) for record in rec.records[:]]
+  pool.close()
+  pool.join()
+  for r in results:
+    b = r.get()
+    if b:
+      wraps.append(b)
+  return wraps
+  
+def process_leafspectra_record(record):
+  """Process a leaf spectra record
+  This function take a leafspectra record object and return a processed leafspectra record processed object
+  """
+  if record.isValid:
+    LO.l_info('Start prepare spectrum data for record {}'.format(record.ID))
+    boo = calculate_leafspectra_record(record)
+    if boo:
+      LO.l_info('Start prepare csv files for record {}'.format(record.ID))
+      leafspectra_record_to_csv(record)
+  return record
+
+# Spectrum Data
+##############################################
+def calculate_leafspectra_record(record):
+  # Check the Protocol choosed
+  if record.fv_manufacturer_short_name_sphere == 'SVC':
+    LO.l_info("Start SVC spectrum data for record {}".format(record.ID))
+    if record.fv_leaf_larger_than_port == 'yes':
+      LO.l_info('large leaf')
+      return large_leaf_calculation(record)
+    elif record.fv_leaf_larger_than_port == 'no':
+      LO.l_info('small leaf')
+      return small_leaf_calculation(record)
+  LO.l_war("No known manufacturer short name sphere for record {}".format(record.ID))
+  return False
+
+  ## Spectrum Calculations
+  ########################
+    ### Large Leaf calculation
+    ########################
+def large_leaf_calculation(record):
+  boo = True
+  
+  pm = record.fv_properties_measured
+  pmB, pmR, pmT = (False for i in range(3))
+  if 'both' in pm:
+    pmB = True
+  if 'both' in pm or 'reflectance' in pm:
+    pmR = True
+  if 'both' in pm or 'transmittance' in pm:
+    pmT = True
+
+  wvlMax = record.fv_calibration.cMax
+  wvlMin = record.fv_calibration.cMin
+  reflTargets, reflStrays, reflRefs = ([] for i in range(3))
+  transRefAll, transTargets = ([] for i in range(2))
+  
+  for measurement in record.fv_measurements:
+    # Reflectance
+    if 'A:' in measurement.sphere_configuration_svc_large_leaves:
+      reflRefs.append(measurement)
+      if len(reflRefs)>0:
+        # set values max and min from the min of max wvl or max calibration data
+        wvLO.l_max = reflRefs[0].spectre.metadata['wavelength_range'][1]
+        wvLO.l_min = reflRefs[0].spectre.metadata['wavelength_range'][0]
+        if wvLO.l_max < wvlMax:
+          wvlMax = wvLO.l_max
+        if wvLO.l_min > wvlMin:
+          wvlMin = wvLO.l_min
+      else:
+        LO.l_war("the record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.ID))
+    if 'B:' in measurement.sphere_configuration_svc_large_leaves:
+      reflStrays.append(measurement) #B: No leaf
+    if 'C:' in measurement.sphere_configuration_svc_large_leaves:
+      leafNumber = measurement.leaf_number
+      if leafNumber:
+        reflTargets.append(measurement)
+        record.fv_reflecLeaves[leafNumber] = measurement
+    #Transmission
+    if 'D:' in measurement.sphere_configuration_svc_large_leaves:
+      transRefAll.append(measurement) 
+    if 'E:' in measurement.sphere_configuration_svc_large_leaves:
+      leafNumber = measurement.leaf_number
+      if leafNumber:
+        transTargets.append(measurement)
+        record.fv_transLeaves[leafNumber] = measurement
+  
+  # Fix the range, if not use of calibration
+  if not pmR:
+    wvlMax = transRefAll[0].spectre.metadata['wavelength_range'][1]
+    wvlMin = transRefAll[0].spectre.metadata['wavelength_range'][0]
+
+  # REFLECTANCE CALCULATION
+  # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=67
+  if pmR and len(reflStrays)>0 and len(reflRefs)>0 and len(reflTargets)>0:
+    # Calibration
+    calib = record.fv_calibration.spectre.measurement.sort_index().loc[wvlMin:wvlMax]
+    # (A - B):
+    divisorsTar = reflRefs[0].spectre.measurement.sub(reflStrays[0].spectre.measurement)
+    # Calculations per leafs:
+    for reflTarget in reflTargets:
+      # (C - B):
+      dividendsTar = reflTarget.spectre.measurement.sub(reflStrays[0].spectre.measurement)
+      # [ (C - B) ÷ (A - B) ]
+      divisionTar = dividendsTar.div(divisorsTar)
+      # ([ (C - B) ÷ (A - B) ]) × calib.refl
+      mseries = TO.get_monotonic_series(divisionTar)
+      for i in range(len(mseries)):
+        mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
+        for ind, row in mserie.iteritems():
+          mserie.set_value(ind,row*calib.at[ind])
+        mseries[i] = mserie
+        i+=1
+      reflectance = pd.concat(mseries)
+      reflTarget.reflectance= reflectance
+
+    # Average and Standard Deviation
+    arr     = np.array([reflTarget.reflectance for reflTarget in reflTargets])
+    arrIndex= np.array(reflTargets[0].reflectance.index)
+    arrMean = np.mean(arr, axis=0)
+    arrStd  = np.std(arr, axis=0, ddof=1)
+    
+    reflecAverage = pd.Series(arrMean, index=arrIndex, name="reflectance_average")
+    reflecAverage.index.name = 'wavelength'
+    record.fv_reflecAverage = reflecAverage
+    reflecStadDev = pd.Series(arrStd, index=arrIndex, name="reflectance_standard_deviation")
+    reflecStadDev.index.name = 'wavelength'
+    record.fv_reflecStadDev = reflecStadDev
+
+    # Calculation of (A1/A0):
+    distA0A1 = pd.Series()
+    if len(reflRefs) == 2:
+      distA0A1 = reflRefs[1].spectre.measurement.div(reflRefs[0].spectre.measurement)
+      record.fv_reflecDiffRef = distA0A1
+    else:
+      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.ID))
+    # Calculation of (B0/A0):
+    distB0A1 = pd.Series()
+    if len(reflStrays) > 0 and len(reflRefs) > 0 :
+      distB0A1 = reflStrays[0].spectre.measurement.div(reflRefs[0].spectre.measurement)
+      record.fv_reflecRef = distB0A1
+    else:
+      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.ID))
+  else:
+    boo = False
+    LO.l_err("the record {} doesn't all spectrum measurments to process the reflectance calculation.".format(record.ID))
+  
+  # Transmittance
+  # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=68
+  if pmT and len(transTargets)>0 and len(transRefAll)>0:
+    for transTarget in transTargets:
+      trans = transTarget.spectre.measurement.div(transRefAll[0].spectre.measurement)
+      # Create the sample (wvl,transmittance)
+      transmittance = trans.sort_index().loc[wvlMin:wvlMax]
+      transTarget.transmittance = transmittance
+      
+    # Average and Standard Deviation
+    arr = np.array([transTarget.transmittance for transTarget in transTargets])
+    arrIndex = np.array(transTargets[0].transmittance.index)
+    arrMean = np.mean(arr, axis=0)
+    arrStd = np.std(arr, axis=0, ddof=1)
+
+    transAverage = pd.Series(arrMean, index=arrIndex, name="transmittance_average")
+    transAverage.index.name = 'wavelength'
+    record.fv_transAverage = transAverage
+    transStadDev = pd.Series(arrStd, index=arrIndex, name="transmittance_standard_deviation")
+    transStadDev.index.name = 'wavelength'
+    record.fv_transStadDev = transStadDev
+
+    # Calculation of (D1/D0):
+    distD0D1 = pd.Series()
+    if len(transRefAll) == 2:
+      distD0D1 = transRefAll[1].spectre.measurement.div(transRefAll[0].spectre.measurement)
+      record.fv_transDiffRef    = distD0D1
+    else:
+      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.ID))
+  else:
+    boo = False
+    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.ID))
+  return boo
+
+    ### Small Leaf calculation
+    ########################
+def small_leaf_calculation(record):
+  boo = True
+  
+  pm = record.fv_properties_measured
+  pmB, pmR, pmT = (False for i in range(3))
+  if 'both' in pm:
+    pmB = True
+  if 'both' in pm or 'reflectance' in pm:
+    pmR = True
+  if 'both' in pm or 'transmittance' in pm:
+    pmT = True
+
+  wvlMax = record.fv_calibration.cMax
+  wvlMin = record.fv_calibration.cMin
+  
+  RrefA, RrefAP, RtarAPi, RtarAi, RrefP, RtarP, Rstr = ([] for i in range(7))
+  TrefA, TtarAi = ([] for i in range(2))
+  
+  for measurement in record.fv_measurements:
+    #Reflectance
+    if 'A:' in measurement.sphere_configuration_svc_small_leaves:
+      RrefA.append(measurement)
+    if 'B:' in measurement.sphere_configuration_svc_small_leaves:
+      RrefAP.append(measurement) #B: No leaf
+    if 'C:' in measurement.sphere_configuration_svc_small_leaves:
+      RrefP.append(measurement)
+    if 'D:' in measurement.sphere_configuration_svc_small_leaves:
+      Rstr.append(measurement) 
+    if 'E:' in measurement.sphere_configuration_svc_small_leaves:
+      RtarP.append(measurement)
+    if 'F:' in measurement.sphere_configuration_svc_small_leaves:
+      leafNumber = measurement.leaf_number
+      if leafNumber:
+        RtarAPi.append(measurement)
+        record.fv_reflecLeaves[leafNumber] = measurement
+    if'G:' in measurement.sphere_configuration_svc_small_leaves:
+      RtarAi.append(measurement)
+    # Transmittance
+    if 'H:' in measurement.sphere_configuration_svc_small_leaves:
+      TrefA.append(measurement)
+    if 'I:' in measurement.sphere_configuration_svc_small_leaves:
+      leafNumber = measurement.leaf_number
+      if leafNumber:
+        TtarAi.append(measurement)
+        record.fv_transLeaves[leafNumber] = measurement
+  
+  # Fix the range, if not use of calibration
+  if not pmR:
+    wvlMax = TrefA[0].spectre.metadata['wavelength_range'][1]
+    wvlMin = TrefA[0].spectre.metadata['wavelength_range'][0]
+  
+  lwv = 400.0
+  # REFLECTANCE CALCULATION
+  # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-q56dy9e?step=117
+  if pmR and len(RtarAPi) == len(RtarAi) and len(RtarAPi)>2:
+    # Calibration
+    calib = record.fv_calibration.spectre.measurement.sort_index().loc[wvlMin:wvlMax]
+    # absolute reflectance of the filter paper (arfp) at 400nm
+    # arfp = [(RtarP[0] - Rstr[0]) ÷ (RrefP[0] - Rstr[0])] × calib
+    # (C - D) or (RrefP[0] - Rstr[0])
+    divisorArfp = RrefP[0].spectre.measurement.at[lwv] - Rstr[0].spectre.measurement.at[lwv]
+    # (E - D) or (RtarP[0] - Rstr[0])
+    dividendArfp = RtarP[0].spectre.measurement.at[lwv] - Rstr[0].spectre.measurement.at[lwv]
+    # (E - D)/(C - D) or [(RtarP[0] - Rstr[0]) ÷ (RrefP[0] - Rstr[0])]
+    divisionArfp = dividendArfp / divisorArfp
+    # ([ (E - D)/(C - D) ]) × calib.refl
+    arfp = divisionArfp * calib.at[lwv]
+    #(calib ÷ arfp)
+    multip = calib.at[lwv] / arfp
+
+    for i in range(len(RtarAPi)):
+      t = 0
+      if i > 2:
+        t = 1
+      # (A-D) or (RrefA - Rstr)
+      AD400 = RrefA[t].spectre.measurement.at[lwv] - Rstr[0].spectre.measurement.at[lwv]
+      # (B-D) or (RrefAP - Rstr)
+      BD400 = RrefAP[t].spectre.measurement.at[lwv] - Rstr[0].spectre.measurement.at[lwv]
+      # (G-D)
+      # (RtarAi - Rstr)
+      GD400 = RtarAi[i].spectre.measurement.at[lwv] - Rstr[0].spectre.measurement.at[lwv]
+      # (G-D)/(A-D)
+      # (RtarAi - Rstr) ÷ (RrefA - Rstr)
+      rightGri400 = GD400 / AD400
+      # (F-D)
+      # (RtarAPi - Rstr)
+      FD400 = RtarAPi[i].spectre.measurement.at[lwv] - Rstr[0].spectre.measurement.at[lwv]
+      # (F-D)/(B-D)
+      # (RtarAPi - Rstr) ÷ (RrefAP - Rstr)
+      leftGri400 = FD400 / BD400
+      # [(F-D)/(B-D) - (G-D)/(A-D)]
+      # [ ( (RtarAPi - Rstr) ÷ (RrefAP - Rstr) ) - ( (RtarAi - Rstr) ÷ (RrefA - Rstr) ) ]
+      gri400 = leftGri400 - rightGri400
+      # [(F-D)/(B-D) - (G-D)/(A-D)] * multip
+      # [ ( (RtarAPi - Rstr) ÷ (RrefAP - Rstr) ) - ( (RtarAi - Rstr) ÷ (RrefA - Rstr) ) ] × ( calib ÷ arfp)
+      Gri400 = gri400 * multip
+      # [1 ÷ (1 - Gri)]
+      dGri400 = (1/(1-Gri400))
+      # (A-D) or (RrefA - Rstr)
+      AD = RrefA[t].spectre.measurement.sub(Rstr[0].spectre.measurement)
+      # (G-D) or (RtarAi - Rstr)
+      GD = RtarAi[i].spectre.measurement.sub(Rstr[0].spectre.measurement)
+      # (G-D)/(A-D) or (RtarAi - Rstr) ÷ (RrefA - Rstr)
+      rightGri = GD.div(AD)
+      # [(G-D)/(A-D)] × calib × dGri400
+      # rightGri × calib or [(RtarA[i] - Rstr) ÷ (RrefA - Rstr)] × calib × [1 ÷ (1 - Gri)]
+      mseries = TO.get_monotonic_series(rightGri)
+      for x in range(len(mseries)):
+        mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
+        for ind, row in mserie.iteritems():
+          val = row * calib.at[ind] * dGri400
+          mserie.set_value(ind,val)
+        mseries[x] = mserie
+      pAi = pd.concat(mseries)
+      RtarAPi[i].reflectance = pAi
+      
+    # Average and Standard Deviation
+    arr     = np.array([x.reflectance for x in RtarAPi])
+    arrIndex= np.array(RtarAPi[0].reflectance.index)
+    arrMean = np.mean(arr, axis=0)
+    arrStd  = np.std(arr, axis=0, ddof=1)
+    
+    reflecAverage = pd.Series(arrMean, index=arrIndex, name="reflectance_average")
+    reflecAverage.index.name = 'wavelength'
+    record.fv_reflecAverage = reflecAverage
+    reflecStadDev = pd.Series(arrStd, index=arrIndex, name="reflectance_standard_deviation")
+    reflecStadDev.index.name = 'wavelength'
+    record.fv_reflecStadDev = reflecStadDev
+
+    # Calculation of (A1/A0):
+    distA0A1 = pd.Series()
+    if len(RrefA) >1:
+      distA0A1 = RrefA[1].spectre.measurement.div(RrefA[0].spectre.measurement)
+      record.fv_reflecDiffRef = distA0A1
+    else:
+      LO.l_war("the record {} have just one reference measurments to process the reference of refletance calculation.".format(record.ID))
+    # Calculation of (D0 / A0 => put in reference !):
+    if len(RrefA)>0 and len(Rstr)>0:
+      distD0A0 = Rstr[0].spectre.measurement.div(RrefA[0].spectre.measurement)
+      record.fv_reflecRef = distD0A0
+    else:
+      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.ID))
+    
+  else:
+    boo = False
+    LO.l_err("the record {} doesn't all spectrum measurments to process the refletance calculation.".format(record.ID))
+        
+  # Transmittance
+  # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-q56dy9e?step=118
+  if pmT and len(TtarAi)>0 and len(TrefA)>0:
+    for i in range(len(TtarAi)):
+      # (I/H) at 400
+      # Gti = Ttari ÷ Tref
+      Gti = TtarAi[i].spectre.measurement.at[lwv] / TrefA[0].spectre.measurement.at[lwv]
+      dGti = (1 / (1 - Gti))
+      # (I/H)
+      # (Ttar,i  ÷ Tref)
+      IH = TtarAi[i].spectre.measurement.div(TrefA[0].spectre.measurement)
+      # ((I/H)-Gti)*dGti
+      # [ (Ttar,i  ÷ Tref) - Gti ] × [ 1 ÷ (1 - Gti) ]
+      mseries = TO.get_monotonic_series(IH)
+      for x in range(len(mseries)):
+        mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
+        for ind, row in mserie.iteritems():
+          val = (row - Gti) * dGti
+          mserie.set_value(ind,val)
+        mseries[x] = mserie
+      tAi = pd.concat(mseries)
+      TtarAi[i].transmittance = tAi
+
+    # Average and Standard Deviation
+    arr     = np.array([x.transmittance for x in TtarAi])
+    arrIndex= np.array(TtarAi[0].transmittance.index)
+    arrMean = np.mean(arr, axis=0)
+    arrStd  = np.std(arr, axis=0, ddof=1)
+
+    transAverage = pd.Series(arrMean, index=arrIndex, name="transmittance_average")
+    transAverage.index.name = 'wavelength'
+    record.fv_transAverage = transAverage
+    transStadDev = pd.Series(arrStd, index=arrIndex, name="transmittance_standard_deviation")
+    transStadDev.index.name = 'wavelength'
+    record.fv_transStadDev = transStadDev
+      
+    # Calculation of (H1/H0):
+    distH0H1 = pd.Series()
+    if len(TrefA) > 1:
+      # refH1 / refH0 
+      distH0H1 = TrefA[1].spectre.measurement.div(TrefA[0].spectre.measurement)
+      record.fv_transDiffRef = distH0H1
+    else:
+      LO.l_war("the record {} have just one reference measurments to process  the reference of transmittance calculation.".format(record.ID))
+  else:
+    boo = False
+    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.ID))
+  return boo
+
+##############################################
+# Records to CSV
+##############################################
+def leafspectra_record_to_csv(record):
+  if create_record_directories(record):
+    c,l,r = leafspectra_record_to_csv_values(record)
+    TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
+    TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
+    TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
+
+def leafspectra_record_to_csv_values(record):
+  dfrra = TO.from_series_to_dataframe(record.fv_reflecAverage)
+  dfrrs = TO.from_series_to_dataframe(record.fv_reflecStadDev)
+  dfrta = TO.from_series_to_dataframe(record.fv_transAverage)
+  dfrts = TO.from_series_to_dataframe(record.fv_transStadDev)
+  
+  c = []
+  c.append(["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","R_T_Average","R_T_STD"])
+  if not dfrra.empty:
+    for index, row in dfrra.iterrows():
+      c.append(record.to_csv()+["reflectance",row[0],row[1],dfrrs.iloc[index][1]])
+  if not dfrta.empty:
+    for index, row in dfrta.iterrows():
+      c.append(record.to_csv()+["transmittance",row[0],row[1],dfrts.iloc[index][1]])
+    
+  l = []
+  l.append(["record_id","sample_id","file_name","leaf_number","leaf_side_measured","reflectance-transmittance","wavelength","raw_value","calculated_value"])
+  for measurement in record.fv_measurements:
+    reflectance = measurement.reflectance
+    if not reflectance.empty:
+      df = from_series_to_dataframe(reflectance)
+      for index, row in df.iterrows():
+        dft = from_series_to_dataframe(measurement.spectre.measurement)
+        l.append([record.ID,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance",row[0],dft.iloc[index][1],row[1]])
+    transmittance = measurement.transmittance
+    if not transmittance.empty:
+      df = from_series_to_dataframe(transmittance)
+      for index, row in df.iterrows():
+        dft = from_series_to_dataframe(measurement.spectre.measurement)
+        l.append([record.ID,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance",row[0],dft.iloc[index][1],row[1]])
+  r = []
+  r.append(["record_id","sample_id","propertie","wavelength","relative_value"])
+  if not record.fv_reflecRef.empty:
+    df = from_series_to_dataframe(record.fv_reflecRef)
+    for index, row in df.iterrows():
+      r.append([record.ID,record.fv_sample_id,'stray_light_vs_reference',row[0],row[1]])
+  if not record.fv_reflecDiffRef.empty:
+    df = from_series_to_dataframe(record.fv_reflecDiffRef)
+    for index, row in df.iterrows():
+      r.append([record.ID,record.fv_sample_id,'reflectance_reference',row[0],row[1]])
+  if not record.fv_transDiffRef.empty:
+    df = from_series_to_dataframe(record.fv_transDiffRef)
+    for index, row in df.iterrows():
+      r.append([record.ID,record.fv_sample_id,'transmittance_reference',row[0],row[1]])
+  return c,l,r
+
+
+# Spectrum Data Logs
+##############################################
+def extract_log_records(rec):
+  for record in rec[:]:
+    status_value = TO.get_record_status_value(record.status)
+    if status_value>1:
+      extract_log_record(record)
+    
+def extract_log_record(record):
+  TO.create_directory(record.fv_processedPath+'log/')
+  TO.string_to_file(spectreProcessed,'{}'.format(record.logInfo))

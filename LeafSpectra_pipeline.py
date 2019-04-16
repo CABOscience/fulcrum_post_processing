@@ -5,7 +5,7 @@ import projects as PR
 import parameters as PA
 import records as RE
 import tools as TO
-import plots as PL
+import tools_plots as PL
 import logs as LO
 import sys
 import LeafSpectra_concat_files as LSCF
@@ -44,7 +44,7 @@ $ sudo apt install python-configparser python-pandas python-scipy python-setupto
 def main():
   PA.set_parameters()
   recordType= PA.LeafSpectraLogFile+"_from_form_file"
-  LO.create_log("MAIN","",recordType)
+  LO.create_log("main","",recordType)
   projects = PR.load_projects()
   
   PR.create_project_website_view_directories(projects)
@@ -56,11 +56,11 @@ def main():
   records = []
   if PA.FormsProcess:
     LO.l_info('Start load records from leafspectra')
-    records = LSR.load_leafspectra_Records(calibrations,projects)
+    records = LSR.load_leafspectra_Records(calibrations)
     LO.l_info('End load records from leafspectra')
   else:
     LO.l_info('Start load records from webhook')
-    records = LSR.load_leafspectra_webhook_Records(calibrations,projects)
+    records = LSR.load_leafspectra_webhook_Records(calibrations)
     LO.l_info('End load records from webhook')
   LSR.process_leafspectra_records(records)
   LO.l_info('Concat Files')

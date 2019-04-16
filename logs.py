@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
+import parameters as PA
 import tools
 
 # System
@@ -13,10 +14,10 @@ from datetime import date
 
 def create_log(logName="main",recordID="",recordType=""):
   today = str(date.today())
-  logPath = tools.get_script_directory()+"/logs/"+today+"/"
+  logPath = PA.FulcrumPath+"/logs/"+today+"/"
   if not os.path.exists(logPath):
     os.makedirs(logPath)
-  logFilename = logPath+today+logName+"_"+recordType+"_"+recordID+".log"
+  logFilename = logPath+today+"_"+logName+"_"+recordType+"_"+recordID+".log"
   logging.basicConfig(name=logName, level=logging.INFO,
                       filename=logFilename, filemode="a+",
                       format="%(asctime)-15s %(levelname)-8s %(message)s")
@@ -37,5 +38,6 @@ def l_err(v,logName="main"):
   logger.error(v)
 
 def l_debug(v,logName="main"):
-  print v
+  if PA.Debug == 'True':
+    l_info(v,logName)
 

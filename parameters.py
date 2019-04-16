@@ -5,7 +5,14 @@ import tools as TO
 # System
 import argparse, os, sys
 import configparser
-import logs as LO
+
+'''
+# Use config parser to set parameters it will allow to simplify the loading and be able to set default values
+$ sudo apt install python-configparser
+import configparser
+config = configparser.RawConfigParser()
+config.read('example.cfg')
+'''
 
 ##############################################
 # Parameters
@@ -14,13 +21,14 @@ import logs as LO
 # Variables
 ##############################################
 DefaultPath     = os.path.expanduser('~/')
+FulcrumVersion  = '1.1.0'
 FulcrumApiKey   = ""
 FulcrumApiURL   = 'https://api.fulcrumapp.com/api/v2/'
 FulcrumPath     = DefaultPath
 FulcrumWebhook  = DefaultPath
 GoogleDrivePath = DefaultPath
 WebsitePath     = DefaultPath
-
+Debug = False
 
 BulkLeafSamplesFormFile   = FulcrumPath
 BulkLeafSamplesRecordsFile= FulcrumPath
@@ -67,10 +75,13 @@ def get_config(confFile):
     config.read(os.path.expanduser(confFile))
     return config
   except Exception, e:
-    LO.l_err(e)
+    print(e)
+    sys.exit(1)
 
 def set_global_from_config(c):
+    global Debug
     global DefaultPath
+    global FulcrumVersion
     global FulcrumApiKey
     global FulcrumApiURL
     global FulcrumPath
@@ -92,9 +103,22 @@ def set_global_from_config(c):
     global NotFoundStr
     global NumberOfProcesses
 
+    t = c.get('DEFAULT','Debug')
+    if t:
+      Debug = c.get('DEFAULT','Debug')
+    
+    if Debug == 'True':
+      print 'Debug is enabled'
+    else:
+      print 'Debug is disable'
+      
     t = c.get('DEFAULT','DefaultPath')
     if t:
       DefaultPath = c.get('DEFAULT','DefaultPath')
+    
+    t = c.get('DEFAULT','FulcrumVersion')
+    if t:
+      FulcrumVersion = c.get('DEFAULT','FulcrumVersion')
     
     t = c.get('DEFAULT','FulcrumApiKey')
     if t:
@@ -197,8 +221,8 @@ def get_arguments():
     dest="directories", help="Create project website view directories")
   optional.add_argument('-rs', '--record-status', choices={"pending", "rejected", "verified", "submitted", "approved", "published", "deleted"},
     dest="recordStatus", help="Select a status of record")
-  #optional.add_argument('-p', '--path', type=str,
-  #  dest="path", help="Choose a directory where fulcrum is backuped")
+  optional.add_argument('-p', '--path', type=str,
+    dest="path", help="Choose a directory where fulcrum is backuped")
   exclusive = parser.add_mutually_exclusive_group()
   exclusive.add_argument('-f', '--form', nargs='+',
     dest="form", help="Fulcrum Backup: Load all records from Selected Leaf Spectra form(s) and process them")
@@ -235,7 +259,16 @@ def get_arguments():
     global FulcrumApiKey
     FulcrumApiKey = args.fulcrumApiKey
 
-# get the FulcrumPath+formName of a FulcrumPath parameter
-def get_file_basename(formName):
-  return FulcrumPath+formName
+  if args.path:
+    argPath = args.path
+    argPath = os.path.expanduser(argPath)
+    argPath = os.path.abspath(argPath)
+    if (os.path.isdir(argPath)):
+      if not argPath.endswith('/'):
+        argPath = argPath+'/'
+      global FulcrumPath
+      print('Pssst: FulcrumPath from config is override by an argument')
+      FulcrumPath = argPath
+    else:
+      print('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath))
 

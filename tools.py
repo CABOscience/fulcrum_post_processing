@@ -13,10 +13,34 @@ import pandas as pd
 import numpy as np
 np.set_printoptions(threshold='nan')
 
+'''
+# Use SpecDAL
+$ sudo apt-get install python-pandas
+$ sudo apt-get install python-scipy
+$ sudo apt-get install python-setuptools
+$ git clone  -b caboscience  https://github.com/CABOscience/SpecDAL.git
+$ cd SpecDAL
+$ sudo python setup.py install
+
+$ git clone  -b caboscience  https://github.com/CABOscience/SpecDAL.git ; cd ./SpecDAL/ ; sudo python setup.py install
+'''
 
 ##############################################
 # Tools functions
 ##############################################
+
+# get the FulcrumPath+formName of a FulcrumPath parameter
+def get_file_basename(st):
+  return PA.FulcrumPath+st
+def get_FormsFile():
+  create_directory(PA.FulcrumPath)
+  return PA.FulcrumPath+"all_forms.json"
+def get_FormsPath():
+  create_directory(PA.FulcrumPath+"forms/")
+  return PA.FulcrumPath+"forms/"
+def get_WebhookFormsPath():
+  create_directory(PA.FulcrumWebhook+"forms/")
+  return PA.FulcrumWebhook+"forms/"
 
 # Test if a file is available and not empty
 def file_is_here(fname,logName="main"):
@@ -34,7 +58,7 @@ def file_is_here(fname,logName="main"):
   if os.path.isfile(fname):
     num_lines = sum(1 for line in open(fname))
     if num_lines > 1:
-      #l_info("\tThe file {} is here".format(fname))
+      #LO.l_info("\tThe file {} is here".format(fname))
       return True
     else:
       #LO.l_war("\tThe file {} does not have lines available".format(fname))
@@ -143,6 +167,29 @@ def string_to_file(fname,s,logName="main",arg = "w"):
     LO.l_err(ValueError,logName)
     return False
 
+def photo_to_file(fname, photo, logName="main"):
+  ''' This function is trying to write a photo in a file
+  
+  :param arg1: a string for the file name
+  :type arg1: string
+
+  :param arg2: the image or photo
+  :type arg2: photo
+
+  :param arg3: a string for the log the default is the main
+  :type arg3: string
+
+  :return: True if it's written, False else
+  :rtype: boolean
+  '''
+  try:
+    with open(fname, 'wb') as f:
+      f.write(photo)
+    return True
+  except ValueError:
+    LO.l_err(ValueError,logName)
+    return False
+
 # Change string colon or space by underscore
 def clean_name(s):
   ''' This function changes space and colon for underscore in a string
@@ -206,12 +253,14 @@ def load_json_file(fname,logName="main"):
   :return: a json oject
   :rtype: deserialize json
   '''
-  try:
-    with open(fname) as f:
-      return json.load(f)
-  except ValueError:
-    LO.l_err(ValueError,logName)
-    return []
+  if file_is_here(fname,logName):
+    try:
+      with open(fname) as f:
+        return json.load(f)
+    except ValueError:
+      LO.l_err(ValueError,logName)
+      pass
+  return []
 
 # Change timestamp date to string
 def from_date_to_s(timestamp):
@@ -245,6 +294,40 @@ def get_files_from_path(fpath):
   :rtype: list(String)
   '''
   return [fpath+f for f in os.listdir(fpath) if os.path.isfile(os.path.join(fpath, f))]
+
+
+# Get all files from a path
+def get_files_from_path_recu_with_eof(fpath,eof):
+  ''' This function returning a list of path+files from a path with a end of file name pattern
+  
+  :param arg1: a path
+  :type arg1: String
+
+  :param arg2: a pattern for the end of file
+  :type arg2: String
+
+  :return: a list of path+file 
+  :rtype: list(String)
+  '''
+  return [os.path.join(dp, f) for dp, dn, filenames in os.walk(fpath) for f in filenames if f.endswith(eof)]
+  
+
+# Get all files from a path
+def get_files_from_path_recu_with_ext(fpath,ext):
+  ''' This function returning a list of path+files from a path with extension file type
+  Source: https://stackoverflow.com/a/18394205
+  
+  :param arg1: a path
+  :type arg1: String
+
+  :param arg2: a pattern for the extension
+  :type arg2: String
+
+  :return: a list of path+file 
+  :rtype: list(String)
+  '''
+  return [os.path.join(dp, f) for dp, dn, filenames in os.walk(fpath) for f in filenames if os.path.splitext(f)[1] == ext]
+  
 
 
 # Change the status of a record to a value

@@ -112,32 +112,29 @@ class LeafSpectra(RE.Record):
 ##############################################
 # LOAD Record
 ##############################################
-def load_leafspectra_webhook_Records(calibrations,projects):
+def load_leafspectra_webhook_Records(calibrations):
   """ This will load Leaf spectra object from webhook
   
   :param arg1: calibrations
   :type arg1: Calibrations object
-
-  :param arg2: projects dictionnary
-  :type arg2: projects[projectID] = projectName
 
   :return: LeafSpectrum object full of LeafSpectra processible
   :rtype: LeafSpectrum
   """
   leafSpectraForm = TO.load_json_file(PA.LeafSpectraFormFile)
   leafSpectraFormID = leafSpectraForm['id']
-  webhookRecords = RE.load_webhook_records(projects)
+  webhookRecords = RE.load_webhook_records()
   spectrum = LeafSpectrum()
   for record_raw in webhookRecords.records[:]:
     if leafSpectraFormID not in record.form_id:
-      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.ID))
+      LO.l_debug('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.ID))
     else:
       record = LeafSpectra(record_raw)
-      LO.l_info('Start update record {} with measurments'.format(record.ID))
+      LO.l_debug('Start update record {} with measurments'.format(record.ID))
       if extract_leafspectra_record(record):
-        LO.l_info('Start update record {} with calibration and date {}'.format(record.ID,record.fv_date_measured))
+        LO.l_debug('Start update record {} with calibration and date {}'.format(record.ID,record.fv_date_measured))
         if link_leafspectra_record_and_calibration(calibrations,record):
-          LO.l_war('The record {} is complete for processing'.format(record.ID))
+          LO.l_debug('The record {} is complete for processing'.format(record.ID))
           spectrum.add_record(record)
         else:
           LO.l_war('The record {} will not be used'.format(record.ID))
@@ -145,21 +142,18 @@ def load_leafspectra_webhook_Records(calibrations,projects):
         LO.l_war('The record {} will not be used'.format(record.ID))
   return spectrum
 
-def load_leafspectra_Records(calibrations,projects):
+def load_leafspectra_Records(calibrations):
   """ This will load Leaf spectra object from the Leaf Spectra Backup
   
   :param arg1: calibrations
   :type arg1: Calibrations object
-
-  :param arg2: projects dictionnary
-  :type arg2: projects[projectID] = projectName
 
   :return: LeafSpectrum object full of LeafSpectra processible
   :rtype: LeafSpectrum
   """
   spectrum = LeafSpectrum()
   # Load records
-  rec = load_leafspectra_Records_from_file(projects)
+  rec = load_leafspectra_Records_from_file()
   # Add calibrations
   my_list = add_Records_in_spectrum(calibrations,rec)
   
@@ -174,11 +168,11 @@ def load_leafspectra_Records(calibrations,projects):
       spectrum.add_record(wrap)
   return spectrum
 
-def load_leafspectra_Records_from_file(projects):
+def load_leafspectra_Records_from_file():
   fname = PA.LeafSpectraRecordsFile
   if TO.file_is_here(fname):
-    LO.l_info('The leaf spectra file is {}'.format(fname))
-    return RE.load_records_from_json(fname,projects)
+    LO.l_debug('The leaf spectra file is {}'.format(fname))
+    return RE.load_records_from_json(fname)
   else:
     LO.l_war('The leaf spectra file ({}) is available. Program will die'.format(fname))
     sys.exit(1)
@@ -218,7 +212,7 @@ def add_Record_in_spectrum(calibrations,record_raw):
   record = LeafSpectra(record_raw)
   validate_leafspectra_record(calibrations,record)
   if record.isValid:
-    LO.l_info('The record id {} is complete for processing'.format(record.ID))
+    LO.l_debug('The record id {} is complete for processing'.format(record.ID))
     record.add_toLog('The record id {} is complete for processing'.format(record.ID))
   else:
     LO.l_war('The record id {} is incomplete and will not be used'.format(record.ID))
@@ -250,7 +244,7 @@ def extract_leafspectra_record(record):
   :param arg1: a LeafSpectra to be tested
   :type arg1: LeafSpectra
   """
-  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_debug('Start extract leaf spectra recordid {}'.format(record.ID))
   rv  = record.form_values
   if 'base_file_name' in rv \
     and 'working_folder' in rv \
@@ -307,8 +301,8 @@ def extract_leafspectra_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
     record.isValid = False
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
     record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
 
 ###
@@ -329,12 +323,11 @@ def link_leafspectra_record_and_calibration(calibrations,record):
   temp    = record.fv_date_measured
   calibs  = calibrations.calibrations
   calib   = SPC.get_calibration_for_record_time(panel_id, calibs, temp)
-  LO.l_info('Start update record {} with calibration and date {}'.format(rID,temp))
-  
+  LO.l_debug('Start update record {} with calibration and date {}'.format(rID,temp))
   
   if calib:
     record.fv_calibration = calib
-    LO.l_info("The record calibration file path is: {}".format(calib.cFilePath))
+    LO.l_debug("The record calibration file path is: {}".format(calib.cFilePath))
     record.add_toLog("The record calibration file path is: {}".format(calib.cFilePath))
   else:
     LO.l_war("The record id {} with the time {} with calibration panel {} was not found. Please update calibrations.".format(rID,temp,panel_id))
@@ -360,12 +353,13 @@ def validate_leafspectra_record_measurements(record):
   wf    = record.fv_working_folder
   
   measurmentsDone = True
-  LO.l_info('Start validate record {} measurments'.format(record.ID))
+  LO.l_debug('Start validate record {} measurments'.format(record.ID))
   for measurement in measurements:
     fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''+ext
     measurement.file_path = fName
     if not TO.file_is_here(fName):
       measurmentsDone = False
+      LO.l_war("The record id {} has not {} available.".format(rid,fName))
       record.add_toLog("The record id {} has not {} available.".format(rid,fName))
   if not measurmentsDone:
     record.isValid = False
@@ -412,7 +406,7 @@ def update_leafspectra_record_measurements(record):
     for measurement in measurements:
       fName = measurement.file_path
       if TO.file_is_here(fName):
-        LO.l_info("\tStart spectre extraction for {}".format(fName))
+        LO.l_debug("\tStart spectre extraction for {}".format(fName))
         spect = specdal.Spectrum(filepath=fName, measure_type= measureType)
         measurement.spectre = spect
         measurement.spectre.interpolate(method='cubic')
@@ -424,12 +418,13 @@ def update_leafspectra_record_measurements(record):
           s += '{}'.format(measurement.spectre.measurement)
         TO.string_to_file(spectreProcessed,'{}'.format(s))
       else:
+        LO.l_war("The record id {} has not {} available.".format(rid,fName))
         record.add_toLog("The record id {} has not {} available.".format(rid,fName))
         measurmentsDone = False
     if not measurmentsDone:
-        LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
-        record.add_toLog("The record id {} will not be used because it has not all its spectre available.".format(rid))
-        record.isValid = False
+      LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
+      record.add_toLog("The record id {} will not be used because it has not all its spectre available.".format(rid))
+      record.isValid = False
   return record
 
 ##############################################
@@ -469,12 +464,12 @@ def process_leafspectra_record(record):
 def calculate_leafspectra_record(record):
   # Check the Protocol choosed
   if record.fv_manufacturer_short_name_sphere == 'SVC':
-    LO.l_info("Start SVC spectrum data for record {}".format(record.ID))
+    LO.l_debug("Start SVC spectrum data for record {}".format(record.ID))
     if record.fv_leaf_larger_than_port == 'yes':
-      LO.l_info('large leaf')
+      LO.l_debug('large leaf')
       return large_leaf_calculation(record)
     elif record.fv_leaf_larger_than_port == 'no':
-      LO.l_info('small leaf')
+      LO.l_debug('small leaf')
       return small_leaf_calculation(record)
   LO.l_war("No known manufacturer short name sphere for record {}".format(record.ID))
   return False

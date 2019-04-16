@@ -202,7 +202,7 @@ def set_global_from_config(c):
     
     t = c.get('DEFAULT','NumberOfProcesses')
     if t:
-      NumberOfProcesses = c.get('DEFAULT','NumberOfProcesses')
+      NumberOfProcesses = int(c.get('DEFAULT','NumberOfProcesses'))
 
 
 # Arguments

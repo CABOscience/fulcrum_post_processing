@@ -54,7 +54,7 @@ def mp_backup_forms(formsO):
   # parallelisation here
   output = mp.Queue()
   wraps = []
-  pool = mp.Pool(processes=int(PA.NumberOfProcesses))
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
   recordsForm = [pool.apply_async(mp_backup_form, args=(form,)) for form in formsO.forms[:]]
   pool.close()
   pool.join()

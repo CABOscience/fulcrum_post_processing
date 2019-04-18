@@ -87,7 +87,7 @@ class Form(object):
     self.isValid = True
 
   def __str__(self):
-    return '>{} - {}'.format(self.ID, self.name)
+    return '>{} - {}'.format(self.id, self.name)
 
   def to_csv(self):
     return []
@@ -223,18 +223,28 @@ def get_forms_from_formsJson(formsJson):
 
 def get_dictKeysDataName_from_formid(form_id):
   fs = load_forms()
-  return fs.formsDictID[form_id].dictKeysDataName
+  if form_id in fs.formsDictID:
+    return fs.formsDictID[form_id].dictKeysDataName
 
-def get_formName_from_formid(form_id):
-  fs = load_forms()
-  return fs.formsDictIDName[form_id]
+def get_formName_from_formid(form_id,fs=[]):
+  if isinstance(fs, Forms):
+    if form_id in fs.formsDictIDName:
+      return fs.formsDictIDName[form_id]
+  elif len(fs)<1:
+    return get_formName_from_formid(form_id,load_forms())
+  else:
+    return ""
 
-def get_projects_enabled_status(form_id):
-  fs = load_forms()
-  if fs.formsDictID[form_id]:
-    return fs.formsDictID[form_id].projects_enabled
+def get_projects_enabled_status(form_id,fs=[]):
+  if isinstance(fs, Forms):
+    if form_id in fs.formsDictID:
+      return fs.formsDictID[form_id].projects_enabled
+  elif len(fs)<1:
+    return get_projects_enabled_status(form_id,load_forms())
   LO.l_war('get_projects_enabled_status : The form {} was not found in formsDictID'.format(form_id))
-  return False
+  return ""
+
+
 
 ##############################################
 # LOAD SOURCES

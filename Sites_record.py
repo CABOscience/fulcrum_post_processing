@@ -3,6 +3,7 @@
 # Local Modules
 import projects as PR
 import parameters as PA
+import records as RE
 import tools as TO
 import logs as LO
 
@@ -15,17 +16,14 @@ import sys
 # OBJECTS
 ##############################################
 
-class Sites(object):
-  """ Plots object
-  Plots object is containing a list of Plots Object
+class Sites(RE.Records):
+  """ Sites object
+  Sites object is containing a list of Sites Object
   """
-  def add_record(self,Site):
-    self.records.append(Site)
-    self.recordsDict[Site.ID]=Site
 
-class Site(object):
+class Site(RE.Record):
   def __init__(self, record):
-    super(Site,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(Site,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_approbation = ''
     self.fv_approved_by = ''
     self.fv_continent = ''
@@ -72,8 +70,11 @@ class Site(object):
     self.fv_verification = ''
     self.fv_verified_by = ''
 
+  def __str__(self):
+    return super(Site, self).__str__()+'\n\n>fv_original_purpose {}'.format(self.fv_original_purpose)
 
-def extract_spectroscopyPanel_record(record):
+
+def extract_site_record(record):
   """ This will extract a spectroscopy panel record data from a record "form values"
   
   :param arg1: a SpectroscopyPanel to be tested
@@ -82,13 +83,8 @@ def extract_spectroscopyPanel_record(record):
   :return: an updated record if it is validated or the record
   :rtype: SpectroscopyPanel
   """
-  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_info('Start extract leaf spectra recordid {}'.format(record.id))
   rv  = record.form_values
-
-    self.fv_ = '' # doute
-    self.fv_ = '' #
-    self.fv_ = '' #
-    self.fv_ = '' #
 
   if 'corners' in rv \
     and 'date_defined' in rv \
@@ -149,6 +145,79 @@ def extract_spectroscopyPanel_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
     record.isValid = False
-    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
+
+
+##############################################
+# Get From Sites
+##############################################
+
+def get_site_with_site_id(siteID):
+  sts = load_sites()
+  return get_site_with_site_id_from_sites(siteID,sts)
+
+def get_site_with_site_id_from_sites(siteID,sts):
+  if len(sts)>0 and siteID in sts.recordsDict:
+    return sts.recordsDict[siteID]
+  LO.l_war("No site associated with {}".format(siteID))
+  return ''
+
+
+##############################################
+# Get Sites
+##############################################
+
+def get_sites_from_records(recs):
+  sites = Sites()
+  for site_raw in recs.records:
+    site = Site(site_raw)
+    extract_site_record(site)
+    if site.isValid:
+      sites.add_record(site)
+      st = 'The site record id {} is complete for processing'.format(site.id)
+      LO.l_debug(st)
+      site.add_toLog(st)
+    else:
+      st = 'The site record id {} is incomplete and will not be used'.format(site.id)
+      LO.l_war(st)
+      site.add_toLog(st)
+  return sites
+  
+##############################################
+# LOAD SOURCES
+##############################################
+
+# Load Sites from Sites Records File
+def load_sites_from_json_file():
+  if TO.file_is_here(PA.SitesRecordsFile):
+    records = RE.load_records_from_json(PA.SitesRecordsFile)
+    return get_sites_from_records(records)
+  else:
+    LO.l_err('The file {} is not available. A default empty Sites will be loaded'.format(PA.SitesRecordsFile))
+    return Sites()
+
+# Load Sites from fulcrum
+def load_sites_from_fulcrum():
+  RE.backup_records_from_forms()
+  return load_sites_from_json_file()
+
+# Load from Sites form
+def load_sites_from_sites_form():
+  if TO.file_is_here(PA.SitesFormFile):
+    sites_form = FO.load_form_from_json_file(PA.SitesFormFile)
+    recs = RE.load_records_from_fulcrum(sites_form)
+    return get_sites_from_records(recs)
+  else:
+    LO.l_err('The file {} is not available. A default empty Sites will be loaded'.format(PA.SitesRecordsFile))
+    return Sites()
+
+# Load Sites
+def load_sites():
+  pls = load_sites_from_json_file()
+  if len(pls) < 1:
+    pls = load_sites_from_sites_form()
+  if len(pls) < 1:
+    pls = load_sites_from_fulcrum()
+  return pls

@@ -3,6 +3,7 @@
 # Local Modules
 import projects as PR
 import parameters as PA
+import records as RE
 import tools as TO
 import logs as LO
 
@@ -15,17 +16,14 @@ import sys
 # OBJECTS
 ##############################################
 
-class Plots(object):
+class Plots(RE.Records):
   """ Plots object
   Plots object is containing a list of Plots Object
   """
-  def add_record(self,Plot):
-    self.records.append(Plot)
-    self.recordsDict[Plot.ID]=Plot
 
-class Plot(object):
+class Plot(RE.Record):
   def __init__(self, record):
-    super(Plot,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(Plot,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_altitude = ''
     self.fv_approbation = ''
     self.fv_approved_by = ''
@@ -93,16 +91,16 @@ class Plot(object):
     self.fv_vertical_accuracy = ''
 
 
-def extract_spectroscopyPanel_record(record):
-  """ This will extract a spectroscopy panel record data from a record "form values"
+def extract_plot_record(record):
+  """ This will extract a plot panel record data from a record "form values"
   
-  :param arg1: a SpectroscopyPanel to be tested
-  :type arg1: SpectroscopyPanel
+  :param arg1: a Plot to be tested
+  :type arg1: Plot
 
   :return: an updated record if it is validated or the record
-  :rtype: SpectroscopyPanel
+  :rtype: Plot
   """
-  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_info('Start extract leaf spectra recordid {}'.format(record.id))
   rv  = record.form_values
 
   if 'date_first_established' in rv \
@@ -183,6 +181,87 @@ def extract_spectroscopyPanel_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
     record.isValid = False
-    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
+
+##############################################
+# Get From Plots
+##############################################
+
+def get_scientific_name_with_plot_id(plotID):
+  pls = load_plots()
+  return get_scientific_name_with_plot_id_from_plots(plotID,pls)
+
+def get_plot_shape_with_plot_id_from_plots(plotID,pls):
+  if len(pls)>0 and plotID in pls.recordsDict:
+    return pls.recordsDict[plotID].fv_plot_shape
+  LO.l_war("No Plot shape associated with {}".format(plotID))
+  return ''
+
+def get_plot_with_plot_id(plotID):
+  pls = load_plots()
+  return get_plot_with_plot_id_from_plots(plotID,pls)
+
+def get_plot_with_plot_id_from_plots(plotID,pls):
+  if len(pls)>0 and plotID in pls.recordsDict:
+    return pls.recordsDict[plotID]
+  LO.l_war("No plot associated with {}".format(plotID))
+  return ''
+
+##############################################
+# Get Plots
+##############################################
+
+def get_plots_from_records(recs):
+  plots = Plots()
+  for plot_raw in recs.records:
+    plot = Plot(plot_raw)
+    extract_plot_record(plot)
+    if plot.isValid:
+      plots.add_record(plot)
+      st = 'The plot record id {} is complete for processing'.format(plot.id)
+      LO.l_debug(st)
+      plot.add_toLog(st)
+    else:
+      st = 'The plot record id {} is incomplete and will not be used'.format(plot.id)
+      LO.l_war(st)
+      plot.add_toLog(st)
+  return plots
+  
+##############################################
+# LOAD SOURCES
+##############################################
+
+# Load Plots from Plots Records File
+def load_plots_from_json_file():
+  if TO.file_is_here(PA.PlotsRecordsFile):
+    records = RE.load_records_from_json(PA.PlotsRecordsFile)
+    return get_plots_from_records(records)
+  else:
+    LO.l_err('The file {} is not available. A default empty Plots will be loaded'.format(PA.PlotsRecordsFile))
+    return Plots()
+
+# Load Plots from fulcrum
+def load_plots_from_fulcrum():
+  RE.backup_records_from_forms()
+  return load_plots_from_json_file()
+
+# Load from Plots form
+def load_plots_from_plots_form():
+  if TO.file_is_here(PA.PlotsFormFile):
+    plots_form = FO.load_form_from_json_file(PA.PlotsFormFile)
+    recs = RE.load_records_from_fulcrum(plots_form)
+    return get_plots_from_records(recs)
+  else:
+    LO.l_err('The file {} is not available. A default empty Plots will be loaded'.format(PA.PlotsRecordsFile))
+    return Plots()
+
+# Load Plots
+def load_plots():
+  pls = load_plots_from_json_file()
+  if len(pls) < 1:
+    pls = load_plots_from_plots_form()
+  if len(pls) < 1:
+    pls = load_plots_from_fulcrum()
+  return pls

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
+import tools_fulcrum_api as TOFA
 import tools as TO
 # System
 import argparse, os, sys
@@ -20,45 +21,60 @@ config.read('example.cfg')
 
 # Variables
 ##############################################
-DefaultPath     = os.path.expanduser('~/')
-FulcrumVersion  = '1.1.0'
-FulcrumApiKey   = ""
-FulcrumApiURL   = 'https://api.fulcrumapp.com/api/v2/'
-FulcrumPath     = DefaultPath
-FulcrumWebhook  = DefaultPath
-GoogleDrivePath = DefaultPath
-WebsitePath     = DefaultPath
-Debug = False
-
-BulkLeafSamplesFormFile   = FulcrumPath
-BulkLeafSamplesRecordsFile= FulcrumPath
-BulkLeafSamplesLogFile = 'BulkLeafSamples_pipeline'
-
-SpectroscopyPanelsFormFile    = FulcrumPath
-SpectroscopyPanelsRecordsFile = FulcrumPath
-SpectroscopyPanelsLogFile     = 'SpectroscopyPanels_pipeline'
-
-LeafSpectraFormFile   = FulcrumPath
-LeafSpectraRecordsFile= FulcrumPath
-LeafSpectraLogFile = 'leafspectra_pipeline'
-
-CampaignsPath      = GoogleDrivePath
-PanelsPath         = GoogleDrivePath
-ScriptPath         = TO.get_script_directory()
-ConfFile           = ScriptPath+'/config.ini'
-FulcrumBackupScript= ScriptPath
-ProjectWebsitePath = WebsitePath
 FulcrumForms      = []
 FulcrumRecords    = []
 KeysDataname      = []
 FormsProcess      = False
 WebhookProcess    = False
 DirectoriesProcess= False
+NumberOfRequests  = 0
+RecordStatus      = "verified" #choices={pending, rejected, verified, submitted, approved, published, deleted}
+
+# From config
+DefaultPath       = os.path.expanduser('~/')
+BulkLeafSamplesLogFile = DefaultPath
+BulkLeafSamplessFormFile = DefaultPath
+BulkLeafSamplessRecordsFile = DefaultPath
+CampaignsPath = DefaultPath = DefaultPath
+Debug = False
+FulcrumApiKey   = ""
+FulcrumApiURL   = 'https://api.fulcrumapp.com/api/v2/'
+FulcrumBackupScript = DefaultPath
+FulcrumPath = DefaultPath
+FulcrumVersion  = '1.1.0'
+FulcrumWebhook = DefaultPath
+GoogleDrivePath = DefaultPath
+LeafSpectraFormFile = DefaultPath
+LeafSpectraLogFile = DefaultPath
+LeafSpectraRecordsFile = DefaultPath
 LimitExceededStr  = 'because you have exceeded the number of request.'
 NotFoundStr       = 'because it was not found.'
 NumberOfProcesses = 1
-NumberOfRequests  = 0
-RecordStatus      = "verified" #choices={pending, rejected, verified, submitted, approved, published, deleted}
+PanelCalibrationLogFile = DefaultPath
+PanelCalibrationsFormFile = DefaultPath
+PanelCalibrationsRecordsFile = DefaultPath
+PanelsPath = DefaultPath
+PlantsFormFile = DefaultPath
+PlantsLogFile = DefaultPath
+PlantsRecordsFile = DefaultPath
+PlotsFormFile = DefaultPath
+PlotsLogFile = DefaultPath
+PlotsRecordsFile = DefaultPath
+ProjectWebsitePath = DefaultPath
+ScriptPath = TO.get_script_directory()
+SitesFormFile = DefaultPath
+SitesLogFile = DefaultPath
+SitesRecordsFile = DefaultPath
+SpectroscopyPanelsFormFile = DefaultPath
+SpectroscopyPanelsLogFile = DefaultPath
+SpectroscopyPanelsRecordsFile = DefaultPath
+SubplotsFormFile = DefaultPath
+SubplotsLogFile = DefaultPath
+SubplotsRecordsFile = DefaultPath
+WebsitePath = DefaultPath
+
+# Path to config
+ConfFile           = ScriptPath+'/config.ini'
 
 # Set Variables from config files
 ##############################################
@@ -79,131 +95,97 @@ def get_config(confFile):
     sys.exit(1)
 
 def set_global_from_config(c):
+    global BulkLeafSamplesLogFile
+    global BulkLeafSamplessFormFile
+    global BulkLeafSamplessRecordsFile
+    global CampaignsPath
     global Debug
     global DefaultPath
-    global FulcrumVersion
     global FulcrumApiKey
     global FulcrumApiURL
+    global FulcrumBackupScript
     global FulcrumPath
+    global FulcrumVersion
     global FulcrumWebhook
     global GoogleDrivePath
-    global WebsitePath
-    global SpectroscopyPanelsFormFile
-    global SpectroscopyPanelsRecordsFile
-    global SpectroscopyPanelsLogFile
     global LeafSpectraFormFile
-    global LeafSpectraRecordsFile
     global LeafSpectraLogFile
-    global CampaignsPath
-    global PanelsPath
-    global ScriptPath
-    global FulcrumBackupScript
-    global ProjectWebsitePath
+    global LeafSpectraRecordsFile
     global LimitExceededStr
     global NotFoundStr
     global NumberOfProcesses
-
-    t = c.get('DEFAULT','Debug')
-    if t:
-      Debug = c.get('DEFAULT','Debug')
+    global PanelCalibrationLogFile
+    global PanelCalibrationsFormFile
+    global PanelCalibrationsRecordsFile
+    global PanelsPath
+    global PlantsFormFile
+    global PlantsLogFile
+    global PlantsRecordsFile
+    global PlotsFormFile
+    global PlotsLogFile
+    global PlotsRecordsFile
+    global ProjectWebsitePath
+    global ScriptPath
+    global SitesFormFile
+    global SitesLogFile
+    global SitesRecordsFile
+    global SpectroscopyPanelsFormFile
+    global SpectroscopyPanelsLogFile
+    global SpectroscopyPanelsRecordsFile
+    global SubplotsFormFile
+    global SubplotsLogFile
+    global SubplotsRecordsFile
+    global WebsitePath
+    
+    if c.get('DEFAULT','BulkLeafSamplesLogFile'): BulkLeafSamplesLogFile = c.get('DEFAULT','BulkLeafSamplesLogFile')
+    if c.get('DEFAULT','BulkLeafSamplessFormFile'): BulkLeafSamplessFormFile = c.get('DEFAULT','BulkLeafSamplessFormFile')
+    if c.get('DEFAULT','BulkLeafSamplessRecordsFile'): BulkLeafSamplessRecordsFile = c.get('DEFAULT','BulkLeafSamplessRecordsFile')
+    if c.get('DEFAULT','CampaignsPath'): CampaignsPath = c.get('DEFAULT','CampaignsPath')
+    if c.get('DEFAULT','Debug'): Debug = c.get('DEFAULT','Debug')
+    if c.get('DEFAULT','DefaultPath'): DefaultPath = c.get('DEFAULT','DefaultPath')
+    if c.get('DEFAULT','FulcrumApiKey'): FulcrumApiKey = c.get('DEFAULT','FulcrumApiKey')
+    if c.get('DEFAULT','FulcrumApiURL'): FulcrumApiURL = c.get('DEFAULT','FulcrumApiURL')
+    if c.get('DEFAULT','FulcrumBackupScript'): FulcrumBackupScript = c.get('DEFAULT','FulcrumBackupScript')
+    if c.get('DEFAULT','FulcrumPath'): FulcrumPath = c.get('DEFAULT','FulcrumPath')
+    if c.get('DEFAULT','FulcrumVersion'): FulcrumVersion = c.get('DEFAULT','FulcrumVersion')
+    if c.get('DEFAULT','FulcrumWebhook'): FulcrumWebhook = c.get('DEFAULT','FulcrumWebhook')
+    if c.get('DEFAULT','GoogleDrivePath'): GoogleDrivePath = c.get('DEFAULT','GoogleDrivePath')
+    if c.get('DEFAULT','LeafSpectraFormFile'): LeafSpectraFormFile = c.get('DEFAULT','LeafSpectraFormFile')
+    if c.get('DEFAULT','LeafSpectraLogFile'): LeafSpectraLogFile = c.get('DEFAULT','LeafSpectraLogFile')
+    if c.get('DEFAULT','LeafSpectraRecordsFile'): LeafSpectraRecordsFile = c.get('DEFAULT','LeafSpectraRecordsFile')
+    if c.get('DEFAULT','LimitExceededStr'): LimitExceededStr = c.get('DEFAULT','LimitExceededStr')
+    if c.get('DEFAULT','NotFoundStr'): NotFoundStr = c.get('DEFAULT','NotFoundStr')
+    if c.get('DEFAULT','NumberOfProcesses'): NumberOfProcesses = int(c.get('DEFAULT','NumberOfProcesses'))
+    if c.get('DEFAULT','PanelCalibrationLogFile'): PanelCalibrationLogFile = c.get('DEFAULT','PanelCalibrationLogFile')
+    if c.get('DEFAULT','PanelCalibrationsFormFile'): PanelCalibrationsFormFile = c.get('DEFAULT','PanelCalibrationsFormFile')
+    if c.get('DEFAULT','PanelCalibrationsRecordsFile'): PanelCalibrationsRecordsFile = c.get('DEFAULT','PanelCalibrationsRecordsFile')
+    if c.get('DEFAULT','PanelsPath'): PanelsPath = c.get('DEFAULT','PanelsPath')
+    if c.get('DEFAULT','PlantsFormFile'): PlantsFormFile = c.get('DEFAULT','PlantsFormFile')
+    if c.get('DEFAULT','PlantsLogFile'): PlantsLogFile = c.get('DEFAULT','PlantsLogFile')
+    if c.get('DEFAULT','PlantsRecordsFile'): PlantsRecordsFile = c.get('DEFAULT','PlantsRecordsFile')
+    if c.get('DEFAULT','PlotsFormFile'): PlotsFormFile = c.get('DEFAULT','PlotsFormFile')
+    if c.get('DEFAULT','PlotsLogFile'): PlotsLogFile = c.get('DEFAULT','PlotsLogFile')
+    if c.get('DEFAULT','PlotsRecordsFile'): PlotsRecordsFile = c.get('DEFAULT','PlotsRecordsFile')
+    if c.get('DEFAULT','ProjectWebsitePath'): ProjectWebsitePath = c.get('DEFAULT','ProjectWebsitePath')
+    if c.get('DEFAULT','ScriptPath'): ScriptPath = c.get('DEFAULT','ScriptPath')
+    if c.get('DEFAULT','SitesFormFile'): SitesFormFile = c.get('DEFAULT','SitesFormFile')
+    if c.get('DEFAULT','SitesLogFile'): SitesLogFile = c.get('DEFAULT','SitesLogFile')
+    if c.get('DEFAULT','SitesRecordsFile'): SitesRecordsFile = c.get('DEFAULT','SitesRecordsFile')
+    if c.get('DEFAULT','SpectroscopyPanelsFormFile'): SpectroscopyPanelsFormFile = c.get('DEFAULT','SpectroscopyPanelsFormFile')
+    if c.get('DEFAULT','SpectroscopyPanelsLogFile'): SpectroscopyPanelsLogFile = c.get('DEFAULT','SpectroscopyPanelsLogFile')
+    if c.get('DEFAULT','SpectroscopyPanelsRecordsFile'): SpectroscopyPanelsRecordsFile = c.get('DEFAULT','SpectroscopyPanelsRecordsFile')
+    if c.get('DEFAULT','SubplotsFormFile'): SubplotsFormFile = c.get('DEFAULT','SubplotsFormFile')
+    if c.get('DEFAULT','SubplotsLogFile'): SubplotsLogFile = c.get('DEFAULT','SubplotsLogFile')
+    if c.get('DEFAULT','SubplotsRecordsFile'): SubplotsRecordsFile = c.get('DEFAULT','SubplotsRecordsFile')
+    if c.get('DEFAULT','WebsitePath'): WebsitePath = c.get('DEFAULT','WebsitePath')
     
     if Debug == 'True':
       print 'Debug is enabled'
     else:
       print 'Debug is disable'
       
-    t = c.get('DEFAULT','DefaultPath')
-    if t:
-      DefaultPath = c.get('DEFAULT','DefaultPath')
-    
-    t = c.get('DEFAULT','FulcrumVersion')
-    if t:
-      FulcrumVersion = c.get('DEFAULT','FulcrumVersion')
-    
-    t = c.get('DEFAULT','FulcrumApiKey')
-    if t:
-      FulcrumApiKey = c.get('DEFAULT','FulcrumApiKey')
-    
-    t = c.get('DEFAULT','FulcrumApiURL')
-    if t:
-      FulcrumApiURL = c.get('DEFAULT','FulcrumApiURL')
-    
-    t = c.get('DEFAULT','FulcrumPath')
-    if t:
-      FulcrumPath = c.get('DEFAULT','FulcrumPath')
-    
-    t = c.get('DEFAULT','FulcrumWebhook')
-    if t:
-      FulcrumWebhook = c.get('DEFAULT','FulcrumWebhook')
-    
-    t = c.get('DEFAULT','FulcrumWebhook')
-    if t:
-      FulcrumWebhook = c.get('DEFAULT','FulcrumWebhook')
-    
-    t = c.get('DEFAULT','GoogleDrivePath')
-    if t:
-      GoogleDrivePath = c.get('DEFAULT','GoogleDrivePath')
-    
-    t = c.get('DEFAULT','WebsitePath')
-    if t:
-      WebsitePath = c.get('DEFAULT','WebsitePath')
-    
-    t = c.get('DEFAULT','SpectroscopyPanelsFormFile')
-    if t:
-      SpectroscopyPanelsFormFile = c.get('DEFAULT','SpectroscopyPanelsFormFile')
-    
-    t = c.get('DEFAULT','SpectroscopyPanelsRecordsFile')
-    if t:
-      SpectroscopyPanelsRecordsFile = c.get('DEFAULT','SpectroscopyPanelsRecordsFile')
-    
-    t = c.get('DEFAULT','SpectroscopyPanelsLogFile')
-    if t:
-      SpectroscopyPanelsLogFile = c.get('DEFAULT','SpectroscopyPanelsLogFile')
-    
-    t = c.get('DEFAULT','LeafSpectraFormFile')
-    if t:
-      LeafSpectraFormFile = c.get('DEFAULT','LeafSpectraFormFile')
-    
-    t = c.get('DEFAULT','LeafSpectraRecordsFile')
-    if t:
-      LeafSpectraRecordsFile = c.get('DEFAULT','LeafSpectraRecordsFile')
-    
-    t = c.get('DEFAULT','LeafSpectraLogFile')
-    if t:
-      LeafSpectraLogFile = c.get('DEFAULT','LeafSpectraLogFile')
-    
-    t = c.get('DEFAULT','CampaignsPath')
-    if t:
-      CampaignsPath = c.get('DEFAULT','CampaignsPath')
-    
-    t = c.get('DEFAULT','PanelsPath')
-    if t:
-      PanelsPath = c.get('DEFAULT','PanelsPath')
-    
-    t = c.get('DEFAULT','ScriptPath')
-    if t:
-      ScriptPath = c.get('DEFAULT','ScriptPath')
-    
-    t = c.get('DEFAULT','FulcrumBackupScript')
-    if t:
-      FulcrumBackupScript = c.get('DEFAULT','FulcrumBackupScript')
-    
-    t = c.get('DEFAULT','ProjectWebsitePath')
-    if t:
-      ProjectWebsitePath = c.get('DEFAULT','ProjectWebsitePath')
-    
-    t = c.get('DEFAULT','LimitExceededStr')
-    if t:
-      LimitExceededStr = c.get('DEFAULT','LimitExceededStr')
-    
-    t = c.get('DEFAULT','NotFoundStr')
-    if t:
-      NotFoundStr = c.get('DEFAULT','NotFoundStr')
-    
-    t = c.get('DEFAULT','NumberOfProcesses')
-    if t:
-      NumberOfProcesses = int(c.get('DEFAULT','NumberOfProcesses'))
-
+    if TOFA.test_fulcrum_access():
+      print 'Fulcrum is accessible'
 
 # Arguments
 ##############################################

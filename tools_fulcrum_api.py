@@ -3,7 +3,7 @@
 import parameters as PA
 import logs as LO
 # System
-import io, os
+import io, os, sys
 # files
 import csv, codecs, cStringIO, json
 # Spectroscopy
@@ -76,6 +76,7 @@ def exception_api(e,s):
     LO.l_war('{} {}'.format(s,PA.NotFoundStr))
   elif isinstance(e, RateLimitExceededException):
     LO.l_err('{} {}'.format(s,PA.LimitExceededStr))
+    print_num_of_request()
   else:
     LO.l_err('The error is:\n{}'.format(s))
   return False
@@ -83,18 +84,21 @@ def exception_api(e,s):
 #
 # Fulcrum functions
 #
-def get_fulcrum_access(logName="main"):
-  fulcrumApp  = Fulcrum(key=PA.FulcrumApiKey)
+def get_fulcrum_access():
+  return Fulcrum(key=PA.FulcrumApiKey)
+  
+def test_fulcrum_access():
+  fulcrumApp  = get_fulcrum_access()
   s = 'Search in Fulcrum by forms has failed'
   try:
     fulcrumApp.forms.search()['forms']
-    return fulcrumApp
+    return True
   except (UnauthorizedException,
           InvalidAPIVersionException,
           InternalServerErrorException
           ):
     if not PA.FulcrumApiKey:
-      LO.l_war("A Fulcrum API is needed")
+      print("A Fulcrum API is needed")
       print parser.print_help()
     else:
       t = 'Connexion to Fulcrum has failed due to'
@@ -105,19 +109,19 @@ def get_fulcrum_access(logName="main"):
         endString = 'invalid API version.'
       elif InternalServerErrorException:
         endString = 'internal server error.'
-      LO.l_err(t+' '+endString)
+      print(t+' '+endString)
     sys.exit(1)
   except NotFoundException as n:
-    exception_api(n,s)
+    print('{} {}'.format(s,PA.NotFoundStr))
     sys.exit(1)
   except RateLimitExceededException as r:
-    exception_api(r,s)
+    print('{} {}'.format(s,PA.LimitExceededStr))
     sys.exit(1)
 
 # get forms
 def get_fulcrum_forms(logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     formsTmp = fulcrumApp.forms.search()['forms']
     increase_num_of_request_by(1)
     forms = []
@@ -143,7 +147,7 @@ def get_fulcrum_forms(logName="main"):
 
 def find_forms_from_ID(formID,logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     formjson = fulcrumApp.forms.find(formID)
     increase_num_of_request_by(1)
     return formjson
@@ -154,7 +158,7 @@ def find_forms_from_ID(formID,logName="main"):
 # get records from a form
 def get_fulcrum_records(formID,formName,logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     records = fulcrumApp.records.search(url_params={'form_id': formID})['records']
     increase_num_of_request_by(1)
     return records
@@ -175,7 +179,7 @@ def get_record_history_2(recordID,logName="main"):
 
 def get_record_history(recordID,logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     record_history = fulcrumApp.records.history(recordID)['records']
     increase_num_of_request_by(1)
     return record_history
@@ -185,7 +189,7 @@ def get_record_history(recordID,logName="main"):
 
 def find_project_from_project_ID(projectID,logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     project = fulcrumApp.projects.find(projectID)
     increase_num_of_request_by(1)
     return project
@@ -195,7 +199,7 @@ def find_project_from_project_ID(projectID,logName="main"):
  
 def get_projects(logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     projects = fulcrumApp.projects.search()['projects']
     increase_num_of_request_by(1)
     return projects
@@ -216,7 +220,7 @@ def donwload_photo_meta(fname,fulcrumApp,photoID,logName="main"):
 
 def get_photo_meta(photoID,logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     record_history = fulcrumApp.photos.find(photoID)['photo']
     increase_num_of_request_by(1)
     return record_history
@@ -226,7 +230,7 @@ def get_photo_meta(photoID,logName="main"):
 
 def get_photo_file(photoID,logName="main"):
   try:
-    fulcrumApp = get_fulcrum_access(logName)
+    fulcrumApp = get_fulcrum_access()
     photo = fulcrumApp.photos.media(photoID)
     increase_num_of_request_by(1)
     return photo

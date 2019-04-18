@@ -26,10 +26,18 @@ class Projects():
     self.projects.append(project)
     self.idName[project.id] = project.name
     
-  def get_project_idName(self):
-    return self.idName
-    
   def get_projects_size(self):
+    return len(self.projects)
+    
+  def __str__(self):
+    st = ''
+    print self.get_projects_size()
+    for project in self.projects[:]:
+      if project.id != "":
+        st += project
+    return st
+    
+  def __len__(self):
     return len(self.projects)
     
   
@@ -49,6 +57,9 @@ class Project():
   def set_file_name(self):
     self.file_name = get_ProjectsPath()+'/'+self.name_cleaned+'.json'
   
+  def __str__(self):
+    return '{} {} {}'.format(self.id,self.file_name,self.name_cleaned)
+
 #
 # Project(s) From Json
 #
@@ -89,22 +100,15 @@ def backup_projects_from_Fulcrum():
 #
 # Load Project(s)
 #
-def get_project_name_from_id(project_id):
-  projects_idName = load_projects_idName()
-  if project_id in projects_idName:
-    return projects_idName[project_id]
+
+def get_project_name_from_id(project_id,pjs=[]):
+  if isinstance(pjs, Projects):
+    if project_id in pjs.idName:
+      return pjs.idName[project_id]
+  elif len(pjs)<1:
+    return get_project_name_from_id(project_id,load_projects())
   else:
     return ""
-
-def load_projects_idName():
-  ps = load_projects()
-  return ps.get_project_idName()
-
-def load_projects():
-  ps = load_backuped_projects()
-  if ps.get_projects_size() < 1:
-    ps = backup_projects_from_Fulcrum()
-  return ps
 
 def load_backuped_projects():
   ps = Projects()
@@ -114,6 +118,12 @@ def load_backuped_projects():
     if 'id' in projectJson:
       project = create_project_from_json(projectJson)
       ps.add_project(project)
+  return ps
+
+def load_projects():
+  ps = load_backuped_projects()
+  if ps.get_projects_size() < 1:
+    ps = backup_projects_from_Fulcrum()
   return ps
 
 #

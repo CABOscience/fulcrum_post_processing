@@ -3,6 +3,8 @@
 # Local Modules
 import projects as PR
 import parameters as PA
+import records as RE
+import forms as FO
 import tools as TO
 import logs as LO
 
@@ -15,17 +17,20 @@ import sys
 # OBJECTS
 ##############################################
 
-class Plants(object):
+class Plants(RE.Records):
   """ Plants object
   Plants object is containing a list of Plant Object
-  """
   def add_record(self,Plant):
     self.records.append(Plant)
-    self.recordsDict[Plant.ID]=Plant
+    self.recordsDict[Plant.id]=Plant
 
-class Plant(object):
+  def __len__(self):
+    return len(self.records)
+  """
+
+class Plant(RE.Record):
   def __init__(self, record):
-    super(Plant,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(Plant,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_altitude = ''
     self.fv_approved_by = ''
     self.fv_bryoquel_taxon = ''
@@ -101,10 +106,12 @@ class Plant(object):
     self.fv_verification = ''
     self.fv_verified_by = ''
     self.fv_vertical_accuracy = ''
+  
+  def __str__(self):
+    return super(Plant, self).__str__()+'\n\n>fv_scientific_name {}'.format(self.fv_scientific_name)
 
-
-def extract_spectroscopyPanel_record(record):
-  """ This will extract a spectroscopy panel record data from a record "form values"
+def extract_plant_record(record):
+  """ This will extract a plant panel record data from a record "form values"
   
   :param arg1: a SpectroscopyPanel to be tested
   :type arg1: SpectroscopyPanel
@@ -112,10 +119,8 @@ def extract_spectroscopyPanel_record(record):
   :return: an updated record if it is validated or the record
   :rtype: SpectroscopyPanel
   """
-  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_info('Start extract leaf plant record id {}'.format(record.id))
   rv  = record.form_values
-
-
   if 'date_first_observed' in rv \
     and 'date_identified' in rv \
     and 'first_observed_by' in rv \
@@ -204,7 +209,7 @@ def extract_spectroscopyPanel_record(record):
     if 'verification' in rv: record.fv_verification = rv['verification']
     if 'verified_by' in rv: record.fv_verified_by = rv['verified_by']
     if 'vertical_accuracy' in rv: record.fv_vertical_accuracy = rv['vertical_accuracy']
-
+    
   else:
     tab = ['date_first_observed', 'date_identified', 'first_observed_by', 'identification_protocol', 'identified_by', 'site', 'taxon_checklist']
     s = ""
@@ -213,6 +218,88 @@ def extract_spectroscopyPanel_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
     record.isValid = False
-    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    sPnoR = 'Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s)
+    LO.l_war(sPnoR)
+    record.add_toLog(sPnoR)
+
+
+##############################################
+# Get From Plants
+##############################################
+
+def get_scientific_name_with_plant_id(plantID):
+  pls = load_plants()
+  return get_scientific_name_with_plant_id_from_plants(plantID,pls)
+
+def get_scientific_name_with_plant_id_from_plants(plantID,pls):
+  if len(pls)>0 and plantID in pls.recordsDict:
+    return pls.recordsDict[plantID].fv_scientific_name
+  LO.l_war("No Scientific name associated with {}".format(plantID))
+  return ''
+
+def get_plant_with_plant_id_from_plants(plantID,pls=[]):
+  if isinstance(pls,Plants):
+    if len(pls)>0 and plantID in pls.recordsDict:
+      return pls.recordsDict[plantID]
+  elif len(pls)<1:
+    return get_plant_with_plant_id_from_plants(plantID,load_plants())
+  LO.l_war("No plant associated with {}".format(plantID))
+  return ''
+
+##############################################
+# Get Plants
+##############################################
+
+def get_plants_from_records(recs):
+  plants = Plants()
+  for plant_raw in recs.records:
+    plant = Plant(plant_raw)
+    extract_plant_record(plant)
+    if plant.isValid:
+      plants.add_record(plant)
+      st = 'The plant record id {} is complete for processing'.format(plant.id)
+      LO.l_debug(st)
+      plant.add_toLog(st)
+    else:
+      st = 'The plant record id {} is incomplete and will not be used'.format(plant.id)
+      LO.l_war(st)
+      plant.add_toLog(st)
+  return plants
+  
+##############################################
+# LOAD SOURCES
+##############################################
+
+# Load Plants from Plants Records File
+def load_plants_from_json_file():
+  if TO.file_is_here(PA.PlantsRecordsFile):
+    records = RE.load_records_from_json(PA.PlantsRecordsFile)
+    return get_plants_from_records(records)
+  else:
+    LO.l_err('The file {} is not available. A default empty Plants will be loaded'.format(PA.PlantsRecordsFile))
+    return Plants()
+
+# Load Plants from fulcrum
+def load_plants_from_fulcrum():
+  RE.backup_records_from_forms()
+  return load_plants_from_json_file()
+
+# Load from Plants form
+def load_plants_from_plants_form():
+  if TO.file_is_here(PA.PlantsFormFile):
+    plants_form = FO.load_form_from_json_file(PA.PlantsFormFile)
+    recs = RE.load_records_from_fulcrum(plants_form)
+    return get_plants_from_records(recs)
+  else:
+    LO.l_err('The file {} is not available. A default empty Plants will be loaded'.format(PA.PlantsRecordsFile))
+    return Plants()
+
+# Load Plants
+def load_plants():
+  pls = load_plants_from_json_file()
+  if len(pls) < 1:
+    pls = load_plants_from_plants_form()
+  if len(pls) < 1:
+    pls = load_plants_from_fulcrum()
+  return pls

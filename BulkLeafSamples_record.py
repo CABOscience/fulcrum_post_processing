@@ -38,7 +38,7 @@ class BulkLeaveSample(RE.Record):
   Leaf spectra object is a Records + its form values
   """
   def __init__(self, record):
-    super(BulkLeaveSample,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(BulkLeaveSample,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_approbation = ''
     self.fv_approved_by = ''
     self.fv_data_quality_control = ''
@@ -115,19 +115,19 @@ def load_bulkleafsample_webhook_Records(calibrations,projects):
   spectrum = LeafSpectrum()
   for record_raw in webhookRecords.records[:]:
     if leafSpectraFormID not in record.form_id:
-      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.ID))
+      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id))
     else:
       record = LeafSpectra(record_raw)
-      LO.l_info('Start update record {} with measurments'.format(record.ID))
+      LO.l_info('Start update record {} with measurments'.format(record.id))
       if extract_leafspectra_record(record):
-        LO.l_info('Start update record {} with calibration and date {}'.format(record.ID,record.fv_date_measured))
+        LO.l_info('Start update record {} with calibration and date {}'.format(record.id,record.fv_date_measured))
         if link_leafspectra_record_and_calibration(calibrations,record):
-          LO.l_war('The record {} is complete for processing'.format(record.ID))
+          LO.l_war('The record {} is complete for processing'.format(record.id))
           spectrum.add_record(record)
         else:
-          LO.l_war('The record {} will not be used'.format(record.ID))
+          LO.l_war('The record {} will not be used'.format(record.id))
       else:
-        LO.l_war('The record {} will not be used'.format(record.ID))
+        LO.l_war('The record {} will not be used'.format(record.id))
   return spectrum
 
 def load_bulkleafsample_Records(calibrations,projects):
@@ -191,11 +191,11 @@ def add_Record_in_BulkLeafSamples(calibrations,record_raw):
   record = LeafSpectra(record_raw)
   validate_leafspectra_record(calibrations,record)
   if record.isValid:
-    LO.l_info('The record id {} is complete for processing'.format(record.ID))
-    record.add_toLog('The record id {} is complete for processing'.format(record.ID))
+    LO.l_info('The record id {} is complete for processing'.format(record.id))
+    record.add_toLog('The record id {} is complete for processing'.format(record.id))
   else:
-    LO.l_war('The record id {} is incomplete and will not be used'.format(record.ID))
-    record.add_toLog('The record id {} is incomplete and will not be used'.format(record.ID))
+    LO.l_war('The record id {} is incomplete and will not be used'.format(record.id))
+    record.add_toLog('The record id {} is incomplete and will not be used'.format(record.id))
   return record
 
 ##
@@ -226,7 +226,7 @@ def extract_bulkLeafSamples_record(record):
   :return: True if is a valid record False if it's not a LeafSpectra record
   :rtype: boolean (True,False)
   """
-  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_info('Start extract leaf spectra recordid {}'.format(record.id))
   rv  = record.form_values
   if 'date_sampled' in rv \
     and ('plant' in rv or 'plant2' in rv) \
@@ -286,7 +286,7 @@ def extract_bulkLeafSamples_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
     record.isValid = False
-    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
 

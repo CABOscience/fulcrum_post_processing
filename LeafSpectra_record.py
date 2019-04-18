@@ -32,14 +32,14 @@ class LeafSpectrum(RE.Records):
   """
   def add_record(self,LeafSpectra):
     self.records.append(LeafSpectra)
-    self.recordsDict[LeafSpectra.ID]=LeafSpectra
+    self.recordsDict[LeafSpectra.id]=LeafSpectra
 
 class LeafSpectra(RE.Record):
   """ Leaf spectra object
   Leaf spectra object is a Records + its form values
   """
   def __init__(self, record, bfn='',dm='',ii='',lltp='',lsm='',manu='',mb='',measurements=[],paID='',pdir='',pm='',sai='',sn='',spi='',stt='',wf=''):
-    super(LeafSpectra,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(LeafSpectra,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_base_file_name = bfn
     self.fv_calibration = SPC.SpectroscopyPanels_calibration()
     self.fv_date_measured = dm
@@ -95,12 +95,12 @@ class LeafSpectra(RE.Record):
     self.fv_date_published = ''
     
   def to_csv(self):
-    #return super(LeafSpectra, self).to_csv()+[self.ID, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id, self.fv_leaf_side_measured]
-    return [self.ID, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id, self.fv_leaf_side_measured]
+    #return super(LeafSpectra, self).to_csv()+[self.id, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id, self.fv_leaf_side_measured]
+    return [self.id, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id, self.fv_leaf_side_measured]
 
   def to_info(self):
-    #return super(LeafSpectra, self).to_info()+[self.ID,self.fv_sample_id,self.fv_scientific_name,self.fv_date_measured,self.fv_measured_by]
-    return [self.ID,self.fv_sample_id,self.fv_scientific_name,self.fv_date_measured,self.fv_measured_by]
+    #return super(LeafSpectra, self).to_info()+[self.id,self.fv_sample_id,self.fv_scientific_name,self.fv_date_measured,self.fv_measured_by]
+    return [self.id,self.fv_sample_id,self.fv_scientific_name,self.fv_date_measured,self.fv_measured_by]
 
   def whoami(self):
     return type(self).__name__
@@ -127,19 +127,19 @@ def load_leafspectra_webhook_Records(calibrations):
   spectrum = LeafSpectrum()
   for record_raw in webhookRecords.records[:]:
     if leafSpectraFormID not in record.form_id:
-      LO.l_debug('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.ID))
+      LO.l_debug('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id))
     else:
       record = LeafSpectra(record_raw)
-      LO.l_debug('Start update record {} with measurments'.format(record.ID))
+      LO.l_debug('Start update record {} with measurments'.format(record.id))
       if extract_leafspectra_record(record):
-        LO.l_debug('Start update record {} with calibration and date {}'.format(record.ID,record.fv_date_measured))
+        LO.l_debug('Start update record {} with calibration and date {}'.format(record.id,record.fv_date_measured))
         if link_leafspectra_record_and_calibration(calibrations,record):
-          LO.l_debug('The record {} is complete for processing'.format(record.ID))
+          LO.l_debug('The record {} is complete for processing'.format(record.id))
           spectrum.add_record(record)
         else:
-          LO.l_war('The record {} will not be used'.format(record.ID))
+          LO.l_war('The record {} will not be used'.format(record.id))
       else:
-        LO.l_war('The record {} will not be used'.format(record.ID))
+        LO.l_war('The record {} will not be used'.format(record.id))
   return spectrum
 
 def load_leafspectra_Records(calibrations):
@@ -212,11 +212,11 @@ def add_Record_in_spectrum(calibrations,record_raw):
   record = LeafSpectra(record_raw)
   validate_leafspectra_record(calibrations,record)
   if record.isValid:
-    LO.l_debug('The record id {} is complete for processing'.format(record.ID))
-    record.add_toLog('The record id {} is complete for processing'.format(record.ID))
+    LO.l_debug('The record id {} is complete for processing'.format(record.id))
+    record.add_toLog('The record id {} is complete for processing'.format(record.id))
   else:
-    LO.l_war('The record id {} is incomplete and will not be used'.format(record.ID))
-    record.add_toLog('The record id {} is incomplete and will not be used'.format(record.ID))
+    LO.l_war('The record id {} is incomplete and will not be used'.format(record.id))
+    record.add_toLog('The record id {} is incomplete and will not be used'.format(record.id))
   return record
 
 ##
@@ -244,7 +244,7 @@ def extract_leafspectra_record(record):
   :param arg1: a LeafSpectra to be tested
   :type arg1: LeafSpectra
   """
-  LO.l_debug('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_debug('Start extract leaf spectra recordid {}'.format(record.id))
   rv  = record.form_values
   if 'base_file_name' in rv \
     and 'working_folder' in rv \
@@ -302,8 +302,8 @@ def extract_leafspectra_record(record):
           s+=', '
         s += t
     record.isValid = False
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
-    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
+    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
 
 ###
 def link_leafspectra_record_and_calibration(calibrations,record):
@@ -318,7 +318,7 @@ def link_leafspectra_record_and_calibration(calibrations,record):
   :return: True if a calibration has been found, false if the calibration has not been found
   :rtype: boolean (True/False)
   """
-  rID     = record.ID
+  rID     = record.id
   panel_id= record.fv_panel_id
   temp    = record.fv_date_measured
   calibs  = calibrations.calibrations
@@ -346,14 +346,14 @@ def validate_leafspectra_record_measurements(record):
   """
   # from record object
   pname = record.project_name
-  rid   = record.ID
+  rid   = record.id
   # from leaf spectra object
   ext  = record.fv_extFile
   measurements=record.fv_measurements
   wf    = record.fv_working_folder
   
   measurmentsDone = True
-  LO.l_debug('Start validate record {} measurments'.format(record.ID))
+  LO.l_debug('Start validate record {} measurments'.format(record.id))
   for measurement in measurements:
     fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''+ext
     measurement.file_path = fName
@@ -395,7 +395,7 @@ def update_leafspectra_record_measurements(record):
   if record.isValid:
     # from record object
     pname = record.project_name
-    rid   = record.ID
+    rid   = record.id
     # from leaf spectra object
     ext         = record.fv_extFile
     measurements=record.fv_measurements
@@ -452,10 +452,10 @@ def process_leafspectra_record(record):
   This function take a leafspectra record object and return a processed leafspectra record processed object
   """
   if record.isValid:
-    LO.l_info('Start prepare spectrum data for record {}'.format(record.ID))
+    LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
     boo = calculate_leafspectra_record(record)
     if boo:
-      LO.l_info('Start prepare csv files for record {}'.format(record.ID))
+      LO.l_info('Start prepare csv files for record {}'.format(record.id))
       leafspectra_record_to_csv(record)
   return record
 
@@ -464,14 +464,14 @@ def process_leafspectra_record(record):
 def calculate_leafspectra_record(record):
   # Check the Protocol choosed
   if record.fv_manufacturer_short_name_sphere == 'SVC':
-    LO.l_debug("Start SVC spectrum data for record {}".format(record.ID))
+    LO.l_debug("Start SVC spectrum data for record {}".format(record.id))
     if record.fv_leaf_larger_than_port == 'yes':
       LO.l_debug('large leaf')
       return large_leaf_calculation(record)
     elif record.fv_leaf_larger_than_port == 'no':
       LO.l_debug('small leaf')
       return small_leaf_calculation(record)
-  LO.l_war("No known manufacturer short name sphere for record {}".format(record.ID))
+  LO.l_war("No known manufacturer short name sphere for record {}".format(record.id))
   return False
 
   ## Spectrum Calculations
@@ -508,7 +508,7 @@ def large_leaf_calculation(record):
         if wvLO.l_min > wvlMin:
           wvlMin = wvLO.l_min
       else:
-        LO.l_war("the record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.ID))
+        LO.l_war("the record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.id))
     if 'B:' in measurement.sphere_configuration_svc_large_leaves:
       reflStrays.append(measurement) #B: No leaf
     if 'C:' in measurement.sphere_configuration_svc_large_leaves:
@@ -573,17 +573,17 @@ def large_leaf_calculation(record):
       distA0A1 = reflRefs[1].spectre.measurement.div(reflRefs[0].spectre.measurement)
       record.fv_reflecDiffRef = distA0A1
     else:
-      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.ID))
+      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.id))
     # Calculation of (B0/A0):
     distB0A1 = pd.Series()
     if len(reflStrays) > 0 and len(reflRefs) > 0 :
       distB0A1 = reflStrays[0].spectre.measurement.div(reflRefs[0].spectre.measurement)
       record.fv_reflecRef = distB0A1
     else:
-      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.ID))
+      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the reflectance calculation.".format(record.ID))
+    LO.l_err("the record {} doesn't all spectrum measurments to process the reflectance calculation.".format(record.id))
   
   # Transmittance
   # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=68
@@ -613,10 +613,10 @@ def large_leaf_calculation(record):
       distD0D1 = transRefAll[1].spectre.measurement.div(transRefAll[0].spectre.measurement)
       record.fv_transDiffRef    = distD0D1
     else:
-      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.ID))
+      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.ID))
+    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.id))
   return boo
 
     ### Small Leaf calculation
@@ -756,17 +756,17 @@ def small_leaf_calculation(record):
       distA0A1 = RrefA[1].spectre.measurement.div(RrefA[0].spectre.measurement)
       record.fv_reflecDiffRef = distA0A1
     else:
-      LO.l_war("the record {} have just one reference measurments to process the reference of refletance calculation.".format(record.ID))
+      LO.l_war("the record {} have just one reference measurments to process the reference of refletance calculation.".format(record.id))
     # Calculation of (D0 / A0 => put in reference !):
     if len(RrefA)>0 and len(Rstr)>0:
       distD0A0 = Rstr[0].spectre.measurement.div(RrefA[0].spectre.measurement)
       record.fv_reflecRef = distD0A0
     else:
-      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.ID))
+      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.id))
     
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the refletance calculation.".format(record.ID))
+    LO.l_err("the record {} doesn't all spectrum measurments to process the refletance calculation.".format(record.id))
         
   # Transmittance
   # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-q56dy9e?step=118
@@ -811,10 +811,10 @@ def small_leaf_calculation(record):
       distH0H1 = TrefA[1].spectre.measurement.div(TrefA[0].spectre.measurement)
       record.fv_transDiffRef = distH0H1
     else:
-      LO.l_war("the record {} have just one reference measurments to process  the reference of transmittance calculation.".format(record.ID))
+      LO.l_war("the record {} have just one reference measurments to process  the reference of transmittance calculation.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.ID))
+    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.id))
   return boo
 
 ##############################################
@@ -850,27 +850,27 @@ def leafspectra_record_to_csv_values(record):
       df = from_series_to_dataframe(reflectance)
       for index, row in df.iterrows():
         dft = from_series_to_dataframe(measurement.spectre.measurement)
-        l.append([record.ID,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance",row[0],dft.iloc[index][1],row[1]])
+        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance",row[0],dft.iloc[index][1],row[1]])
     transmittance = measurement.transmittance
     if not transmittance.empty:
       df = from_series_to_dataframe(transmittance)
       for index, row in df.iterrows():
         dft = from_series_to_dataframe(measurement.spectre.measurement)
-        l.append([record.ID,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance",row[0],dft.iloc[index][1],row[1]])
+        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance",row[0],dft.iloc[index][1],row[1]])
   r = []
   r.append(["record_id","sample_id","propertie","wavelength","relative_value"])
   if not record.fv_reflecRef.empty:
     df = from_series_to_dataframe(record.fv_reflecRef)
     for index, row in df.iterrows():
-      r.append([record.ID,record.fv_sample_id,'stray_light_vs_reference',row[0],row[1]])
+      r.append([record.id,record.fv_sample_id,'stray_light_vs_reference',row[0],row[1]])
   if not record.fv_reflecDiffRef.empty:
     df = from_series_to_dataframe(record.fv_reflecDiffRef)
     for index, row in df.iterrows():
-      r.append([record.ID,record.fv_sample_id,'reflectance_reference',row[0],row[1]])
+      r.append([record.id,record.fv_sample_id,'reflectance_reference',row[0],row[1]])
   if not record.fv_transDiffRef.empty:
     df = from_series_to_dataframe(record.fv_transDiffRef)
     for index, row in df.iterrows():
-      r.append([record.ID,record.fv_sample_id,'transmittance_reference',row[0],row[1]])
+      r.append([record.id,record.fv_sample_id,'transmittance_reference',row[0],row[1]])
   return c,l,r
 
 

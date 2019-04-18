@@ -15,17 +15,14 @@ import sys
 # OBJECTS
 ##############################################
 
-class Subplots(object):
+class Subplots(RE.Records):
   """ Subplots object
   Plots object is containing a list of Plots Object
   """
-  def add_record(self,Subplot):
-    self.records.append(Subplot)
-    self.recordsDict[Subplot.ID]=Subplot
 
-class Subplot(object):
+class Subplot(RE.Record):
   def __init__(self, record):
-    super(Subplot,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(Subplot,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_altitude = ''
     self.fv_approbation = ''
     self.fv_approved_by = ''
@@ -117,7 +114,7 @@ def extract_spectroscopyPanel_record(record):
   :return: an updated record if it is validated or the record
   :rtype: SpectroscopyPanel
   """
-  LO.l_info('Start extract leaf spectra recordid {}'.format(record.ID))
+  LO.l_info('Start extract leaf spectra recordid {}'.format(record.id))
   rv  = record.form_values
 
   if 'date_first_established' in rv \
@@ -213,6 +210,6 @@ def extract_spectroscopyPanel_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
     record.isValid = False
-    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
+    record.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))

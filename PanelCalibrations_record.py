@@ -36,7 +36,7 @@ class PanelCalibrations(object):
 
 class PanelCalibration(object):
   def __init__(self, record, bfn='',dm='',ii='',lltp='',lsm='',manu='',mb='',measurements='',paID='',pdir='',pm='',sai='',sn='',spi='',stt='',wf=''):
-    super(PanelCalibration,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(PanelCalibration,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_approved_by = appby
     self.fv_base_file_name = bfn #
     self.fv_branch_number = bran
@@ -102,13 +102,13 @@ class PanelCalibration(object):
     self.fv_processedPath = PA.ProjectWebsitePath+self.fv_serial_number+'/spectra/processed/'+self.working_folder+'/'+self.sample_id
   
   def __str__(self):
-    return '>{} - {}'.format(self.ID, self.form_id)
+    return '>{} - {}'.format(self.id, self.form_id)
 
   def to_csv(self):
-    return [self.ID, self.sample_id, self.scientific_name, self.date_measured, self.measured_by, self.spectroradiometer_start_time, self.spectroradiometer_id, self.instrumentation_id, self.leaf_side_measured]
+    return [self.id, self.sample_id, self.scientific_name, self.date_measured, self.measured_by, self.spectroradiometer_start_time, self.spectroradiometer_id, self.instrumentation_id, self.leaf_side_measured]
 
   def to_info(self):
-    return [self.ID,self.sample_id,self.scientific_name,self.date_measured,self.measured_by]
+    return [self.id,self.sample_id,self.scientific_name,self.date_measured,self.measured_by]
 
   def whoami(self):
     return type(self).__name__
@@ -125,19 +125,19 @@ def load_panelcalibrations_webhook_Records(calibrations,projects):
   spectrum = LeafSpectrum()
   for record_raw in webhookRecords.records[:]:
     if leafSpectraFormID not in record.form_id:
-      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.ID))
+      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id))
     else:
       record = LeafSpectra(record_raw)
-      LO.l_info('Start update record {} with measurments'.format(record.ID))
+      LO.l_info('Start update record {} with measurments'.format(record.id))
       if extract_leafspectra_record(record):
-        LO.l_info('Start update record {} with calibration and date {}'.format(record.ID,record.date_measured))
+        LO.l_info('Start update record {} with calibration and date {}'.format(record.id,record.date_measured))
         if link_leafspectra_record_and_calibration(calibrations,record):
-          LO.l_war('The record {} is complete for processing'.format(record.ID))
+          LO.l_war('The record {} is complete for processing'.format(record.id))
           spectrum.add_record(record)
         else:
-          LO.l_war('The record {} will not be used'.format(record_raw.ID))
+          LO.l_war('The record {} will not be used'.format(record_raw.id))
       else:
-        LO.l_war('The record {} will not be used'.format(record_raw.ID))
+        LO.l_war('The record {} will not be used'.format(record_raw.id))
   return spectrum
 
 
@@ -180,10 +180,10 @@ def add_Record_in_spectrum_wrapper(tab):
 def add_Record_in_PanelCalibrations(calibrations,record_raw):
   record = LeafSpectra(record_raw)
   if validate_leafspectra_record(calibrations,record):
-    #LO.l_info('The record id {} is complete for processing'.format(record.ID))
+    #LO.l_info('The record.id {} is complete for processing'.format(record.id))
     return record
   #else:
-  #  LO.l_war('The record id {} is incomplete and will not be used'.format(record.ID))
+  #  LO.l_war('The record.id {} is incomplete and will not be used'.format(record.id))
 
 def validate_panel_calibrations_record(calibrations,record):
   boo = True
@@ -196,8 +196,7 @@ def validate_panel_calibrations_record(calibrations,record):
   return boo
 
 def extract_panel_calibrations_record(record):
-  LO.l_info('Start extract panel calibration recordid {}'.format(record.ID))
-  LO.l_info('Start extract panel calibration recordid {}'.format(record.ID))
+  LO.l_info('Start extract panel calibration recordid {}'.format(record.id))
   rv  = record.form_values
 
   if 'base_file_name' in rv \
@@ -273,7 +272,7 @@ def extract_panel_calibrations_record(record):
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.ID,s))
+    LO.l_war('Project {}, the record.id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
     return False
 
 # validate the record link measurments
@@ -281,11 +280,11 @@ def validate_panel_calibrations_record_measurements(record_raw):
   manu= record_raw.manufacturer_short_name_sphere
   measurements=record_raw.measurements
   pname = record_raw.project_name
-  rid = record_raw.ID
+  rid = record_raw.id
   wf = record_raw.working_folder
   
   measurmentsDone = True
-  #LO.l_info('Start validate record {} measurments'.format(record.ID))
+  #LO.l_info('Start validate record {} measurments'.format(record.id))
   for measurement in measurements:
     measureType = ""
     fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''
@@ -298,7 +297,7 @@ def validate_panel_calibrations_record_measurements(record_raw):
     if not TO.file_is_here(fName):
       measurmentsDone = False
   if not measurmentsDone:
-    LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
+    LO.l_war("The record.id {} will not be used because it has not all its spectre available.".format(rid))
   return measurmentsDone
 
 # link metadata and data extracted from files
@@ -306,7 +305,7 @@ def update_leafspectra_record_measurements(record_raw):
   manu= record_raw.manufacturer_short_name_sphere
   measurements=record_raw.measurements
   pname = record_raw.project_name
-  rid = record_raw.ID
+  rid = record_raw.id
   wf = record_raw.working_folder
   measurmentsDone = True
   for measurement in measurements:
@@ -331,7 +330,7 @@ def update_leafspectra_record_measurements(record_raw):
         s += '{}'.format(measurement.spectre.measurement)
       TO.string_to_file(spectreProcessed,'{}'.format(s))
     else:
-      LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
+      LO.l_war("The record.id {} will not be used because it has not all its spectre available.".format(rid))
       measurmentsDone = False
   if measurmentsDone:
     return record_raw
@@ -379,10 +378,10 @@ def process_panel_calibrations_records(rec):
       wraps.append(b)
   
 def process_record(record):
-  LO.l_info('Start prepare spectrum data for record {}'.format(record.ID))
+  LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
   boo = calculate_leafspectra_record(record)
   if boo:
-    LO.l_info('Start prepare csv files for record {}'.format(record.ID))
+    LO.l_info('Start prepare csv files for record {}'.format(record.id))
     leafspectra_record_to_csv(record)
   '''
   # parallelisation here
@@ -390,14 +389,14 @@ def process_record(record):
   for record in rec.records[:]:
     #print '{}'.format(record.project_name)
     #if 'SWA-Warren' in record.project_name:
-    #if 'a44016be-14a1-4b1a-8c56-c92086273442' in record.ID:
-    if '1ae1a8af-5abf-414d-bd48-8f97f09709f4' in record.ID:
-      LO.l_info('Start prepare spectrum data for record {}'.format(record.ID))
+    #if 'a44016be-14a1-4b1a-8c56-c92086273442' in record.id:
+    if '1ae1a8af-5abf-414d-bd48-8f97f09709f4' in record.id:
+      LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
       boo = calculate_leafspectra_record(record)
       print boo
       sys.exit(1)
       if boo:
-        LO.l_info('Start prepare csv files for record {}'.format(record.ID))
+        LO.l_info('Start prepare csv files for record {}'.format(record.id))
         leafspectra_record_to_csv(record)
   '''
 
@@ -433,7 +432,7 @@ def panel_calibration_calculation(record):
         if wvLO.l_min > wvlMin:
           wvlMin = wvLO.l_min
       else:
-        LO.l_war("the record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.ID))
+        LO.l_war("the record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.id))
     if 'B:' in measurement.sphere_configuration_svc_large_leaves:
       reflStrays.append(measurement) #B: No leaf
     if 'C:' in measurement.sphere_configuration_svc_large_leaves:
@@ -498,17 +497,17 @@ def panel_calibration_calculation(record):
       distA0A1 = reflRefs[1].spectre.measurement.div(reflRefs[0].spectre.measurement)
       record.reflecDiffRef = distA0A1
     else:
-      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.ID))
+      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.id))
     # Calculation of (B0/A0):
     distB0A1 = pd.Series()
     if len(reflStrays) > 0 and len(reflRefs) > 0 :
       distB0A1 = reflStrays[0].spectre.measurement.div(reflRefs[0].spectre.measurement)
       record.reflecRef = distB0A1
     else:
-      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.ID))
+      LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the reflectance calculation.".format(record.ID))
+    LO.l_err("the record {} doesn't all spectrum measurments to process the reflectance calculation.".format(record.id))
   
   # Transmittance
   # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=68
@@ -538,9 +537,9 @@ def panel_calibration_calculation(record):
       distD0D1 = transRefAll[1].spectre.measurement.div(transRefAll[0].spectre.measurement)
       record.transDiffRef    = distD0D1
     else:
-      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.ID))
+      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.ID))
+    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.id))
   return boo
 

@@ -21,13 +21,10 @@ class SpectroscopyPanels(RE.Records):
   """ SpectroscopyPanels object
   SpectroscopyPanels object is containing a list of SpectroscopyPanel Object
   """
-  def add_record(self,SpectroscopyPanel):
-    self.records.append(SpectroscopyPanel)
-    self.recordsDict[SpectroscopyPanel.ID]=SpectroscopyPanel
 
 class SpectroscopyPanel(RE.Record):
   def __init__(self, record):
-    super(SpectroscopyPanel,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.ID, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    super(SpectroscopyPanel,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_calibrated_by = ""
     self.fv_calibrated_reflectance = ""
     self.fv_calibration_date = ""
@@ -78,7 +75,7 @@ class SpectroscopyPanel(RE.Record):
     :return: an updated record if it is validated or the record
     :rtype: SpectroscopyPanel
     """
-    LO.l_info('Start extract spectroscopy panel recordid {}'.format(self.ID))
+    LO.l_info('Start extract spectroscopy panel recordid {}'.format(self.id))
     rv  = self.form_values
     if 'serial_number' in rv \
       and 'name_of_contact_person' in rv \
@@ -130,9 +127,9 @@ class SpectroscopyPanel(RE.Record):
           if s:
             s+=', '
           s += t
-      LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(self.project_name,self.ID,s))
+      LO.l_war('Project {}, the record id {} will not be used because it has no {}.'.format(self.project_name,self.id,s))
       self.isValid = False
-      self.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(self.project_name,self.ID,s))
+      self.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(self.project_name,self.id,s))
 
   def update_record_with_calibrations(self,):
     if self.fv_calibrations:
@@ -162,7 +159,7 @@ def load_spectroscopypanels_webhook_Records():
   webhookRecords = RE.load_webhook_records(projects)
   for record_raw in webhookRecords.records[:]:
     if spectroPanelsFormID not in record.form_id:
-      LO.l_info('The record {} will not be used because it is not a Spectroscopy Panels record'.format(record_raw.ID))
+      LO.l_info('The record {} will not be used because it is not a Spectroscopy Panels record'.format(record_raw.id))
     else:
       record = SpectroscopyPanel(record_raw)
       record.extract_spectroscopyPanel_record()

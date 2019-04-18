@@ -289,7 +289,7 @@ def get_photo_meta_file_name(bName,photoID):
 
 def backup_photos_from_records(form,recs):
   formName = form.name_cleaned
-  bName = TO.get_FormsPath()+"/"+formName
+  bName = TO.get_FormsPath()+""+formName
   photosID = []
   LO.l_info('Start searching photos for the form "{}" with {} records'.format(formName,form.record_count))
   for record in recs.records:

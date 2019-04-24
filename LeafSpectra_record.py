@@ -30,9 +30,6 @@ class LeafSpectrum(RE.Records):
   """ Leaf spectrum object
   Leaf spectrum object is containing a list of LeafSpectra Object
   """
-  def add_record(self,LeafSpectra):
-    self.records.append(LeafSpectra)
-    self.recordsDict[LeafSpectra.id]=LeafSpectra
 
 class LeafSpectra(RE.Record):
   """ Leaf spectra object

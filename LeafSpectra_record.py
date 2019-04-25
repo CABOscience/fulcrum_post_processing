@@ -364,13 +364,13 @@ def validate_leafspectra_record_measurements(record):
 #########################
 # Record measurments updated
 #########################
-def update_leafspectra_records_measurements(my_records):
+def update_leafspectra_records_measurements(records_raw):
   """
   This parallelisation of update_leafspectra_record_measurements
   """
   my_list = []
   pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(update_leafspectra_record_measurements, args=(record_raw,)) for record_raw in my_records[:]]
+  results = [pool.apply_async(update_leafspectra_record_measurements, args=(record_raw,)) for record_raw in records_raw[:]]
   pool.close()
   pool.join()
   for r in results:

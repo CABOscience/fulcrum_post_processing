@@ -50,6 +50,7 @@ LeafSpectraRecordsFile = DefaultPath
 LimitExceededStr  = 'because you have exceeded the number of request.'
 NotFoundStr       = 'because it was not found.'
 NumberOfProcesses = 1
+PanelCalibPath = DefaultPath
 PanelCalibrationLogFile = DefaultPath
 PanelCalibrationsFormFile = DefaultPath
 PanelCalibrationsRecordsFile = DefaultPath
@@ -114,6 +115,7 @@ def set_global_from_config(c):
     global LimitExceededStr
     global NotFoundStr
     global NumberOfProcesses
+    global PanelCalibPath
     global PanelCalibrationLogFile
     global PanelCalibrationsFormFile
     global PanelCalibrationsRecordsFile
@@ -156,6 +158,7 @@ def set_global_from_config(c):
     if c.get('DEFAULT','LimitExceededStr'): LimitExceededStr = c.get('DEFAULT','LimitExceededStr')
     if c.get('DEFAULT','NotFoundStr'): NotFoundStr = c.get('DEFAULT','NotFoundStr')
     if c.get('DEFAULT','NumberOfProcesses'): NumberOfProcesses = int(c.get('DEFAULT','NumberOfProcesses'))
+    if c.get('DEFAULT','PanelCalibPath'): PanelCalibPath = c.get('DEFAULT','PanelCalibPath')
     if c.get('DEFAULT','PanelCalibrationLogFile'): PanelCalibrationLogFile = c.get('DEFAULT','PanelCalibrationLogFile')
     if c.get('DEFAULT','PanelCalibrationsFormFile'): PanelCalibrationsFormFile = c.get('DEFAULT','PanelCalibrationsFormFile')
     if c.get('DEFAULT','PanelCalibrationsRecordsFile'): PanelCalibrationsRecordsFile = c.get('DEFAULT','PanelCalibrationsRecordsFile')

@@ -6,7 +6,7 @@ import records as RE
 import tools as TO
 import logs as LO
 import SpectroscopyPanels_calibrations as SPC
-import LeafSpectra_measurements as LSP
+import PanelCalibrations_measurements as RPC
 
 # System
 import os, sys
@@ -26,69 +26,52 @@ np.set_printoptions(threshold='nan')
 # OBJECT
 #########################
 
-class PanelCalibrations(object):
-  def __init__(self):
-    self.records=[]
-    
-  def add_record(self,PanelCalibration):
-    self.records.append(PanelCalibration)
+class PanelCalibrations(RE.Records):
 
 
-class PanelCalibration(object):
-  def __init__(self, record, bfn='',dm='',ii='',lltp='',lsm='',manu='',mb='',measurements='',paID='',pdir='',pm='',sai='',sn='',spi='',stt='',wf=''):
-    super(PanelCalibration,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
-    self.fv_approved_by = appby
-    self.fv_base_file_name = bfn #
-    self.fv_branch_number = bran
-    self.fv_computer = com #
-    self.fv_computer_type = comt
-    self.fv_date_approved = dapp
-    self.fv_date_deleted = ddel
-    self.fv_date_measured = dmea #
-    self.fv_date_published = dpub
-    self.fv_date_rejected = drej
-    self.fv_date_submitted = dsub
-    self.fv_date_verified = dver
-    self.fv_deleted_by = delb
-    self.fv_event_remarks = ever
-    self.fv_file_name = fna
-    self.fv_file_name_value = fnav
-    self.fv_hidden_variables = hvar
-    self.fv_instrumentation_id = insi
-    self.fv_instrumentation_type = inst
-    self.fv_manufacturer_short_name = msn
-    self.fv_manufacturer_short_name_sphere = msns
-    self.fv_measured_by = meab #
-    self.fv_measurement_id = meai #
-    self.fv_measurement_remarks = mear
-    self.fv_measurements = mea
-    self.fv_number_of_measurements = nummea
-    self.fv_number_of_rejections = numrej
-    self.fv_panel_number = pnumber
-    self.fv_panel_photos = pphoto
-    self.fv_parent_directory = pardirec #
-    self.fv_primary_light_port = plp
-    self.fv_protocol_url = prou
-    self.fv_published_by = pubb
-    self.fv_reference_panel = refp #
-    self.fv_reference_panel_id = refpi
-    self.fv_reflectance_port = reflp
-    self.fv_rejected_by = rejb
-    self.fv_replicate_number = repn
-    self.fv_serial_number = serinum
-    self.fv_spectral_measurements_visibility = smv
-    self.fv_spectroradiometer_id = spei #
-    self.fv_spectroradiometer_start_time = spest #
-    self.fv_spectrum_number = spen
-    self.fv_sphere_configuration = sphc
-    self.fv_submitted_by = subb
-    self.fv_target_panel = tarp #
-    self.fv_target_panel_id = tarpi
-    self.fv_target_type = tart
-    self.fv_time_measured = timm #
-    self.fv_transmission_port = transp
-    self.fv_verified_by = verb
-    self.fv_working_folder = worf #
+class PanelCalibration(RE.Record):
+  def __init__(self, record):
+    super(PanelCalibration,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
+    self.fv_approved_by = '' 
+    self.fv_base_file_name = '' #
+    self.fv_computer = '' #
+    self.fv_computer_type = '' 
+    self.fv_date_approved = '' 
+    self.fv_date_deleted = '' 
+    self.fv_date_measured = '' #
+    self.fv_date_published = '' 
+    self.fv_date_rejected = '' 
+    self.fv_date_submitted = '' 
+    self.fv_date_verified = '' 
+    self.fv_deleted_by = '' 
+    self.fv_event_remarks = '' 
+    self.fv_hidden_variables = '' 
+    self.fv_instrumentation_id = '' 
+    self.fv_instrumentation_type = '' 
+    self.fv_manufacturer_short_name = '' 
+    self.fv_manufacturer_short_name_sphere = '' 
+    self.fv_measured_by = '' #
+    self.fv_measurements = '' 
+    self.fv_measurements_raw = '' 
+    self.fv_number_of_measurements = '' 
+    self.fv_number_of_rejections = '' 
+    self.fv_panel_photos = '' 
+    self.fv_parent_directory = '' #
+    self.fv_protocol_url = '' 
+    self.fv_published_by = '' 
+    self.fv_reference_panel = '' #
+    self.fv_reference_panel_id = '' 
+    self.fv_rejected_by = '' 
+    self.fv_serial_number = '' 
+    self.fv_spectral_measurements_visibility = '' 
+    self.fv_spectroradiometer_id = '' #
+    self.fv_spectroradiometer_start_time = '' #
+    self.fv_submitted_by = '' 
+    self.fv_target_panel = '' #
+    self.fv_target_panel_id = '' 
+    self.fv_time_measured = '' #
+    self.fv_verified_by = '' 
+    self.fv_working_folder = '' #
     self.fv_reflecAverage = pd.Series()
     self.fv_reflecDiffRef = pd.Series()
     self.fv_reflecLeaves  = {}
@@ -99,103 +82,19 @@ class PanelCalibration(object):
     self.fv_transLeafs    = {}
     self.fv_transStadDev  = pd.Series()
     # need to be check
-    self.fv_processedPath = PA.ProjectWebsitePath+self.fv_serial_number+'/spectra/processed/'+self.working_folder+'/'+self.sample_id
-  
-  def __str__(self):
-    return '>{} - {}'.format(self.id, self.form_id)
-
-  def to_csv(self):
-    return [self.id, self.sample_id, self.scientific_name, self.date_measured, self.measured_by, self.spectroradiometer_start_time, self.spectroradiometer_id, self.instrumentation_id, self.leaf_side_measured]
-
-  def to_info(self):
-    return [self.id,self.sample_id,self.scientific_name,self.date_measured,self.measured_by]
-
-  def whoami(self):
-    return type(self).__name__
-    
-
-
-##############################################
-# Extract Record
-##############################################
-def load_panelcalibrations_webhook_Records(calibrations,projects):
-  leafSpectraForm = TO.load_json_file(PA.LeafSpectraFormFile)
-  leafSpectraFormID = leafSpectraForm['id']
-  webhookRecords = RE.load_webhook_records(projects)
-  spectrum = LeafSpectrum()
-  for record_raw in webhookRecords.records[:]:
-    if leafSpectraFormID not in record.form_id:
-      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id))
-    else:
-      record = LeafSpectra(record_raw)
-      LO.l_info('Start update record {} with measurments'.format(record.id))
-      if extract_leafspectra_record(record):
-        LO.l_info('Start update record {} with calibration and date {}'.format(record.id,record.date_measured))
-        if link_leafspectra_record_and_calibration(calibrations,record):
-          LO.l_war('The record {} is complete for processing'.format(record.id))
-          spectrum.add_record(record)
-        else:
-          LO.l_war('The record {} will not be used'.format(record_raw.id))
-      else:
-        LO.l_war('The record {} will not be used'.format(record_raw.id))
-  return spectrum
-
-
-def load_panelcalibrations_Records(calibrations,projects):
-  spectrum = LeafSpectrum()
-  fileName = PA.LeafSpectraRecordsFile
-  rec = RE.load_records_from_json(fileName,projects)
-  # parallelisation here
-  output = mp.Queue()
-  wraps = []
-  pool = mp.Pool(processes=3)
-  results = [pool.apply_async(add_Record_in_spectrum, args=(calibrations,record_raw)) for record_raw in rec.records[:]]
-  pool.close()
-  pool.join()
-  for r in results:
-    b = r.get()
-    if b:
-      wraps.append(b)
-  
-  # parallelisation here
-  output2 = mp.Queue()
-  wraps2 = []
-  if len(wraps)>0:
-    pool2 = mp.Pool(processes=3)
-    results2 = [pool2.apply_async(update_leafspectra_record_measurements, args=(record_raw,)) for record_raw in wraps[:]]
-    pool2.close()
-    pool2.join()
-    for r2 in results2:
-      b2 = r2.get()
-      if b2:
-        wraps2.append(b2)
-    if len(wraps2)>0:
-      for wrap in wraps2[:]:
-        spectrum.add_record(wrap)
-  return spectrum
-
-def add_Record_in_spectrum_wrapper(tab):
-  return add_Record_in_spectrum(tab[0],tab[1],tab[2])
-    
-def add_Record_in_PanelCalibrations(calibrations,record_raw):
-  record = LeafSpectra(record_raw)
-  if validate_leafspectra_record(calibrations,record):
-    #LO.l_info('The record.id {} is complete for processing'.format(record.id))
-    return record
-  #else:
-  #  LO.l_war('The record.id {} is incomplete and will not be used'.format(record.id))
-
-def validate_panel_calibrations_record(calibrations,record):
-  boo = True
-  if not extract_leafspectra_record(record):
-    boo = False
-  if boo and not link_leafspectra_record_and_calibration(calibrations,record):
-    boo = False
-  if boo and not validate_leafspectra_record_measurements(record):
-    boo = False
-  return boo
+    self.fv_processedPath = "" # it will be: PA.PanelCalibPath+''+pname+'/'+wf+'/'
+    self.fv_extFile = ''
+    self.fv_measureType = ''
 
 def extract_panel_calibrations_record(record):
+  """ This will extract a plant panel record data from a record "form values"
+  
+  :param arg1: a SpectroscopyPanel to be tested
+  :type arg1: SpectroscopyPanel
+
+  :return: an updated record if it is validated or the record
+  :rtype: SpectroscopyPanel
+  """
   LO.l_info('Start extract panel calibration recordid {}'.format(record.id))
   rv  = record.form_values
 
@@ -203,7 +102,6 @@ def extract_panel_calibrations_record(record):
     and 'computer' in rv \
     and 'date_measured' in rv \
     and 'measured_by' in rv \
-    and 'measurement_id' in rv \
     and 'parent_directory' in rv \
     and 'reference_panel' in rv \
     and 'spectroradiometer_id' in rv \
@@ -214,7 +112,6 @@ def extract_panel_calibrations_record(record):
 
     if 'approved_by' in rv: record.fv_approved_by = rv['approved_by']
     if 'base_file_name' in rv: record.fv_base_file_name = rv['base_file_name']
-    if 'branch_number' in rv: record.fv_branch_number = rv['branch_number']
     if 'computer' in rv: record.fv_computer = rv['computer']
     if 'computer_type' in rv: record.fv_computer_type = rv['computer_type']
     if 'date_approved' in rv: record.fv_date_approved = rv['date_approved']
@@ -226,139 +123,203 @@ def extract_panel_calibrations_record(record):
     if 'date_verified' in rv: record.fv_date_verified = rv['date_verified']
     if 'deleted_by' in rv: record.fv_deleted_by = rv['deleted_by']
     if 'event_remarks' in rv: record.fv_event_remarks = rv['event_remarks']
-    if 'file_name' in rv: record.fv_file_name = rv['file_name']
-    if 'file_name_value' in rv: record.fv_file_name_value = rv['file_name_value']
     if 'hidden_variables' in rv: record.fv_hidden_variables = rv['hidden_variables']
     if 'instrumentation_id' in rv: record.fv_instrumentation_id = rv['instrumentation_id']
     if 'instrumentation_type' in rv: record.fv_instrumentation_type = rv['instrumentation_type']
     if 'manufacturer_short_name' in rv: record.fv_manufacturer_short_name = rv['manufacturer_short_name']
     if 'manufacturer_short_name_sphere' in rv: record.fv_manufacturer_short_name_sphere = rv['manufacturer_short_name_sphere']
     if 'measured_by' in rv: record.fv_measured_by = rv['measured_by']
-    if 'measurement_id' in rv: record.fv_measurement_id = rv['measurement_id']
-    if 'measurement_remarks' in rv: record.fv_measurement_remarks = rv['measurement_remarks']
-    if 'measurements' in rv: record.fv_measurements = rv['measurements']
+    if 'measurements' in rv: record.fv_measurements_raw = rv['measurements']
     if 'number_of_measurements' in rv: record.fv_number_of_measurements = rv['number_of_measurements']
     if 'number_of_rejections' in rv: record.fv_number_of_rejections = rv['number_of_rejections']
-    if 'panel_number' in rv: record.fv_panel_number = rv['panel_number']
     if 'panel_photos' in rv: record.fv_panel_photos = rv['panel_photos']
     if 'parent_directory' in rv: record.fv_parent_directory = rv['parent_directory']
-    if 'primary_light_port' in rv: record.fv_primary_light_port = rv['primary_light_port']
     if 'protocol_url' in rv: record.fv_protocol_url = rv['protocol_url']
     if 'published_by' in rv: record.fv_published_by = rv['published_by']
     if 'reference_panel' in rv: record.fv_reference_panel = rv['reference_panel']
     if 'reference_panel_id' in rv: record.fv_reference_panel_id = rv['reference_panel_id']
-    if 'reflectance_port' in rv: record.fv_reflectance_port = rv['reflectance_port']
     if 'rejected_by' in rv: record.fv_rejected_by = rv['rejected_by']
-    if 'replicate_number' in rv: record.fv_replicate_number = rv['replicate_number']
     if 'serial_number' in rv: record.fv_serial_number = rv['serial_number']
     if 'spectral_measurements_visibility' in rv: record.fv_spectral_measurements_visibility = rv['spectral_measurements_visibility']
     if 'spectroradiometer_id' in rv: record.fv_spectroradiometer_id = rv['spectroradiometer_id']
     if 'spectroradiometer_start_time' in rv: record.fv_spectroradiometer_start_time = rv['spectroradiometer_start_time']
-    if 'spectrum_number' in rv: record.fv_spectrum_number = rv['spectrum_number']
-    if 'sphere_configuration' in rv: record.fv_sphere_configuration = rv['sphere_configuration']
     if 'submitted_by' in rv: record.fv_submitted_by = rv['submitted_by']
     if 'target_panel' in rv: record.fv_target_panel = rv['target_panel']
     if 'target_panel_id' in rv: record.fv_target_panel_id = rv['target_panel_id']
-    if 'target_type' in rv: record.fv_target_type = rv['target_type']
     if 'time_measured' in rv: record.fv_time_measured = rv['time_measured']
-    if 'transmission_port' in rv: record.fv_transmission_port = rv['transmission_port']
     if 'verified_by' in rv: record.fv_verified_by = rv['verified_by']
     if 'working_folder' in rv: record.fv_working_folder = rv['working_folder']
+    
+    record.fv_processedPath = PA.PanelCalibPath+''+pname+'/'+wf+'/'
+    if record.fv_manufacturer_short_name_sphere == 'SVC':
+      record.fv_extFile = '.sig'
+      record.fv_measureType = 'tgt_counts'
+    record.fv_measurements = PCR.extract_panel_calibrations_measurements(record.fv_measurements_raw)
   else:
-    tab = ['base_file_name', 'computer', 'date_measured', 'measured_by', 'measurement_id', 'parent_directory', 'reference_panel', 'spectroradiometer_id', 'spectroradiometer_start_time', 'target_panel', 'time_measured', 'working_folder']
+    tab = ['base_file_name', 'computer', 'date_measured', 'measured_by', 'parent_directory', 'reference_panel', 'spectroradiometer_id', 'spectroradiometer_start_time', 'target_panel', 'time_measured', 'working_folder']
     s = ""
     for t in tab:
       if not t in rv:
         if s:
           s+=', '
         s += t
-    LO.l_war('Project {}, the record.id {} will not be used because it has no {}.'.format(record.project_name,record.id,s))
-    return False
+    record.isValid = False
+    sPnoR = 'Project {}, the record id {} will not be used because it has no {}.'.format(record.project_name,record.id,s)
+    LO.l_war(sPnoR)
+    record.add_toLog(sPnoR)
 
-# validate the record link measurments
-def validate_panel_calibrations_record_measurements(record_raw):
-  manu= record_raw.manufacturer_short_name_sphere
-  measurements=record_raw.measurements
-  pname = record_raw.project_name
-  rid = record_raw.id
-  wf = record_raw.working_folder
+def panel_calibrations_measurements(recs):
+  for record in recs.records[:]:
+    validate_panel_calibrations_measurements(record)
+    update_panel_calibrations_measurements(record)
+    record_processing(record)
+
+def validate_panel_calibrations_measurements(record):
+  """ This will validate the panel calibrations record measurments
+  
+  :param arg1: a LeafSpectra to be tested
+  :type arg1: LeafSpectra
+
+  :return: True if is a valid record False if it's not a LeafSpectra record
+  :rtype: boolean (True,False)
+  """
+  # from record object
+  pname = record.parent_directory
+  rid   = record.id
+  # from leaf spectra object
+  ext   = record.fv_extFile
+  mts   = record.fv_measurements.measurements
+  wf    = record.fv_working_folder
   
   measurmentsDone = True
-  #LO.l_info('Start validate record {} measurments'.format(record.id))
-  for measurement in measurements:
-    measureType = ""
-    fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''
-    ext = ''
-    if manu == 'SVC':
-      ext = '.sig'
-      measureType ='tgt_counts'
-    fName += ext
-    measurement.file_path = fName
+  LO.l_debug('Start validate record {} measurments'.format(record.id))
+  for mt in mts[:]:
+    fName = record.fv_processedPath+mt.file_name+''+ext
+    mt.file_path = fName
     if not TO.file_is_here(fName):
       measurmentsDone = False
+      nFa = "The record id {} has not {} available.".format(rid,fName)
+      LO.l_war(nFa)
+      record.add_toLog(nFa)
   if not measurmentsDone:
-    LO.l_war("The record.id {} will not be used because it has not all its spectre available.".format(rid))
-  return measurmentsDone
+    record.isValid = False
 
-# link metadata and data extracted from files
-def update_leafspectra_record_measurements(record_raw):
-  manu= record_raw.manufacturer_short_name_sphere
-  measurements=record_raw.measurements
-  pname = record_raw.project_name
-  rid = record_raw.id
-  wf = record_raw.working_folder
-  measurmentsDone = True
-  for measurement in measurements:
-    measureType = ""
-    fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''
-    ext = ''
-    if manu == 'SVC':
-      ext = '.sig'
-      measureType ='tgt_counts'
-    fName += ext
-    measurement.file_path = fName
-    if TO.file_is_here(fName):
-      #LO.l_info("\tStart spectre extraction for {}".format(fName))
-      spect = specdal.Spectrum(filepath=fName, measure_type= measureType)
-      measurement.spectre = spect
-      measurement.spectre.interpolate(method='cubic')
-      TO.create_directory(record_raw.processedPath+'/interpolated_files/')
-      spectreProcessed = record_raw.processedPath+'/interpolated_files/'+measurement.file_name+ext+'.txt'
-      s = '{}'.format(measurement.spectre)
-      s += '###############\nALL DATA\n###############\n'
-      with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        s += '{}'.format(measurement.spectre.measurement)
-      TO.string_to_file(spectreProcessed,'{}'.format(s))
+def update_panel_calibrations_measurements(record):
+  """ This will link metadata and data extracted from files of a panel calibration record
+  It will also prepare "interpolated_files" form processing
+  
+  :param arg1: a LeafSpectra to be tested
+  :type arg1: LeafSpectra
+  
+  :return: a record 
+  :rtype: LeafSpectra (with measurments updated)
+  """
+  if record.isValid:
+    # from record object
+    pname = record.project_name
+    rid   = record.id
+    # from leaf spectra object
+    ext         = record.fv_extFile
+    measurements=record.fv_measurements
+    measureType = record.fv_measureType
+    wf          = record.fv_working_folder
+    
+    measurmentsDone = True
+    for measurement in measurements:
+      fName = measurement.file_path
+      if TO.file_is_here(fName):
+        LO.l_debug("\tStart spectre extraction for {}".format(fName))
+        spect = specdal.Spectrum(filepath=fName, measure_type= measureType)
+        measurement.spectre = spect
+        measurement.spectre.interpolate(method='cubic')
+        TO.create_directory(record.fv_processedPath+'/interpolated_files/')
+        spectreProcessed = record.fv_processedPath+'/interpolated_files/'+measurement.file_name+ext+'.txt'
+        s = '{}'.format(measurement.spectre)
+        s += '###############\nALL DATA\n###############\n'
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+          s += '{}'.format(measurement.spectre.measurement)
+        TO.string_to_file(spectreProcessed,'{}'.format(s))
+      else:
+        LO.l_war("The record id {} has not {} available.".format(rid,fName))
+        record.add_toLog("The record id {} has not {} available.".format(rid,fName))
+        measurmentsDone = False
+    if not measurmentsDone:
+      LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
+      record.add_toLog("The record id {} will not be used because it has not all its spectre available.".format(rid))
+      record.isValid = False
+  return record
+
+def panel_calibrations_processing(record):
+  if record.isValid:
+    # load files from google drive
+    # process files for the average
+    # process files for the linear
+
+
+##############################################
+# Get From Plants
+##############################################
+
+##############################################
+# Get Panel calibrations
+##############################################
+def get_panel_calibrations_from_records(recs):
+  panelCalibrations = PanelCalibrations()
+  for panelCalibration_raw in recs.records:
+    panelCalibration = PanelCalibration(panelCalibration_raw)
+    extract_panel_calibrations_record(panelCalibration)
+    if panelCalibration.isValid:
+      panelCalibrations.add_record(panelCalibration)
+      st = 'The panel calibration record id {} is complete for processing'.format(panelCalibration.id)
+      LO.l_debug(st)
+      panelCalibration.add_toLog(st)
     else:
-      LO.l_war("The record.id {} will not be used because it has not all its spectre available.".format(rid))
-      measurmentsDone = False
-  if measurmentsDone:
-    return record_raw
+      st = 'The panel calibration record id {} is incomplete and will not be used'.format(panelCalibration.id)
+      LO.l_war(st)
+      panelCalibration.add_toLog(st)
+  return panelCalibrations
 
-def clean_measured_by(mb):
-  st = ""
-  if len(mb["choice_values"])>0:
-    st += ', '.join(x for x in mb["choice_values"])
-  elif len(mb["other_values"])>0:
-    st += ', '.join(x for x in mb["other_values"])
-  return st
+##############################################
+# Load Records
+##############################################
+# Load Panel calibrations from Panel calibrations Records File
+def load_panel_calibrations_from_webhook():
+  if TO.file_is_here(PA.PanelCalibrationsFormFile):
+    records = RE.load_webhook_records_with_formID_from_formFile(PA.PanelCalibrationsFormFile)
+    return get_plants_from_records(records)
+  else:
+    return RE.error_load(PA.PanelCalibrationsFormFile)
 
-def extract_measurements(measurements):
-  measurementsInfo = []
-  for measurement in measurements:
-    cv = 'choice_values'
-    fn, ln, lsm, sn, scsll, scssl, rps, tps = ("",)*8
-    vs  = measurement['form_values']
-    fn  = vs['file_name']
-    if 'leaf_number'            in vs: ln = vs['leaf_number']
-    if 'leaf_side_measured'     in vs: lsm = vs['leaf_side_measured']  
-    if 'spectrum_number'        in vs: sn  = vs['spectrum_number']      
-    if 'reflectance_port_svc'   in vs: rps = vs['reflectance_port_svc'][cv][0] 
-    if 'transmission_port_svc'  in vs: tps = vs['transmission_port_svc'][cv][0]
-    if 'sphere_configuration_svc_large_leaves' in vs: scsll = vs['sphere_configuration_svc_large_leaves'][cv][0]  # test if 'sphere_configuration_svc_large_leaves' here
-    if 'sphere_configuration_svc_small_leaves.l_leaves' in vs: scssl = vs['sphere_configuration_svc_small_leaves.l_leaves'][cv][0]  # test if 'sphere_configuration_svc_large_leaves' here
-    measurementsInfo.append(SP.make_SpectraMeasurements(fn, ln, lsm, sn, rps, tps, scsll, scssl))
-  return measurementsInfo
+# Load Panel calibrations from Panel calibrations Records File
+def load_panel_calibrations_from_records_file():
+  if TO.file_is_here(PA.PanelCalibrationsRecordsFile):
+    records = RE.load_records_from_json(PA.PanelCalibrationsRecordsFile)
+    return get_panel_calibrations_from_records(records)
+  else:
+    return RE.error_load(PA.PlantsRecordsFile)
+
+# Load Panel calibrations from fulcrum
+def load_panelCalibrations_from_fulcrum():
+  RE.backup_records_from_forms()
+  return load_panelCalibrations_from_json_file()
+
+# Load Panel Calibrations from form
+def load_panelCalibrations_from_form():
+  if TO.file_is_here(PA.PlantsFormFile):
+    panelCalibrations_form = FO.load_form_from_json_file(PA.PlantsFormFile)
+    recs = RE.load_records_from_fulcrum(panelCalibrations_form)
+    return get_panelCalibrations_from_records(recs)
+  else:
+    return RE.error_load(PA.PlantsRecordsFile)
+
+# Load Panel calibrations
+def load_panelCalibrations():
+  pls = load_panelCalibrations_from_json_file()
+  if len(pls) < 1:
+    pls = load_panelCalibrations_from_panelCalibrations_form()
+  if len(pls) < 1:
+    pls = load_panelCalibrations_from_fulcrum()
+  return pls
 
 ##############################################
 ## Process record

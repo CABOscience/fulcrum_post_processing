@@ -131,7 +131,7 @@ def load_projects():
 # Website Project(s) directories (with symbolic links)
 #
 def create_project_website_view_directories(projects):
-  for project in projects.values():
+  for project in projects.idName.values():
     create_project_directories(project)
     create_symbolic_links(project)
 

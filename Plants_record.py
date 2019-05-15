@@ -285,7 +285,7 @@ def load_plants_from_records_file():
 # Load Plants from fulcrum
 def load_plants_from_fulcrum():
   RE.backup_records_from_forms()
-  return load_plants_from_json_file()
+  return load_plants_from_records_file()
 
 # Load from Plants form
 def load_plants_from_form():
@@ -298,7 +298,7 @@ def load_plants_from_form():
 
 # Load Plants
 def load_plants():
-  pls = load_plants_from_json_file()
+  pls = load_plants_from_records_file()
   if len(pls) < 1:
     pls = load_plants_from_plants_form()
   if len(pls) < 1:

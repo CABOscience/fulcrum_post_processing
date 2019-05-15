@@ -406,11 +406,29 @@ def search_for_keys_recu(dictKeysDataName,info):
 # LOAD RECORDS
 ##############################################
 
+# Error load
+##############################################
+def error_load(st):
+  LO.l_err('The file {} is not available. A default empty Records will be loaded'.format(st))
+  return Plants()
+
 # Load records from Webhooks
 ##############################################
 def load_webhook_records():
   records_files = TO.get_files_from_path(PA.FulcrumWebhook+"records/")
   return get_records_from_files_list(records_files)
+
+def load_webhook_records_with_formID_from_formFile(formFile):
+  recsTmp = load_webhook_records()
+  recs = Records()
+  formJson = TO.load_json_file(formFile)
+  if 'id' in formJson:
+    formId = formJson['id']
+    for record in recsTmp.records[:]:
+      if record.form_id == formId:
+        recs.add_record(record)
+  return recs
+
 
 # Load records from File Name
 ##############################################

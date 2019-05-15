@@ -20,12 +20,6 @@ import sys
 class Plants(RE.Records):
   """ Plants object
   Plants object is containing a list of Plant Object
-  def add_record(self,Plant):
-    self.records.append(Plant)
-    self.recordsDict[Plant.id]=Plant
-
-  def __len__(self):
-    return len(self.records)
   """
 
 class Plant(RE.Record):
@@ -242,6 +236,7 @@ def get_plant_with_plant_id_from_plants(plantID,pls=[]):
   if isinstance(pls,Plants):
     if len(pls)>0 and plantID in pls.recordsDict:
       return pls.recordsDict[plantID]
+    pass
   elif len(pls)<1:
     return get_plant_with_plant_id_from_plants(plantID,load_plants())
   LO.l_war("No plant associated with {}".format(plantID))
@@ -271,14 +266,21 @@ def get_plants_from_records(recs):
 # LOAD SOURCES
 ##############################################
 
+# Load Plants from fulcrum webhook
+def load_plants_from_webhook():
+  if TO.file_is_here(PA.PlantsFormFile):
+    records = RE.load_webhook_records_with_formID_from_formFile(PA.PlantsFormFile)
+    return get_plants_from_records(records)
+  else:
+    return RE.error_load(PA.PlantsFormFile)
+    
 # Load Plants from Plants Records File
-def load_plants_from_json_file():
+def load_plants_from_records_file():
   if TO.file_is_here(PA.PlantsRecordsFile):
     records = RE.load_records_from_json(PA.PlantsRecordsFile)
     return get_plants_from_records(records)
   else:
-    LO.l_err('The file {} is not available. A default empty Plants will be loaded'.format(PA.PlantsRecordsFile))
-    return Plants()
+    return RE.error_load(PA.PlantsRecordsFile)
 
 # Load Plants from fulcrum
 def load_plants_from_fulcrum():
@@ -286,14 +288,13 @@ def load_plants_from_fulcrum():
   return load_plants_from_json_file()
 
 # Load from Plants form
-def load_plants_from_plants_form():
+def load_plants_from_form():
   if TO.file_is_here(PA.PlantsFormFile):
     plants_form = FO.load_form_from_json_file(PA.PlantsFormFile)
     recs = RE.load_records_from_fulcrum(plants_form)
     return get_plants_from_records(recs)
   else:
-    LO.l_err('The file {} is not available. A default empty Plants will be loaded'.format(PA.PlantsRecordsFile))
-    return Plants()
+    return RE.error_load(PA.PlantsFormFile)
 
 # Load Plants
 def load_plants():

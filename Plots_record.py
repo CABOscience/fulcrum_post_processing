@@ -199,13 +199,13 @@ def get_plot_shape_with_plot_id_from_plots(plotID,pls):
   LO.l_war("No Plot shape associated with {}".format(plotID))
   return ''
 
-def get_plot_with_plot_id(plotID):
-  pls = load_plots()
-  return get_plot_with_plot_id_from_plots(plotID,pls)
-
-def get_plot_with_plot_id_from_plots(plotID,pls):
-  if len(pls)>0 and plotID in pls.recordsDict:
-    return pls.recordsDict[plotID]
+def get_plot_with_plot_id_from_plots(plotID,pls=[]):
+  if isinstance(pls,Plots):
+    if len(pls)>0 and plantID in pls.recordsDict:
+      return pls.recordsDict[plotID]
+    pass
+  elif len(pls)<1:
+    return get_plant_with_plant_id_from_plants(plotID,load_plots())
   LO.l_war("No plot associated with {}".format(plotID))
   return ''
 
@@ -233,14 +233,21 @@ def get_plots_from_records(recs):
 # LOAD SOURCES
 ##############################################
 
+# Load Plots from fulcrum webhook
+def load_plots_from_webhook():
+  if TO.file_is_here(PA.PlotsFormFile):
+    records = RE.load_webhook_records_with_formID_from_formFile(PA.PlotsFormFile)
+    return get_plots_from_records(records)
+  else:
+    return RE.error_load(PA.PlotsFormFile)
+    
 # Load Plots from Plots Records File
 def load_plots_from_json_file():
   if TO.file_is_here(PA.PlotsRecordsFile):
     records = RE.load_records_from_json(PA.PlotsRecordsFile)
     return get_plots_from_records(records)
   else:
-    LO.l_err('The file {} is not available. A default empty Plots will be loaded'.format(PA.PlotsRecordsFile))
-    return Plots()
+    return RE.error_load(PA.PlotsRecordsFile)
 
 # Load Plots from fulcrum
 def load_plots_from_fulcrum():
@@ -248,14 +255,13 @@ def load_plots_from_fulcrum():
   return load_plots_from_json_file()
 
 # Load from Plots form
-def load_plots_from_plots_form():
+def load_plots_from_form():
   if TO.file_is_here(PA.PlotsFormFile):
     plots_form = FO.load_form_from_json_file(PA.PlotsFormFile)
     recs = RE.load_records_from_fulcrum(plots_form)
     return get_plots_from_records(recs)
   else:
-    LO.l_err('The file {} is not available. A default empty Plots will be loaded'.format(PA.PlotsRecordsFile))
-    return Plots()
+    return RE.error_load(PA.PlotsFormFile)
 
 # Load Plots
 def load_plots():

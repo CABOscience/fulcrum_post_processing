@@ -34,7 +34,7 @@ class Projects():
     print self.get_projects_size()
     for project in self.projects[:]:
       if project.id != "":
-        st += project
+        st += '{}'.format(project)
     return st
     
   def __len__(self):

@@ -105,10 +105,10 @@ def get_project_name_from_id(project_id,pjs=[]):
   if isinstance(pjs, Projects):
     if project_id in pjs.idName:
       return pjs.idName[project_id]
+    pass
   elif len(pjs)<1:
     return get_project_name_from_id(project_id,load_projects())
-  else:
-    return ""
+  return ""
 
 def load_backuped_projects():
   ps = Projects()

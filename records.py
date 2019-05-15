@@ -210,9 +210,9 @@ def get_records_from_list(listRecords,forms=[],projects=[]):
   records = Records()
   for record_raw in listRecords[:]:
     record = create_record_from_json(record_raw,forms,projects)
-    records.add_record(record)
+    if PR.test_if_project_id(record.project_id,projects):
+      records.add_record(record)
   return records
-
 
 ##############################################
 # Backup Records From Forms

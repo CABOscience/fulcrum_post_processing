@@ -22,6 +22,7 @@ config.read('example.cfg')
 # Variables
 ##############################################
 FulcrumForms      = []
+FulcrumProjects   = []
 FulcrumRecords    = []
 KeysDataname      = []
 FormsProcess      = False
@@ -215,6 +216,8 @@ def get_arguments():
     dest="webhooks", help="Load all records from All Leaf Spectra from webhooks")
   exclusive.add_argument('-r', '--records', nargs='+',
     dest="records", help="From Fulcrum Backup: Load record(s) and process them")
+  exclusive.add_argument('-j', '--projects', nargs='+',
+    dest="projects", help="From Fulcrum Backup: Load porject(s) and process them")
   args = parser.parse_args()
   
   if args.form and len(args.form)>0:
@@ -224,6 +227,10 @@ def get_arguments():
     global FormsProcess
     FormsProcess=True
   
+  if args.projects and len(args.projects)>0:
+    global FulcrumProjects
+    FulcrumProjects = args.projects
+
   if args.webhooks:
     global WebhookProcess
     WebhookProcess = True

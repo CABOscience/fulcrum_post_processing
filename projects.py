@@ -23,8 +23,9 @@ class Projects():
     self.idName = {}
   
   def add_project(self,project):
-    self.projects.append(project)
-    self.idName[project.id] = project.name
+    if project_is_available(project):
+      self.projects.append(project)
+      self.idName[project.id] = project.name
     
   def get_projects_size(self):
     return len(self.projects)
@@ -167,4 +168,19 @@ def extract_projects_ID_from_records(records):
         project = create_project_from_json(projectJson)
         ps.add_project(project)
   return projectsID
+
+#
+# Project is specific
+#
+def project_is_available(project):
+  b = False
+  if len(PA.FulcrumProjects)>0:
+    if project.id in PA.FulcrumProjects or project.name in PA.FulcrumProjects:
+      b = True
+  else:
+    b = True
+  return b
+
+def test_if_project_id(project_id,pjs=[]):
+  return project_id in pjs.idName
 

@@ -46,7 +46,7 @@ def main():
   recordType= PA.SpectroscopyPanelsLogFile+"_from_form_file"
   LO.create_log("main","",recordType)
   
-  SPR.load_spectroscopypanels_Records()
+  SPR.load_spectroscopypanels()
 
 ##############################################
 # MAIN

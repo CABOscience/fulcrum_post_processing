@@ -6,10 +6,11 @@ import parameters as PA
 import records as RE
 import tools as TO
 import logs as LO
+import forms as FO
 import SpectroscopyPanels_calibrations as SPC
 
 # Spectroscopy
-import specdal
+#import specdal
 # System
 import sys
 
@@ -65,8 +66,15 @@ class SpectroscopyPanel(RE.Record):
     self.fv_wavelength_nm = ""
     self.hasCalibrations = False
 
+  def update_record_with_calibrations(self):
+    if self.fv_calibrations:
+      self.fv_calibrations = SPC.extract_SpectroscopyPanels_calibration_values(self.fv_serial_number,self.fv_calibrations)
+      #self.fv_calibrations.toPrint()
+    else:
+      print('no calibrations')
+    #for calibration in self.fv_calibrations:
 
-  def extract_spectroscopyPanel_record(self,):
+def extract_spectroscopyPanel_record(self):
     """ This will extract a spectroscopy panel record data from a record "form values"
     
     :param arg1: a SpectroscopyPanel to be tested
@@ -119,6 +127,7 @@ class SpectroscopyPanel(RE.Record):
       if 'reflectance'  in rv: self.fv_reflectance = rv['reflectance']
       if 'serial_number'  in rv: self.fv_serial_number = rv['serial_number']
       if 'wavelength_nm'  in rv: self.fv_wavelength_nm = rv['wavelength_nm']
+      self.update_record_with_calibrations()
     else:
       tab = ['serial_number','name_of_contact_person','manufacture_name','contact_email_address']
       s = ""
@@ -131,16 +140,6 @@ class SpectroscopyPanel(RE.Record):
       self.isValid = False
       self.add_toLog('Project {}, the record id {} will not be used because it has no {}.'.format(self.project_name,self.id,s))
 
-  def update_record_with_calibrations(self,):
-    if self.fv_calibrations:
-      self.fv_calibrations = SPC.extract_SpectroscopyPanels_calibration_values(self.fv_serial_number,self.fv_calibrations)
-      self.fv_calibrations.toPrint()
-    else:
-      print('no calibrations')
-    #for calibration in self.fv_calibrations:
-    
-  def is_record():
-    return True
 
     
 ##############################################
@@ -164,24 +163,79 @@ def load_spectroscopypanels_webhook_Records():
       record = SpectroscopyPanel(record_raw)
       record.extract_spectroscopyPanel_record()
       if record.isValid:
-        record.update_record_with_calibrations()
         spectroPanels.add_record(record)
         
   return spectroPanels
 
-
-def load_spectroscopypanels_Records():
-  fname = PA.SpectroscopyPanelsRecordsFile
-  if TO.file_is_here(fname):
-    LO.l_info('The panel calibration file is {}'.format(fname))
-    return get_SpectroscopyPanels_Records(fname)
+def get_calibrations_from_panelID(panelID,spectroPanels=[]):
+  if len(spectroPanels)<1:
+    spectroPanels = load_spectroscopypanels()
+  if panelID in spectroPanels.recordsDict:
+    return spectroPanels.recordsDict[panelID].fv_calibrations.calibrations
   else:
-    LO.l_war('The panel calibration  ({}) is available. Program will die'.format(fname))
-    sys.exit(1)
+    LO.l_error('The panel ID {} has not been found in Spectroscopy Panels records'.format(panelID))
+    return []
 
-def get_SpectroscopyPanels_Records(fname):
-  fileRecords = RE.load_records_from_json(fname)
-  for record_raw in fileRecords.records[:]:
-    record = SpectroscopyPanel(record_raw)
-    record.extract_spectroscopyPanel_record()
-    record.update_record_with_calibrations()
+##############################################
+# Get Spectroscopypanels
+##############################################
+
+def get_spectroscopypanels_from_records(recs):
+  spectroscopyPanels = SpectroscopyPanels()
+  for spectroscopyPanel_raw in recs.records:
+    spectroscopyPanel = SpectroscopyPanel(spectroscopyPanel_raw)
+    extract_spectroscopyPanel_record(spectroscopyPanel)
+    if spectroscopyPanel.isValid:
+      spectroscopyPanels.add_record(spectroscopyPanel)
+      st = 'The spectroscopy panel record id {} is complete for processing'.format(spectroscopyPanel.id)
+      LO.l_debug(st)
+      spectroscopyPanel.add_toLog(st)
+    else:
+      st = 'The spectroscopy panel record id {} is incomplete and will not be used'.format(spectroscopyPanel.id)
+      LO.l_war(st)
+      spectroscopyPanel.add_toLog(st)
+  return spectroscopyPanels
+  
+
+##############################################
+# LOAD SOURCES
+##############################################
+
+# Load Spectroscopypanels from fulcrum webhook
+def load_spectroscopypanels_from_webhook():
+  if TO.file_is_here(PA.SpectroscopypanelsFormFile):
+    records = RE.load_webhook_records_with_formID_from_formFile(PA.SpectroscopyPanelsFormFile)
+    return get_spectroscopypanels_from_records(records)
+  else:
+    return RE.error_load(PA.SpectroscopyPanelsFormFile)
+    
+# Load Spectroscopypanels from Spectroscopypanels Records File
+def load_spectroscopypanels_from_records_file():
+  if TO.file_is_here(PA.SpectroscopyPanelsRecordsFile):
+    records = RE.load_records_from_json(PA.SpectroscopyPanelsRecordsFile)
+    return get_spectroscopypanels_from_records(records)
+  else:
+    return RE.error_load(PA.SpectroscopyPanelsRecordsFile)
+
+# Load Spectroscopypanels from fulcrum
+def load_spectroscopypanels_from_fulcrum():
+  RE.backup_records_from_forms()
+  return load_spectroscopypanels_from_records_file()
+
+# Load from Spectroscopypanels form
+def load_spectroscopypanels_from_form():
+  if TO.file_is_here(PA.SpectroscopyPanelsFormFile):
+    spectroscopypanels_form = FO.load_form_from_json_file(PA.SpectroscopyPanelsFormFile)
+    records = RE.load_records_from_fulcrum(spectroscopypanels_form)
+    return get_spectroscopypanels_from_records(records)
+  else:
+    return RE.error_load(PA.SpectroscopyPanelsFormFile)
+
+# Load Spectroscopypanels
+def load_spectroscopypanels():
+  pls = load_spectroscopypanels_from_records_file()
+  if len(pls) < 1:
+    pls = load_spectroscopypanels_from_form()
+  if len(pls) < 1:
+    pls = load_spectroscopypanels_from_fulcrum()
+  return pls

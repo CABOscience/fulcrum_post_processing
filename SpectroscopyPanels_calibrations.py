@@ -7,7 +7,7 @@ import tools as TO
 import logs as LO
 
 # Spectroscopy
-import specdal
+#import specdal
 # System
 import sys
 
@@ -39,16 +39,15 @@ def make_SpectroscopyPanels_calibrations(calibsTab):
   
   return calib
 
-def get_calibration_for_record_time(panelID, calibrations, t):
+def get_calibration_for_record_time(calibrations, t):
   ts = TO.from_date_to_s(t)
   calib = SpectroscopyPanels_calibration()
   tp = 0
   for calibration in calibrations:
-    if panelID == calibration.panelID:
-      td = int(ts)-int(calibration.cDate)
-      if td>0 and td>tp:
-        calib = calibration
-        tp = td
+    td = int(ts)-int(calibration.cDate)
+    if td>0 and td>tp:
+      calib = calibration
+      tp = td
   if calib.cID != '':
     return calib
   else:
@@ -57,7 +56,7 @@ def get_calibration_for_record_time(panelID, calibrations, t):
 # Calibration objects
 class SpectroscopyPanels_calibration(object):
   
-  def __init__(self,  cID   = "", dDate = "", uDate = "", cDate = "", cMax = 0.0, cMin = 0.0, cFilePath = "", spectre = specdal.Spectrum(name='empty')):
+  def __init__(self,  cID   = "", dDate = "", uDate = "", cDate = "", cMax = 0.0, cMin = 0.0, cFilePath = "", spectre = TO.create_empty_spectrum()):
     self.cID   = cID
     self.dDate = dDate # calibration_date
     self.uDate = uDate # updated_at
@@ -80,7 +79,7 @@ class SpectroscopyPanels_calibration(object):
     return s
   
 def make_SpectroscopyPanels_calibration(calibID, calibDate, calibUDate, calibCDate, calibFilePath):
-  spectre = specdal.Spectrum(filepath=calibFilePath,measure_type='reflectance')
+  spectre = TO.create_spectrum(calibFilePath,'reflectance')
   spectre.interpolate(method='cubic')
   cMin = spectre.measurement.index.min()
   cMax = spectre.measurement.index.max()
@@ -124,7 +123,8 @@ def extract_SpectroscopyPanels_calibrations_values(fname):
             calibFilePath = PA.PanelsPath+calibSerialNumber+"/"+calibDate+"/"+calibFileName
             if TO.file_is_here(calibFilePath):
               LO.l_info('\tStart calibration extraction for {} with date {}'.format(calibFilePath,calibDate))
-              calib = make_SpectroscopyPanels_calibration(panelID, calibSerialNumber,calibID, calibDate, calibUDate, calibCDate, calibFilePath)
+              #calib = make_SpectroscopyPanels_calibration(panelID, calibSerialNumber,calibID, calibDate, calibUDate, calibCDate, calibFilePath)
+              calib = make_SpectroscopyPanels_calibration(calibID, calibDate, calibUDate, calibCDate, calibFilePath)
               calibrations.append(calib)
             else:
               LO.l_war("The calibration {} .calib file is not found or change the end of line (if it comes from csv file).".format(calibID))

@@ -281,6 +281,7 @@ def from_date_to_s(timestamp):
     return time.strftime("%s", time.strptime(timestamp[:19], "%Y-%m-%dT%H:%M:%S"))
   if len(timestamp)==10:
     return time.strftime("%s", time.strptime(timestamp, "%Y-%m-%d"))
+  print timestamp
   return time.strftime("%s", timestamp)
 
 # Get all files from a path
@@ -343,7 +344,7 @@ def get_record_status_value(recordStatus):
   records_status_list = ['deleted', 'pending', 'rejected', 'verified', 'submitted', 'approved', 'published']
   for record_status in records_status_list[:]:
     if recordStatus == record_status:
-      return list.index(record_status)
+      return records_status_list.index(record_status)
   return -1
 
 # Bottom-Up recursion for a list files to extract directories
@@ -562,11 +563,36 @@ def from_dataframe_to_series(df):
     return None
   
 # Return monotonic series from specdal
+
 def get_monotonic_series(series):
   '''
   # Operator.py defines operations on pd.Series that consists of
   # wavelength as index and measurement as values
   see: https://github.com/CABOscience/SpecDAL/blob/caboscience/specdal/operators/interpolate.py
-  '''
   
   return specdal.get_monotonic_series(series)
+  return a list of series with monotonic index
+  
+  TODO: test what happens if not strictly monotonic
+  i.e. index: 1, 2, 3, 3
+  '''
+  if series.index.is_monotonic:
+      return [series]
+  else:
+      index = pd.Series(series.index)
+      head_positions = index[index.diff() < 0].index
+
+      N = head_positions.size
+
+      result = [series.iloc[:head_positions[0]]]
+      result += [series.iloc[head_positions[i]:head_positions[i+1]] for i in range(0, N-1)]
+      result += [series.iloc[head_positions[N-1]:]]
+      return result
+
+def create_spectrum(fName,measureType):
+  
+  return specdal.Spectrum(filepath=fName, measure_type= measureType)
+
+def create_empty_spectrum():
+  
+  return specdal.Spectrum(name='empty')

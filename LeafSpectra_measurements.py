@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import tools as TO
 # Spectroscopy
-import specdal
+#import specdal
 # Data Science
 import pandas as pd
 
@@ -35,7 +36,7 @@ class SpectraMeasurements(object):
     self.target_type = tt
     self.transmission_port_svc = tps
     self.transmittance = pd.DataFrame()
-    self.spectre = specdal.Spectrum(name='empty')
+    self.spectre = TO.create_empty_spectrum()
   
   def __str__(self):
     return '>{} - {}'.format(self.file_name, self.file_path)
@@ -58,6 +59,9 @@ class SpectraMeasurements(object):
 
   def to_csv_reference(self):
     return [self.leaf_number,self.leaf_side_measured]
+
+  def to_csv_all(self):
+    return [self.leaf_side_measured]
 
 def extract_leaf_spectra_measurements(measurements):
   """ This will extract measurements of a leaf spectra record

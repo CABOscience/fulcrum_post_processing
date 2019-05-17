@@ -3,14 +3,12 @@
 # Local Modules
 import projects as PR
 import parameters as PA
-import records as RE
-import tools as TO
-import tools_plots as PL
 import logs as LO
 import sys
 import LeafSpectra_concat_files as LSCF
 import LeafSpectra_record as LSR
-import SpectroscopyPanels_calibrations as SPC
+#import SpectroscopyPanels_calibrations as SPC
+import SpectroscopyPanels_record as SPR
 
 '''
 # Use config parser to set parameters it will allow to simplify the loading and be able to set default values
@@ -46,25 +44,28 @@ def main():
   recordType= PA.LeafSpectraLogFile+"_from_form_file"
   LO.create_log("main","",recordType)
   projects = PR.load_projects()
-  
   PR.create_project_website_view_directories(projects)
   
-  LO.l_info('Start load records from leafspectra')
-  calibrations  = SPC.extract_SpectroscopyPanels_calibrations()
+  LO.l_info('## Start load records from leafspectra')
+  #calibrations  = SPC.extract_SpectroscopyPanels_calibrations()
+  spectroPanels = SPR.load_spectroscopypanels()
   
   # Extract records
   records = []
   if PA.FormsProcess:
-    LO.l_info('Start load records from leafspectra')
-    records = LSR.load_leafspectra_Records(calibrations)
-    LO.l_info('End load records from leafspectra')
+    LO.l_info('## Start load records from leafspectra')
+    records = LSR.load_leafspectra_Records(spectroPanels)
+    LO.l_info('## End load records from leafspectra')
   else:
-    LO.l_info('Start load records from webhook')
+    LO.l_info('## Start load records from webhook')
     records = LSR.load_leafspectra_webhook_Records(calibrations)
-    LO.l_info('End load records from webhook')
+    LO.l_info('## End load records from webhook')
+  LO.l_info('## Process records')
   LSR.process_leafspectra_records(records)
-  LO.l_info('Concat Files')
-  LSCF.concat_files()
+  LO.l_info('## Print records log')
+  LSR.print_log_records(records)
+  LO.l_info('## Concat Files')
+  LSCF.concat_files(projects)
 
 ##############################################
 # MAIN

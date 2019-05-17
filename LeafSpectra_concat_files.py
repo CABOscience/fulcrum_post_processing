@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from parameters import ProjectWebsitePath
+import parameters as PA
 import tools as TO
 import logs
 
 # System
-import os
+import os, sys
+import multiprocessing as mp
 # files
 import zipfile
 import fnmatch
 # Spectroscopy
-import specdal
+#import specdal
 # Data Science
 import pandas as pd
 
@@ -19,59 +20,103 @@ import pandas as pd
 # CONCAT FILES in directories and projects
 ##############################################
 
-def concat_files():
+def concat_files(projects=[]):
   allCSV      = []
   leavesCSV   = []
   refCSV      = []
   sigfiles    = []
   sigTxtFiles = []
-  for root, dirnames, filenames in os.walk(ProjectWebsitePath, followlinks=True):
+  for root, dirnames, filenames in os.walk(PA.ProjectWebsitePath, followlinks=True):
     for filename in fnmatch.filter(filenames, 'all.csv'):
-      allCSV.append(os.path.join(root, filename))
+      if projectinroot(root,projects):
+        allCSV.append(os.path.join(root, filename))
     for filename in fnmatch.filter(filenames, 'leaves.csv'):
-      leavesCSV.append(os.path.join(root, filename))
+      if projectinroot(root,projects):
+        leavesCSV.append(os.path.join(root, filename))
     for filename in fnmatch.filter(filenames, 'ref.csv'):
-      refCSV.append(os.path.join(root, filename))
+      if projectinroot(root,projects):
+        refCSV.append(os.path.join(root, filename))
     for filename in fnmatch.filter(filenames, '*.sig'):
-      sigfiles.append(os.path.join(root, filename))
+      if projectinroot(root,projects):
+        sigfiles.append(os.path.join(root, filename))
     for filename in fnmatch.filter(filenames, '*.txt'):
-      if 'interpolated_files' in root:
+      if 'interpolated_files' in root and projectinroot(root,projects):
         sigTxtFiles.append(os.path.join(root, filename))
-  c_list = ()
+  c_list = []
   c_list.append([allCSV,3,'project_all_combined'])
   c_list.append([allCSV,2,'all_combined'])
   c_list.append([leavesCSV,3,'project_leaves_combined'])
-  c_list.append([leavesCSV,2,'project_leaves_combined'])
+  c_list.append([leavesCSV,2,'leaves_combined'])
   c_list.append([refCSV,3,'project_ref_combined'])
   c_list.append([refCSV,2,'ref_combined'])
-  create_files(c_list)
-  z_list = ()
+  b = create_files(c_list)
+  z_list = []
   z_list.append([sigfiles,1,'sigfiles'])
   z_list.append([sigfiles,1,'interpolated_files'])
-  create_zip(z_list)
+  b = create_zip(z_list)
   
-  
+# Test if the root contains a projects name
+def projectinroot(root,projects=[]):
+  b = False
+  for projectName in projects.nameId.keys():
+    if projectName in root and PA.ProjectWebsitePath in root:
+      b = True
+      pass
+  return b
+
 # Concat files functions
 ##############################################
 
 def create_files(c_list):
+  # parallelisation here
+  output = mp.Queue()
+  wraps = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  results = [pool.apply_async(create_files_from_l, args=(l,)) for l in c_list[:]]
+  pool.close()
+  pool.join()
+  for r in results:
+    b = r.get()
+    if b:
+      wraps.append(b)
+  return wraps
+  '''
   for l in c_list[:]:
-    dic = TO.get_directories(l[1],l[0])
-    for k in dic.keys():
-      combined_csv = pd.concat( [ pd.read_csv(f) for f in l[0][k] ] )
-      combined_csv.to_csv( k+"/"+l[2]+".csv", index=False )
+    create_files_from_l(l)
+  '''
+
+def create_files_from_l(l):
+  dic = TO.get_directories(l[1],l[0])
+  for k in dic.keys():
+    combined_csv = pd.concat( [ pd.read_csv(f) for f in dic[k] ] )
+    combined_csv.to_csv( k+"/"+l[2]+".csv", index=False )
+  return True
 
 # Zip files functions
 ##############################################
 
 def create_zip(z_list):
-  for l in z_list[:]:
-    dic = TO.get_directories(l[1],l[0])
-    for k in dic.keys():
-      zipf = zipfile.ZipFile(k+'/'+l[2]+'.zip', 'w', zipfile.ZIP_DEFLATED)
-      for f in dic[k]:
-        zipf.write(f)
-      zipf.close()
+  # parallelisation here
+  output = mp.Queue()
+  wraps = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  results = [pool.apply_async(create_zip_from_l, args=(l,)) for l in z_list[:]]
+  pool.close()
+  pool.join()
+  for r in results:
+    b = r.get()
+    if b:
+      wraps.append(b)
+  return wraps
+
+def create_zip_from_l(l):
+  dic = TO.get_directories(l[1],l[0])
+  for k in dic.keys(): 
+    zipf = zipfile.ZipFile(k+'/'+l[2]+'.zip', 'w', zipfile.ZIP_DEFLATED)
+    for f in dic[k]:
+      zipf.write(f)
+    zipf.close()
+  return True
 
 '''
   create_for_all_projects(allCSV)

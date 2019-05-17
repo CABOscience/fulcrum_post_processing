@@ -21,11 +21,13 @@ class Projects():
   def __init__(self):
     self.projects = []
     self.idName = {}
+    self.nameId = {}
   
   def add_project(self,project):
     if project_is_available(project):
       self.projects.append(project)
       self.idName[project.id] = project.name
+      self.nameId[project.name] = project.id
     
   def get_projects_size(self):
     return len(self.projects)

@@ -7,7 +7,7 @@ import io, os, sys
 # files
 import csv, codecs, cStringIO, json
 # Spectroscopy
-import specdal
+#import specdal
 # Data Science
 import pandas as pd
 import numpy as np

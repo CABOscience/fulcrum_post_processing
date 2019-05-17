@@ -12,7 +12,7 @@ import PanelCalibrations_measurements as RPC
 import os, sys
 import multiprocessing as mp
 # Spectroscopy
-import specdal
+#import specdal
 # Data Science
 import math
 import pandas as pd
@@ -229,7 +229,7 @@ def update_panel_calibrations_measurements(record):
       fName = measurement.file_path
       if TO.file_is_here(fName):
         LO.l_debug("\tStart spectre extraction for {}".format(fName))
-        spect = specdal.Spectrum(filepath=fName, measure_type= measureType)
+        spect = TO.create_spectrum(fName,measureType)
         measurement.spectre = spect
         measurement.spectre.interpolate(method='cubic')
         TO.create_directory(record.fv_processedPath+'/interpolated_files/')
@@ -468,7 +468,7 @@ def panel_calibration_calculation(record):
       LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the reflectance calculation.".format(record.id))
+    LO.l_err("the record {} doesn't have all spectrum measurments to process the reflectance calculation.".format(record.id))
   
   # Transmittance
   # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=68
@@ -501,6 +501,6 @@ def panel_calibration_calculation(record):
       LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.id))
   else:
     boo = False
-    LO.l_err("the record {} doesn't all spectrum measurments to process the transmittance calculation.".format(record.id))
+    LO.l_err("the record {} doesn't have all spectrum measurments to process the transmittance calculation.".format(record.id))
   return boo
 

@@ -11,8 +11,6 @@ import SpectroscopyPanels_calibrations as SPC
 # System
 import os, sys
 import multiprocessing as mp
-# Spectroscopy
-import specdal
 # Data Science
 import math
 import pandas as pd

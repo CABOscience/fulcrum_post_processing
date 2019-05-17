@@ -7,7 +7,7 @@ import tools as TO
 import logs as LO
 
 # Spectroscopy
-import specdal
+#import specdal
 # System
 import sys
 
@@ -105,7 +105,7 @@ class Subplot(RE.Record):
 
 
 
-def extract_spectroscopyPanel_record(record):
+def extract_plot_record(record):
   """ This will extract a spectroscopy panel record data from a record "form values"
   
   :param arg1: a SpectroscopyPanel to be tested

@@ -8,7 +8,7 @@ import tools as TO
 import logs as LO
 
 # Spectroscopy
-import specdal
+#import specdal
 # System
 import sys
 
@@ -204,7 +204,7 @@ def load_sites_from_fulcrum():
   return load_sites_from_json_file()
 
 # Load from Sites form
-def load_sites_from_sites_form():
+def load_sites_from_form():
   if TO.file_is_here(PA.SitesFormFile):
     sites_form = FO.load_form_from_json_file(PA.SitesFormFile)
     recs = RE.load_records_from_fulcrum(sites_form)
@@ -217,7 +217,7 @@ def load_sites_from_sites_form():
 def load_sites():
   pls = load_sites_from_json_file()
   if len(pls) < 1:
-    pls = load_sites_from_sites_form()
+    pls = load_sites_from_form()
   if len(pls) < 1:
     pls = load_sites_from_fulcrum()
   return pls

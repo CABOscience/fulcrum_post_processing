@@ -9,7 +9,7 @@ import tools as TO
 import logs as LO
 
 # Spectroscopy
-import specdal
+#import specdal
 # System
 import sys
 
@@ -300,7 +300,7 @@ def load_plants_from_form():
 def load_plants():
   pls = load_plants_from_records_file()
   if len(pls) < 1:
-    pls = load_plants_from_plants_form()
+    pls = load_plants_from_form()
   if len(pls) < 1:
     pls = load_plants_from_fulcrum()
   return pls

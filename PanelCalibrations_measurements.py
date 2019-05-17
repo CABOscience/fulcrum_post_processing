@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Spectroscopy
-import specdal
+#import specdal
 # Data Science
 import pandas as pd
 
@@ -43,7 +43,7 @@ class CalibrationMeasurement(object):
     self.target_type = ''
     self.transmission_port = ''
     self.transmittance = pd.DataFrame()
-    self.spectre = specdal.Spectrum(name='empty')
+    self.spectre = TO.create_empty_spectrum()
     self.sphere_configuration = '' #
     self.isValid = True
     self.logInfo = ""

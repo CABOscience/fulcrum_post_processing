@@ -8,7 +8,7 @@ import tools as TO
 import logs as LO
 
 # Spectroscopy
-import specdal
+#import specdal
 # System
 import sys
 
@@ -267,7 +267,7 @@ def load_plots_from_form():
 def load_plots():
   pls = load_plots_from_json_file()
   if len(pls) < 1:
-    pls = load_plots_from_plots_form()
+    pls = load_plots_from_form()
   if len(pls) < 1:
     pls = load_plots_from_fulcrum()
   return pls

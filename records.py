@@ -49,8 +49,9 @@ class Records(object):
     return tp
   
   def add_record(self,record_raw):
-    self.records.append(record_raw)
-    self.recordsDict[record_raw.id]=record_raw
+    if record_raw.isValid:
+      self.records.append(record_raw)
+      self.recordsDict[record_raw.id]=record_raw
   
   def clean_records(self):
     self.records = []
@@ -97,7 +98,7 @@ class Record(object):
      
 
   def __str__(self):
-    return '>{}'.format([self.altitude, self.assigned_to, self.assigned_to_id, self.client_created_at, self.client_updated_at, self.course, self.created_at, self.created_by, self.created_by_id, self.created_duration, self.created_location, self.edited_duration, self.form_id, self.horizontal_accuracy, self.id, self.latitude, self.longitude, self.project_id, self.speed, self.status, self.updated_at, self.updated_by, self.updated_by_id, self.updated_duration, self.updated_location, self.version, self.vertical_accuracy])
+    return '>{}'.format([self.altitude, self.assigned_to, self.assigned_to_id, self.client_created_at, self.client_updated_at, self.course, self.created_at, self.created_by, self.created_by_id, self.created_duration, self.created_location, self.edited_duration, self.form_id, self.horizontal_accuracy, self.id, self.latitude, self.longitude, self.project_id, self.speed, self.status, self.updated_at, self.updated_by, self.updated_by_id, self.updated_duration, self.updated_location, self.version, self.vertical_accuracy, self.form_values])
 
   def to_csv(self):
     return [self.altitude, self.assigned_to, self.assigned_to_id, self.client_created_at, self.client_updated_at, self.course, self.created_at, self.created_by, self.created_by_id, self.created_duration, self.created_location, self.edited_duration, self.form_id, self.horizontal_accuracy, self.id, self.latitude, self.longitude, self.project_id, self.speed, self.status, self.updated_at, self.updated_by, self.updated_by_id, self.updated_duration, self.updated_location, self.version, self.vertical_accuracy]
@@ -118,6 +119,15 @@ class Record(object):
       
   def add_toLog(self, st):
     self.logInfo += "\n"+st
+
+  def is_record_has_project(self):
+    if (self.project_id == '') or (self.project_id is None):
+      self.isValid = False
+      LO.l_war('The record id {} will not be used because it has no associated project.'.format(self.id))
+      self.add_toLog('The record id {} will not be used because it has no associated project.'.format(self.id))
+      return False
+    return True
+
 
 ##############################################
 # Records Functions
@@ -161,10 +171,10 @@ def create_record_from_json(record_raw,forms=[],projects=[]):
     LO.l_debug('record_raw')
     LO.l_debug(record_raw)
   
-  LO.l_debug('RID :{}'.format(RID))
+  LO.l_debug('The record id is :{}'.format(RID))
   
   if not RID and not RformId:
-    print('The record is not valid. Record Values:\n{}'.format(record))
+    LO.l_debug('The record is not valid. Record Values:\n{}'.format(record))
     record.isValid=False
   else:
     is_form_project_enabled = FO.get_projects_enabled_status(record.form_id,forms)
@@ -210,7 +220,7 @@ def get_records_from_list(listRecords,forms=[],projects=[]):
   records = Records()
   for record_raw in listRecords[:]:
     record = create_record_from_json(record_raw,forms,projects)
-    if PR.test_if_project_id(record.project_id,projects):
+    if (PR.test_if_project_id(record.project_id,projects)) or (not record.project_id):
       records.add_record(record)
   return records
 
@@ -230,7 +240,7 @@ def backup_records_from_forms():
   mp_backup_records_from_forms(formsO)
   TOFA.print_num_of_request()
 
-def mp_backup_records_from_forms(formsO):
+def mp_backup_records_from_forms(formsO = FO.Forms()):
   """
   This parallelisation of backup_form
   """
@@ -247,7 +257,7 @@ def mp_backup_records_from_forms(formsO):
       wraps.append(b)
   return wraps
 
-def mp_backup_records_from_form(form):
+def mp_backup_records_from_form(form = FO.Form()):
   formName = form.name_cleaned
   formID   = form.id
   start = time.time()
@@ -275,7 +285,7 @@ def mp_backup_records_from_form(form):
 # Backup Records and Records Version
 ##############################################
 # Backup Records
-def backup_records_from_form(form):
+def backup_records_from_form(form = FO.Form()):
   formName = form.name_cleaned
   LO.l_info('Start backup for the form "{}" with {} records'.format(formName,form.record_count))
   records = load_records_from_fulcrum(form)
@@ -296,7 +306,7 @@ def backup_records_from_form(form):
   return records
 
 # Backup records versions
-def backup_records_versions(form,recs):
+def backup_records_versions(form = FO.Form(),recs = Records()):
   formName = form.name_cleaned
   bName = TO.get_FormsPath()+formName+''
   
@@ -410,7 +420,7 @@ def search_for_keys_recu(dictKeysDataName,info):
 ##############################################
 def error_load(st):
   LO.l_err('The file {} is not available. A default empty Records will be loaded'.format(st))
-  return Plants()
+  return Records()
 
 # Load records from Webhooks
 ##############################################

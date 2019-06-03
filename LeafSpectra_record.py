@@ -4,10 +4,12 @@
 import parameters as PA
 import records as RE
 import tools as TO
+import tools_plots as TOP
+import tools_fulcrum_api as TOFA
 import logs as LO
 import LeafSpectra_measurements as LSM
-import SpectroscopyPanels_calibrations as SPC
 import SpectroscopyPanels_record as SPR
+import forms as FO
 
 # System
 import os, sys
@@ -37,7 +39,7 @@ class LeafSpectra(RE.Record):
   def __init__(self, record, bfn='',dm='',ii='',lltp='',lsm='',manu='',mb='',measurements=[],paID='',pdir='',pm='',sai='',sn='',spi='',stt='',wf=''):
     super(LeafSpectra,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_base_file_name = bfn
-    self.fv_calibration = SPC.SpectroscopyPanels_calibration()
+    self.fv_calibration = SPR.get_empty_calib()
     self.fv_date_measured = dm
     self.fv_figs = []
     self.fv_instrumentation_id = ii
@@ -89,6 +91,7 @@ class LeafSpectra(RE.Record):
     self.fv_date_approved = ''
     self.fv_published_by = ''
     self.fv_date_published = ''
+    self.leaves_plot = ''
     
   def to_csv_all(self):
     #return super(LeafSpectra, self).to_csv()+[self.id, self.fv_sample_id, self.fv_scientific_name, self.fv_date_measured, self.fv_measured_by, self.fv_spectroradiometer_start_time, self.fv_spectroradiometer_id, self.fv_instrumentation_id]
@@ -100,6 +103,26 @@ class LeafSpectra(RE.Record):
 
   def whoami(self):
     return type(self).__name__
+  
+  def get_wavelength_max(self):
+    wmax = -1
+    for measurement in self.fv_measurements:
+      wmaxt = measurement.m_get_wavelength_max()
+      if wmax == -1:
+        wmax = wmaxt
+      elif wmaxt < wmax:
+        wmax = wmaxt
+    return wmax
+
+  def get_wavelength_min(self):
+    wmin = -1
+    for measurement in self.fv_measurements:
+      wmint = measurement.m_get_wavelength_min()
+      if wmin == -1:
+        wmin = wmint
+      elif wmint > wmin:
+        wmin = wmint
+    return wmin
     
 
 ##############################################
@@ -147,17 +170,14 @@ def load_leafspectra_Records(spectroPanels):
   spectrum = LeafSpectrum()
   # Load records
   rec = load_leafspectra_Records_from_file()
-  # Add calibrations
   my_list = []
   #for record_raw in rec.records[:]:
   #  my_list.append(add_Record_in_spectrum(spectroPanels,record_raw))
   my_list = add_Records_in_spectrum(spectroPanels,rec)
-  
   my_list2 = []
   if len(my_list)>0:
     # update measurments
     my_list2 = update_leafspectra_records_measurements(my_list)
-
   if len(my_list2)>0:
     for wrap in my_list2[:]:
       # Add in spectrum
@@ -327,8 +347,7 @@ def link_leafspectra_record_and_calibration(spectroPanels,record):
     rID     = record.id
     panel_id= record.fv_panel_id
     temp    = record.fv_date_measured
-    calibs  = SPR.get_calibrations_from_panelID(panel_id, spectroPanels)
-    calib   = SPC.get_calibration_for_record_time(calibs, temp)
+    calib   = SPR.get_calibration_from_panelID(temp, panel_id, spectroPanels)
     LO.l_debug('Start update record {} with calibration and date {}'.format(rID,temp))
     
     if calib:
@@ -437,11 +456,14 @@ def update_leafspectra_record_measurements(record):
   return record
 
 ##############################################
-## Process record
+## Process records
 ##############################################
 def process_leafspectra_records(rec):
   """
   This parallelisation of process_record
+  """
+
+  """
   wraps = []
   for record in rec.records[:]:
     b = process_leafspectra_record(record)
@@ -473,7 +495,7 @@ def process_leafspectra_record(record):
     if boo:
       LO.l_info('Start prepare csv files for record {}'.format(record.id))
       leafspectra_record_to_csv(record)
-  
+      leafspectra_record_to_plot(record)
   return record
 
 # Spectrum Data
@@ -502,9 +524,9 @@ def large_leaf_calculation(record):
   pmB, pmR, pmT = (False for i in range(3))
   if 'both' in pm:
     pmB = True
-  if 'both' in pm or 'reflectance' in pm:
+  if pmB or 'reflectance' in pm:
     pmR = True
-  if 'both' in pm or 'transmittance' in pm:
+  if pmB or 'transmittance' in pm:
     pmT = True
 
   wvlMax = record.fv_calibration.cMax
@@ -645,9 +667,9 @@ def small_leaf_calculation(record):
   pmB, pmR, pmT = (False for i in range(3))
   if 'both' in pm:
     pmB = True
-  if 'both' in pm or 'reflectance' in pm:
+  if pmB or 'reflectance' in pm:
     pmR = True
-  if 'both' in pm or 'transmittance' in pm:
+  if pmB or 'transmittance' in pm:
     pmT = True
 
   wvlMax = record.fv_calibration.cMax
@@ -835,7 +857,7 @@ def small_leaf_calculation(record):
   return boo
 
 ##############################################
-# Records to CSV
+# Record to CSV
 ##############################################
 def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
@@ -891,6 +913,61 @@ def leafspectra_record_to_csv_values(record):
   return c,l,r
 
 
+##############################################
+# Record to plot
+##############################################
+def leafspectra_record_to_plot(record):
+  TOP.get_leafspectra_record_plot(record)
+  TOP.get_leafspectra_record_leaves_plot(record)
+  record.isProcessed = True
+  
+##############################################
+## Update records
+##############################################
+def update_leafspectra_records(rec):
+  """
+  This parallelisation of process_record
+  """
+  """
+  wraps = []
+  for record in rec.records:
+    b = update_leafspectra_record(record)
+    if b:
+      wraps.append(b)
+  return wraps
+      
+  """
+  # parallelisation here
+  output = mp.Queue()
+  wraps = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  results = [pool.apply_async(update_leafspectra_record, args=(record,)) for record in rec.records[:]]
+  pool.close()
+  pool.join()
+  for r in results:
+    b = r.get()
+    if b:
+      wraps.append(b)
+  return wraps
+  
+def update_leafspectra_record(record):
+  """Update a leaf spectra record
+  This function take a leafspectra record object and return a processed leafspectra record processed object
+  """
+  if record.isProcessed:
+    LO.l_info('Update record {}'.format(record.id))
+    keyValues = FO.get_Keys_from_DataNames(record.form_id,['record_is_calculated', 'calculated_record_link'])
+    if record.leaves_plot == '':
+      record.leaves_plot = 'http://data.caboscience.org/field-data/projects/2018-Girard-MSc-UdeM/spectra/processed/'
+    obj = TOFA.get_record(record.id)
+    obj['record']['form_values'][keyValues['record_is_calculated']]= 'yes'
+    obj['record']['form_values'][keyValues['calculated_record_link']]= record.leaves_plot
+    TOFA.fulcrum_update_record(""+record.id+"",obj)
+  return record
+
+
+
+##############################################
 # Spectrum Data Logs
 ##############################################
 def print_log_records(rec):
@@ -902,4 +979,7 @@ def print_log_records(rec):
 def extract_log_record(record):
   if record.fv_processedPath != '':
     TO.create_directory(record.fv_processedPath+'')
-    TO.string_to_file(record.fv_processedPath+'/'+record.id+'.log','{}'.format(record.logInfo))
+    TO.string_to_file(record.fv_processedPath+'/'+record.fv_sample_id+'.log','{}'.format(record.logInfo))
+  else:
+    print 'no fv_processedPath for record {}'.format(record.id)
+

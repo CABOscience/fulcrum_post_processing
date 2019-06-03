@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # Local Modules
 import parameters as PA
+import records as RE
+import projects as PR
 import tools as TO
 import logs
 
@@ -20,7 +22,7 @@ import pandas as pd
 # CONCAT FILES in directories and projects
 ##############################################
 
-def concat_files(projects=[]):
+def concat_files(recs= RE.Records() , projects=PR.Projects()):
   allCSV      = []
   leavesCSV   = []
   refCSV      = []
@@ -42,6 +44,25 @@ def concat_files(projects=[]):
     for filename in fnmatch.filter(filenames, '*.txt'):
       if 'interpolated_files' in root and projectinroot(root,projects):
         sigTxtFiles.append(os.path.join(root, filename))
+  
+  # Add filter by records:
+  # Concat only if the record has a status > than verified
+  for recID in recs.recordsDict.keys():
+    recStatus = recs.recordsDict[recID].status
+    recWf = recs.recordsDict[recID].fv_working_folder
+    v = TO.get_record_status_value(recStatus)
+    if v < 4:
+      recs.recordsDict[recID].add_toLog('The current record status is no submitted or higher. It will not be used in files concatenation. For more information contact Etienne.')
+      for acsv in allCSV:
+        if recWf in acsv:
+          allCSV.remove(acsv)
+      for lcsv in leavesCSV[:]:
+        if recWf in lcsv:
+          leavesCSV.remove(lcsv)
+      for rcsv in refCSV[:]:
+        if recWf in rcsv:
+          refCSV.remove(rcsv)
+  
   c_list = []
   c_list.append([allCSV,3,'project_all_combined'])
   c_list.append([allCSV,2,'all_combined'])
@@ -52,7 +73,7 @@ def concat_files(projects=[]):
   b = create_files(c_list)
   z_list = []
   z_list.append([sigfiles,1,'sigfiles'])
-  z_list.append([sigfiles,1,'interpolated_files'])
+  z_list.append([sigTxtFiles,1,'interpolated_files'])
   b = create_zip(z_list)
   
 # Test if the root contains a projects name
@@ -117,73 +138,3 @@ def create_zip_from_l(l):
       zipf.write(f)
     zipf.close()
   return True
-
-'''
-  create_for_all_projects(allCSV)
-  create_for_all_working_directories(allCSV)
-  create_for_leaves_projects(leavesCSV)
-  create_for_leaves_working_directories(leavesCSV)
-  create_for_references_projects(refCSV)
-  create_for_references_working_directories(refCSV)
-  create_sig_raw_zip_working_directories(sigfiles)
-  create_sig_raw_zip_working_directories(sigTxtFiles)
-
-# All
-## project level
-def create_for_all_projects(allCSV):
-  allCSVP = TO.get_directories(3,allCSV)
-  for k in allCSVP.keys():
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in allCSVP[k] ] )
-    combined_csv.to_csv( k+"/project_all_combined.csv", index=False )
-## working directory level
-def create_for_all_working_directories(allCSV):
-  allCSVWF = TO.get_directories(2,allCSV)
-  for k in allCSVWF.keys():
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in allCSVWF[k] ] )
-    combined_csv.to_csv( k+"/all_combined.csv", index=False )
-# Leaves
-## project level
-def create_for_leaves_projects(leavesCSV):
-  leavesCSVWF = TO.get_directories(3,leavesCSV)
-  for k in leavesCSVWF.keys():
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in leavesCSVWF[k] ] )
-    combined_csv.to_csv( k+"/project_leaves_combined.csv", index=False )
-## working directory level
-def create_for_leaves_working_directories(leavesCSV):
-  leavesCSVWF = TO.get_directories(2,leavesCSV)
-  for k in leavesCSVWF.keys():
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in leavesCSVWF[k] ] )
-    combined_csv.to_csv( k+"/leaves_combined.csv", index=False )
-# Ref
-## project level
-def create_for_references_projects(refCSV):
-  refCSVP = TO.get_directories(3,refCSV)
-  for k in refCSVP.keys():
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in refCSVP[k] ] )
-    combined_csv.to_csv( k+"/project_ref_combined.csv", index=False )
-## working directory level
-def create_for_references_working_directories(refCSV):
-  refCSVP = TO.get_directories(2,refCSV)
-  for k in refCSVP.keys():
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in refCSVP[k] ] )
-    combined_csv.to_csv( k+"/ref_combined.csv", index=False )
-
-# raw sig files
-## working directory level
-def create_sig_raw_zip_working_directories(sigfiles):
-  sigFilesWF = TO.get_directories(1,sigfiles)
-  for k in sigFilesWF.keys():
-    zipf = zipfile.ZipFile(k+'/sigfiles.zip', 'w', zipfile.ZIP_DEFLATED)
-    for f in sigFilesWF[k]:
-      zipf.write(f)
-    zipf.close()
-# interpolated sig files
-## working directory level
-def create_sig_raw_zip_working_directories(sigTxtFiles):
-  sigTxtFilesWF = TO.get_directories(2,sigTxtFiles)
-  for k in sigTxtFilesWF.keys():
-    zipf = zipfile.ZipFile(k+'/interpolated_files.zip', 'w', zipfile.ZIP_DEFLATED)
-    for f in sigTxtFilesWF[k]:
-      zipf.write(f)
-    zipf.close()
-'''

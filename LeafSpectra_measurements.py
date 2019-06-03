@@ -62,6 +62,15 @@ class SpectraMeasurements(object):
 
   def to_csv_all(self):
     return [self.leaf_side_measured]
+  
+  def m_get_wavelength_range(self):
+    return self.spectre.metadata['wavelength_range']
+    
+  def m_get_wavelength_max(self):
+    return self.m_get_wavelength_range()[1]
+
+  def m_get_wavelength_min(self):
+    return self.m_get_wavelength_range()[0]
 
 def extract_leaf_spectra_measurements(measurements):
   """ This will extract measurements of a leaf spectra record

@@ -62,10 +62,12 @@ def main():
     LO.l_info('## End load records from webhook')
   LO.l_info('## Process records')
   LSR.process_leafspectra_records(records)
+  LO.l_info('## Update records')
+  LSR.update_leafspectra_records(records)
+  LO.l_info('## Concat Files')
+  LSCF.concat_files(records, projects)
   LO.l_info('## Print records log')
   LSR.print_log_records(records)
-  LO.l_info('## Concat Files')
-  LSCF.concat_files(projects)
 
 ##############################################
 # MAIN

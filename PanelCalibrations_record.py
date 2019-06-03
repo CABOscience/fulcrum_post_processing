@@ -340,26 +340,7 @@ def process_panel_calibrations_records(rec):
   
 def process_record(record):
   LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
-  boo = calculate_leafspectra_record(record)
-  if boo:
-    LO.l_info('Start prepare csv files for record {}'.format(record.id))
-    leafspectra_record_to_csv(record)
-  '''
-  # parallelisation here
-  
-  for record in rec.records[:]:
-    #print '{}'.format(record.project_name)
-    #if 'SWA-Warren' in record.project_name:
-    #if 'a44016be-14a1-4b1a-8c56-c92086273442' in record.id:
-    if '1ae1a8af-5abf-414d-bd48-8f97f09709f4' in record.id:
-      LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
-      boo = calculate_leafspectra_record(record)
-      print boo
-      sys.exit(1)
-      if boo:
-        LO.l_info('Start prepare csv files for record {}'.format(record.id))
-        leafspectra_record_to_csv(record)
-  '''
+  boo = panel_calibration_calculation(record)
 
 ## Panel Calibration Calculations
 ########################
@@ -397,18 +378,10 @@ def panel_calibration_calculation(record):
     if 'B:' in measurement.sphere_configuration_svc_large_leaves:
       reflStrays.append(measurement) #B: No leaf
     if 'C:' in measurement.sphere_configuration_svc_large_leaves:
-      leafNumber = measurement.leaf_number
-      if leafNumber:
+      panelNumber = measurement.panel_number
+      if panelNumber:
         reflTargets.append(measurement)
-        record.reflecLeaves[leafNumber] = measurement
-    #Transmission
-    if 'D:' in measurement.sphere_configuration_svc_large_leaves:
-      transRefAll.append(measurement) 
-    if 'E:' in measurement.sphere_configuration_svc_large_leaves:
-      leafNumber = measurement.leaf_number
-      if leafNumber:
-        transTargets.append(measurement)
-        record.transLeafs[leafNumber] = measurement
+        record.reflecLeaves[panelNumber] = measurement
   
   # Fix the range, if not use of calibration
   if not pmR:

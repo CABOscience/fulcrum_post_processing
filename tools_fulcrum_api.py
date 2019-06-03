@@ -71,14 +71,14 @@ def check_fulcrum_version():
     if ParseVersion(PA.FulcrumVersion) > ParseVersion(get_fulcrum_version()):
       LO.l_war('Your fulcrum version need to be updated (Need: {} vs Current: {}). Hope all function are already there.'.format(PA.FulcrumVersion,get_fulcrum_version()))
 
-def exception_api(e,s):
+def exception_api(e,s,logName="main"):
   if isinstance(e, NotFoundException):
-    LO.l_war('{} {}'.format(s,PA.NotFoundStr))
+    LO.l_war('{} {}'.format(s,PA.NotFoundStr),logName)
   elif isinstance(e, RateLimitExceededException):
-    LO.l_err('{} {}'.format(s,PA.LimitExceededStr))
+    LO.l_err('{} {}'.format(s,PA.LimitExceededStr),logName)
     print_num_of_request()
   else:
-    LO.l_err('The error is:\n{}'.format(s))
+    LO.l_err('The error is:\n{}'.format(s),logName)
   return False
 
 #
@@ -141,7 +141,7 @@ def get_fulcrum_forms(logName="main"):
     return forms
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search forms has failed'
-    exception_api(e,s)
+    exception_api(e,s,logName)
     sys.exit(1)
 
 
@@ -153,7 +153,7 @@ def find_forms_from_ID(formID,logName="main"):
     return formjson
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search project has failed for project {}'.format(formID)
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
 
 # get records from a form
 def get_fulcrum_records(formID,formName,logName="main"):
@@ -164,7 +164,7 @@ def get_fulcrum_records(formID,formName,logName="main"):
     return records
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search records has failed for form {}'.format(formName)
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
     
 def get_record_history_2(recordID,logName="main"):
   url = FulcrumApiURL+'/records/'+recordID+'/history.json?token='+FulcrumApiKey
@@ -185,7 +185,17 @@ def get_record_history(recordID,logName="main"):
     return record_history
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search records has failed for form {}'.format(formName)
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
+
+def get_record(recordID,logName="main"):
+  try:
+    fulcrumApp = get_fulcrum_access()
+    record = fulcrumApp.records.find(recordID)
+    increase_num_of_request_by(1)
+    return record
+  except (NotFoundException, RateLimitExceededException) as e:
+    s = 'Search records has failed for form {}'.format(formName)
+    return exception_api(e,s,logName)
 
 def find_project_from_project_ID(projectID,logName="main"):
   try:
@@ -195,7 +205,7 @@ def find_project_from_project_ID(projectID,logName="main"):
     return project
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search project has failed for project {}'.format(projectID)
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
  
 def get_projects(logName="main"):
   try:
@@ -205,7 +215,7 @@ def get_projects(logName="main"):
     return projects
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search projects has failed'
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
 
 def donwload_photo_meta(fname,fulcrumApp,photoID,logName="main"):
   url = FulcrumApiURL+'/photos/'+photoID+'.json?token='+FulcrumApiKey
@@ -226,7 +236,7 @@ def get_photo_meta(photoID,logName="main"):
     return record_history
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search Photos Meta has failed for form {}'.format(formName)
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
 
 def get_photo_file(photoID,logName="main"):
   try:
@@ -236,10 +246,44 @@ def get_photo_file(photoID,logName="main"):
     return photo
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search photos has failed for photo id {}'.format(photoID)
-    return exception_api(e,s)
+    return exception_api(e,s,logName)
 
 
 
+
+##############################################
+# Update record
+##############################################
+
+def fulcrum_update_record(recordID, obj={}, logName="main"):
+  try:
+    fulcrumApp = get_fulcrum_access()
+    update = fulcrumApp.records.update(recordID, obj)
+    st = 'Record {} has been updated with the object:\n {}'.format(recordID, obj)
+    print st
+    LO.l_debug(st,logName)
+  except (NotFoundException, RateLimitExceededException) as e:
+    s = 'Update Record has failed for {}'.format(recordID)
+    return exception_api(e,s,logName)
+  except InvalidAPIVersionException(Exception) as e:
+    s = 'Update Record has failed for {}'.format(recordID)
+    print '{} {}'.format(s,e)
+    return exception_api(e,s,logName)
+  except UnauthorizedException(Exception) as e:
+    s = 'Update Record has failed for {}'.format(recordID)
+    print '{} {}'.format(s,e)
+    return exception_api(e,s,logName)
+  except InternalServerErrorException(Exception) as e:
+    s = 'Update Record has failed for {}'.format(recordID)
+    print '{} {}'.format(s,e)
+    return exception_api(e,s,logName)
+  except BadRequestException(Exception) as e:
+    s = 'Update Record has failed for {}'.format(recordID)
+    print '{} {}'.format(s,e)
+    return exception_api(e,s,logName)
+
+
+  
 ##############################################
 # Request
 ##############################################

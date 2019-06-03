@@ -94,6 +94,7 @@ class Record(object):
     self.vertical_accuracy = RverticalAccuracy
     self.project_name = RprojectName
     self.isValid = True
+    self.isProcessed = False
     self.logInfo = ""
      
 
@@ -127,6 +128,9 @@ class Record(object):
       self.add_toLog('The record id {} will not be used because it has no associated project.'.format(self.id))
       return False
     return True
+  
+  def to_json(self):
+    return json.dumps(self.__dict__)
 
 
 ##############################################
@@ -411,6 +415,26 @@ def search_for_keys_recu(dictKeysDataName,info):
         info[dictKeysDataName[k]] = info.pop(k)
     for v in info.values():
       search_for_keys_recu(dictKeysDataName,v)
+
+
+def update_json_record_from_dataname_to_keys(record,recordjson):
+  dataNameToKey = FO.get_Keys_from_formId(record.form_id)
+  search_for_dataName_recu(dataNameToKey,recordjson)
+  return recordjson
+    
+# Records sub functions
+# Recursive search for keys to dataname
+def search_for_dataName_recu(dataNameToKey,rjson):
+  if isinstance(rjson, list):
+    for v in rjson:
+      if v:
+        search_for_dataName_recu(dataNameToKey,v)
+  elif isinstance(rjson, dict):
+    for k in rjson.keys():
+      if k in dataNameToKey:
+        info[dataNameToKey[k]] = info.pop(k)
+    for v in rjson.values():
+      search_for_dataName_recu(dataNameToKey,v)
 
 ##############################################
 # LOAD RECORDS

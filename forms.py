@@ -33,9 +33,9 @@ class Forms(object):
     tp = ""
     for form in self.forms:
       if tp:
-        tp += '\n'+form
+        tp += '\n {}'.format(form)
       else:
-        tp = form
+        tp = '{}'.format(form)
     return tp
 
   def to_csv(self):
@@ -63,6 +63,7 @@ class Form(object):
     self.created_at = created_at
     self.description = description
     self.dictKeysDataName= dictKeysDataName
+    self.dictDataNameKeys= {}
     self.backup_file = backup_file
     self.elements = elements
     self.geometry_required = geometry_required
@@ -115,8 +116,16 @@ class Form(object):
       dictKeysDataName = {}
       search_for_keys_form_recu(dictKeysDataName,self.elements)
       self.dictKeysDataName = dictKeysDataName
-      LO.l_debug('The form {} has now a dictKeysDataName'.format(self.name_cleaned))
-      self.add_toLog('The form {} has now a dictKeysDataName'.format(self.name_cleaned))
+      st = 'The form {} has now a dictKeysDataName'.format(self.name_cleaned)
+      LO.l_debug(st)
+      self.add_toLog(st)
+
+  def set_dictDataNameKeys(self):
+    if len(self.dictKeysDataName)>0:
+      self.dictDataNameKeys = from_DataName_to_Keys(self.dictKeysDataName)
+      st = 'The form {} has now a dictDataNameKeys'.format(self.name_cleaned)
+      LO.l_debug(st)
+      self.add_toLog(st)
 
   def set_NameCleaned(self):
     if not self.name_cleaned:
@@ -160,7 +169,11 @@ def create_form_directories(formName):
     if not os.path.exists(directory):
       os.makedirs(directory)
  
-
+def from_DataName_to_Keys(dictKeysDataName):
+  dictDataNameKeys = {}
+  for k in dictKeysDataName.keys():
+    dictDataNameKeys[dictKeysDataName[k]] = k
+  return dictDataNameKeys
 
 ##############################################
 # Forms Functions
@@ -196,6 +209,7 @@ def create_form_from_json(form_raw):
   form = Form(assignment_enabled, auto_assign, bounding_box, created_at, description, dictKeysDataName, elements, geometry_required, geometry_types, hidden_on_dashboard, ID, image, image_large, image_small, image_thumbnail, name, name_cleaned, projects_enabled, record_count, record_title_key, script, status_field, title_field_keys, updated_at, version, backup_file)
   form.set_NameCleaned()
   form.set_KeysDataName()
+  form.set_dictDataNameKeys()
   return form
 
 def backup_fulcrum_forms(formsJson):
@@ -244,7 +258,23 @@ def get_projects_enabled_status(form_id,fs=[]):
   LO.l_war('get_projects_enabled_status : The form {} was not found in formsDictID'.format(form_id))
   return ""
 
+def get_Keys_from_DataNames(formId, dataNames = []):
+  forms = load_forms()
+  form = forms.formsDictID[formId]
+  keyValues = {}
+  for dataName in dataNames[:]:
+    if dataName in form.dictDataNameKeys:
+      keyValues[dataName] = form.dictDataNameKeys[dataName]
+  return keyValues
 
+def get_Keys_from_formId(formId):
+  forms = load_forms()
+  form = forms.formsDictID[formId]
+  keyValues = {}
+  for dataName in dataNames[:]:
+    if dataName in form.dictDataNameKeys:
+      keyValues[dataName] = form.dictDataNameKeys[dataName]
+  return keyValues
 
 ##############################################
 # LOAD SOURCES

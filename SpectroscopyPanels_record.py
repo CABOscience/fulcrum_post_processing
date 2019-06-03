@@ -167,14 +167,19 @@ def load_spectroscopypanels_webhook_Records():
         
   return spectroPanels
 
-def get_calibrations_from_panelID(panelID,spectroPanels=[]):
+def get_calibration_from_panelID(temp, panelID, spectroPanels=SpectroscopyPanels()):
   if len(spectroPanels)<1:
     spectroPanels = load_spectroscopypanels()
   if panelID in spectroPanels.recordsDict:
-    return spectroPanels.recordsDict[panelID].fv_calibrations.calibrations
+    calibs = spectroPanels.recordsDict[panelID].fv_calibrations.calibrations
+    calib = SPC.get_calibration_for_record_time(calibs, temp)
+    return calib
   else:
     LO.l_error('The panel ID {} has not been found in Spectroscopy Panels records'.format(panelID))
     return []
+    
+def get_empty_calib():
+  return SPC.SpectroscopyPanels_calibration()
 
 ##############################################
 # Get Spectroscopypanels

@@ -185,6 +185,21 @@ def get_leafspectra_record_leaves_plot(record):
 
   xmin = record.get_wavelength_min()
   xmax = record.get_wavelength_max()
+  '''
+  for measurement in record.fv_measurements:
+    reflectance = measurement.reflectance
+    if not reflectance.empty:
+      df = TO.from_series_to_dataframe(reflectance)
+      for index, row in df.iterrows():
+        dft = TO.from_series_to_dataframe(measurement.spectre.measurement)
+        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance",row[0],dft.iloc[index][1],row[1]])
+    transmittance = measurement.transmittance
+    if not transmittance.empty:
+      df = TO.from_series_to_dataframe(transmittance)
+      for index, row in df.iterrows():
+        dft = TO.from_series_to_dataframe(measurement.spectre.measurement)
+        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance",row[0],dft.iloc[index][1],row[1]])
+  '''
 
   reflecLeaves = record.fv_reflecLeaves
   transLeaves = record.fv_transLeaves
@@ -193,41 +208,44 @@ def get_leafspectra_record_leaves_plot(record):
   leavesVal = reflecLeaves.keys()
   if len(leavesVal)<1:
     leavesVal = transLeaves.keys()
-  for leafNum in leavesVal:
-    imgPath = imgdir+'/'+record.fv_sample_id+'_leaf_'+leafNum+'.png'
-    reflectance = pd.DataFrame()
-    transmittance = pd.DataFrame()
-    if leafNum in reflecLeaves:
-      reflectance = reflecLeaves[leafNum].reflectance
-      reflectance = TO.from_series_to_dataframe(reflectance)
-      reflectance = reflectance.rename(columns={"tgt_counts": "reflectance"})
-      reflectance = reflectance.set_index('wavelength')
-    if leafNum in transLeaves:
-      transmittance = transLeaves[leafNum].transmittance
-      transmittance = TO.from_series_to_dataframe(transmittance)
-      transmittance = transmittance.rename(columns={"tgt_counts": "transmittance"})
-      transmittance = transmittance.set_index('wavelength')
-    title = record.fv_sample_id+' leaf num: '+leafNum
-    img_reflect_and_transmi(xmin,xmax,reflectance,transmittance,imgPath,title)
+  if len(leavesVal)>0:
+    for leafNum in leavesVal:
+      imgPath = imgdir+'/'+record.fv_sample_id+'_leaf_'+leafNum+'.png'
+      reflectance = pd.DataFrame()
+      transmittance = pd.DataFrame()
+      if leafNum in reflecLeaves:
+        reflectance = reflecLeaves[leafNum].reflectance
+        reflectance = TO.from_series_to_dataframe(reflectance)
+        reflectance = reflectance.rename(columns={"tgt_counts": "reflectance"})
+        reflectance = reflectance.set_index('wavelength')
+      if leafNum in transLeaves:
+        transmittance = transLeaves[leafNum].transmittance
+        transmittance = TO.from_series_to_dataframe(transmittance)
+        transmittance = transmittance.rename(columns={"tgt_counts": "transmittance"})
+        transmittance = transmittance.set_index('wavelength')
+      title = record.fv_sample_id+' leaf num: '+leafNum
+      img_reflect_and_transmi(xmin,xmax,reflectance,transmittance,imgPath,title)
 
-  f, axarr = plt.subplots(3, 2, figsize=(10,10))
-  f.suptitle(record.fv_sample_id+' leaves')
-  imgFiles = TO.get_files_from_path(imgdir+'/')
-  y=1
-  x=2
-  for imgFile in imgFiles:
-    img = mpimg.imread(imgFile)
-    axarr[x,y].imshow(img, interpolation='none')
-    #head, tail = os.path.split(imgFile)
-    #axarr.set_title(fv_sample_id+' leaves')
-    axarr[x,y].axis('off')
-    if x == 0:
-      y -= 1
-      x = 2
-    else:
-      x -=1
-  record.plot_leaves = record.fv_processedPath+'/'+record.fv_sample_id+'_leaves.png'
-  plt.savefig(record.fv_processedPath+'/'+record.fv_sample_id+'_leaves.png', dpi=150)
+    imgFiles = TO.get_files_from_path(imgdir+'/')
+    if len(imgFiles)>0:
+      f, axarr = plt.subplots(3, 2, figsize=(10,10))
+      f.suptitle(record.fv_sample_id+' leaves')
+      y=1
+      x=2
+      for imgFile in imgFiles:
+        img = mpimg.imread(imgFile)
+        axarr[x,y].imshow(img, interpolation='none')
+        #head, tail = os.path.split(imgFile)
+        #axarr.set_title(fv_sample_id+' leaves')
+        axarr[x,y].axis('off')
+        if x == 0:
+          y -= 1
+          x = 2
+        else:
+          x -=1
+      plt.savefig(record.fv_processedPath+'/'+record.fv_sample_id+'_leaves.png', dpi=150)
+      return True
+  return False
   
 
 def print_entire_data_frame(df):
@@ -237,7 +255,7 @@ def print_entire_data_frame(df):
   pd.reset_option('display.max_columns')
 
 def get_leafspectra_record_plot(record):
-  if '23a4dc4c-d41e-49f9-bdf4-3f1d737f9549' == record.id:
+  #if '23a4dc4c-d41e-49f9-bdf4-3f1d737f9549' == record.id:
     reflecAverage = record.fv_reflecAverage
     reflecDiffRef = record.fv_reflecDiffRef
     reflecRef     = record.fv_reflecRef
@@ -263,25 +281,40 @@ def img_reflect_and_transmi(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.Data
     if len(indexV)<1:
       indexV = transmi.index.values.tolist()
   fig = plt.figure()
-  ax1 = fig.add_subplot(111)
-  ax1.plot(indexV, reflecV, color='#998ec3')
-  ax1.set_ylabel('reflectance', color='#998ec3')
-  ax1.set_xlabel('wavelength (nm)')
-  ax1.set_title(title)
-  for tl in ax1.get_yticklabels():
-    tl.set_color('#998ec3')
-  ax1.set_ylim(-0.1, 1.1)
-  loc = plticker.MultipleLocator(base=250) # this locator puts ticks at regular intervals
-  ax1.xaxis.set_major_locator(loc)
-  ax1.set_xlim(xmin,xmax)
+  if len(reflecV)>0:
+    ax1 = fig.add_subplot(111)
+    ax1.plot(indexV, reflecV, color='#998ec3')
+    ax1.set_ylabel('reflectance', color='#998ec3')
+    ax1.set_xlabel('wavelength (nm)')
+    ax1.set_title(title)
+    for tl in ax1.get_yticklabels():
+      tl.set_color('#998ec3')
+    ax1.set_ylim(-0.1, 1.1)
+    loc = plticker.MultipleLocator(base=250) # this locator puts ticks at regular intervals
+    ax1.xaxis.set_major_locator(loc)
+    ax1.set_xlim(xmin,xmax)
   
-  ax2 = ax1.twinx()
-  ax2.plot(indexV, transmiV, 'r-', color='#f1a340')
-  ax2.set_ylim(1.1, -0.1)
-  ax2.set_xlim(xmin,xmax)
-  ax2.set_ylabel('transmittance', color='#f1a340')
-  for tl in ax2.get_yticklabels():
-      tl.set_color('#f1a340')
+    if len(transmiV)>0:
+      ax2 = ax1.twinx()
+      ax2.plot(indexV, transmiV, 'r-', color='#f1a340')
+      ax2.set_ylim(1.1, -0.1)
+      ax2.set_xlim(xmin,xmax)
+      ax2.set_ylabel('transmittance', color='#f1a340')
+      for tl in ax2.get_yticklabels():
+          tl.set_color('#f1a340')
+  else:
+    if len(transmiV)>0:
+      ax1 = fig.add_subplot(111)
+      ax1.plot(indexV, reflecV, color='#f1a340')
+      ax1.set_ylabel('transmittance', color='#f1a340')
+      ax1.set_xlabel('wavelength (nm)')
+      ax1.set_title(title)
+      for tl in ax1.get_yticklabels():
+        tl.set_color('#f1a340')
+      ax1.set_ylim(-0.1, 1.1)
+      loc = plticker.MultipleLocator(base=250) # this locator puts ticks at regular intervals
+      ax1.xaxis.set_major_locator(loc)
+      ax1.set_xlim(xmin,xmax)
   
-  if imgpath != "":
+  if (len(transmiV)>0 or len(reflecV)>0) and imgpath != "":
     plt.savefig(imgpath, dpi=150)

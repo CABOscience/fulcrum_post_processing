@@ -151,7 +151,7 @@ def create_symbolic_links(projectName):
   subDirectories = ['raw']
   for directory in directories:
     for subDirectory in subDirectories:
-      src = CampaignsPath+projectName+'/'+directory
+      src = PA.CampaignsPath+projectName+'/'+directory
       if os.path.exists(src):
         dest = PA.ProjectWebsitePath+projectName+'/'+directory+'/'+subDirectory
         if not os.path.exists(dest):

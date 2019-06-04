@@ -179,9 +179,9 @@ def load_leafspectra_Records(spectroPanels):
     # update measurments
     my_list2 = update_leafspectra_records_measurements(my_list)
   if len(my_list2)>0:
-    for wrap in my_list2[:]:
+    for record in my_list2[:]:
       # Add in spectrum
-      spectrum.add_record(wrap)
+      spectrum.add_record(record)
   return spectrum
 
 def load_leafspectra_Records_from_file():
@@ -474,16 +474,16 @@ def process_leafspectra_records(rec):
   """
   # parallelisation here
   output = mp.Queue()
-  wraps = []
   pool = mp.Pool(processes=PA.NumberOfProcesses)
   results = [pool.apply_async(process_leafspectra_record, args=(record,)) for record in rec.records[:]]
   pool.close()
   pool.join()
+  spectrum = LeafSpectrum()
   for r in results:
-    b = r.get()
-    if b:
-      wraps.append(b)
-  return wraps
+    record = r.get()
+    if record:
+      spectrum.add_record(record)
+  return spectrum
   
 def process_leafspectra_record(record):
   """Process a leaf spectra record
@@ -495,7 +495,7 @@ def process_leafspectra_record(record):
     if boo:
       LO.l_info('Start prepare csv files for record {}'.format(record.id))
       leafspectra_record_to_csv(record)
-      leafspectra_record_to_plot(record)
+      record.isProcessed = True
   return record
 
 # Spectrum Data
@@ -540,12 +540,12 @@ def large_leaf_calculation(record):
       reflRefs.append(measurement)
       if len(reflRefs)>0:
         # set values max and min from the min of max wvl or max calibration data
-        wvLO.l_max = reflRefs[0].spectre.metadata['wavelength_range'][1]
-        wvLO.l_min = reflRefs[0].spectre.metadata['wavelength_range'][0]
-        if wvLO.l_max < wvlMax:
-          wvlMax = wvLO.l_max
-        if wvLO.l_min > wvlMin:
-          wvlMin = wvLO.l_min
+        wvl_max = reflRefs[0].spectre.metadata['wavelength_range'][1]
+        wvl_min = reflRefs[0].spectre.metadata['wavelength_range'][0]
+        if wvl_max < wvlMax:
+          wvlMax = wvl_max
+        if wvl_min > wvlMin:
+          wvlMin = wvl_min
       else:
         LO.l_war("The record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.id))
     if 'B:' in measurement.sphere_configuration_svc_large_leaves:
@@ -916,10 +916,19 @@ def leafspectra_record_to_csv_values(record):
 ##############################################
 # Record to plot
 ##############################################
-def leafspectra_record_to_plot(record):
-  TOP.get_leafspectra_record_plot(record)
-  TOP.get_leafspectra_record_leaves_plot(record)
-  record.isProcessed = True
+def plots_leafspectra_records(rec):
+  for record in rec.records[:]:
+    if record.isProcessed == True:
+      LO.l_info('Start prepare plots data for record {}'.format(record.id))
+      TOP.get_leafspectra_record_plot(record)
+      if TOP.get_leafspectra_record_leaves_plot(record):
+        record.leaves_plot = PA.CaboWebsite+''+record.project_name+'/spectra/processed/'+record.fv_working_folder+'/'+record.fv_sample_id+'/'+record.fv_sample_id+'_leaves.png'
+      else:
+        s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
+        LO.l_war(s)
+        record.add_toLog(s)
+        record.isProcessed = False
+  return rec
   
 ##############################################
 ## Update records
@@ -939,16 +948,16 @@ def update_leafspectra_records(rec):
   """
   # parallelisation here
   output = mp.Queue()
-  wraps = []
   pool = mp.Pool(processes=PA.NumberOfProcesses)
   results = [pool.apply_async(update_leafspectra_record, args=(record,)) for record in rec.records[:]]
   pool.close()
   pool.join()
+  spectrum = LeafSpectrum()
   for r in results:
-    b = r.get()
-    if b:
-      wraps.append(b)
-  return wraps
+    record = r.get()
+    if record:
+      spectrum.add_record(record)
+  return spectrum
   
 def update_leafspectra_record(record):
   """Update a leaf spectra record

@@ -5,7 +5,7 @@ import logs as LO
 import tools as TO
 
 # Plot
-import os
+import os, time
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -185,21 +185,6 @@ def get_leafspectra_record_leaves_plot(record):
 
   xmin = record.get_wavelength_min()
   xmax = record.get_wavelength_max()
-  '''
-  for measurement in record.fv_measurements:
-    reflectance = measurement.reflectance
-    if not reflectance.empty:
-      df = TO.from_series_to_dataframe(reflectance)
-      for index, row in df.iterrows():
-        dft = TO.from_series_to_dataframe(measurement.spectre.measurement)
-        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance",row[0],dft.iloc[index][1],row[1]])
-    transmittance = measurement.transmittance
-    if not transmittance.empty:
-      df = TO.from_series_to_dataframe(transmittance)
-      for index, row in df.iterrows():
-        dft = TO.from_series_to_dataframe(measurement.spectre.measurement)
-        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance",row[0],dft.iloc[index][1],row[1]])
-  '''
 
   reflecLeaves = record.fv_reflecLeaves
   transLeaves = record.fv_transLeaves
@@ -244,6 +229,8 @@ def get_leafspectra_record_leaves_plot(record):
         else:
           x -=1
       plt.savefig(record.fv_processedPath+'/'+record.fv_sample_id+'_leaves.png', dpi=150)
+      #time.sleep(5)
+      plt.close('all')
       return True
   return False
   
@@ -318,3 +305,5 @@ def img_reflect_and_transmi(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.Data
   
   if (len(transmiV)>0 or len(reflecV)>0) and imgpath != "":
     plt.savefig(imgpath, dpi=150)
+    #time.sleep(5)
+    plt.close('all')

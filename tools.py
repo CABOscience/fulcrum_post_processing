@@ -4,6 +4,7 @@ import parameters as PA
 import logs as LO
 # System
 import io, os
+from datetime import datetime 
 # files
 import csv, codecs, cStringIO, json
 # Spectroscopy
@@ -590,9 +591,17 @@ def get_monotonic_series(series):
       return result
 
 def create_spectrum(fName,measureType):
-  
   return specdal.Spectrum(filepath=fName, measure_type= measureType)
 
 def create_empty_spectrum():
-  
   return specdal.Spectrum(name='empty')
+
+# time 
+def print_time(start_time,time_previous_task,task_type):
+  time_now = datetime.now()
+  time_elapsed = time_now - start_time 
+  print('{} Time elapsed since started (hh:mm:ss.ms) {}'.format(task_type,time_elapsed))
+  if time_previous_task != start_time:
+    time_temp = time_previous_task - start_time 
+    print('{} Time elapsed since previous task (hh:mm:ss.ms) {}'.format(task_type,time_temp))
+  return time_now

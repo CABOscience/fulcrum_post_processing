@@ -3,8 +3,10 @@
 # Local Modules
 import projects as PR
 import parameters as PA
+import tools as TO
 import logs as LO
-import sys
+import sys, time
+from datetime import datetime 
 import LeafSpectra_concat_files as LSCF
 import LeafSpectra_record as LSR
 #import SpectroscopyPanels_calibrations as SPC
@@ -40,15 +42,19 @@ $ sudo apt install python-configparser python-pandas python-scipy python-setupto
 #
 ##############################################
 def main():
+  start_time = datetime.now() 
   PA.set_parameters()
+  time_pa = TO.print_time(start_time,start_time,'Parameters')
   recordType= PA.LeafSpectraLogFile+"_from_form_file"
   LO.create_log("main","",recordType)
   projects = PR.load_projects()
   PR.create_project_website_view_directories(projects)
+  time_pr = TO.print_time(start_time,time_pa,'Project')
   
   LO.l_info('## Start load records from leafspectra')
   #calibrations  = SPC.extract_SpectroscopyPanels_calibrations()
   spectroPanels = SPR.load_spectroscopypanels()
+  time_spr = TO.print_time(start_time,time_pr,'SpectroPanels')
   
   # Extract records
   records = []
@@ -56,20 +62,27 @@ def main():
     LO.l_info('## Start load records from leafspectra')
     records = LSR.load_leafspectra_Records(spectroPanels)
     LO.l_info('## End load records from leafspectra')
+    time_llr = TO.print_time(start_time,time_spr,'load_leafspectra_Records')
   else:
     LO.l_info('## Start load records from webhook')
     records = LSR.load_leafspectra_webhook_Records(calibrations)
     LO.l_info('## End load records from webhook')
+    time_llr = TO.print_time(start_time,time_spr,'load_leafspectra_webhook_Records')
   LO.l_info('## Process records')
   records = LSR.process_leafspectra_records(records)
+  time_plr = TO.print_time(start_time,time_llr,'process_leafspectra_records')
   LO.l_info('## Plots records')
   records = LSR.plots_leafspectra_records(records)
+  time_plotr = TO.print_time(start_time,time_plr,'plots_leafspectra_records')
   LO.l_info('## Update records')
   records = LSR.update_leafspectra_records(records)
+  time_ulr = TO.print_time(start_time,time_plotr,'update_leafspectra_records')
   LO.l_info('## Concat Files')
   LSCF.concat_files(records, projects)
+  time_clr = TO.print_time(start_time,time_ulr,'concat_files')
   LO.l_info('## Print records log')
   LSR.print_log_records(records)
+  time_plor = TO.print_time(start_time,time_clr,'print_log_records')
 
 ##############################################
 # MAIN

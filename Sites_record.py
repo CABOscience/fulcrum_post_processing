@@ -200,7 +200,7 @@ def load_sites_from_json_file():
 
 # Load Sites from fulcrum
 def load_sites_from_fulcrum():
-  RE.backup_records_from_forms()
+  #RE.backup_records_from_forms()
   return load_sites_from_json_file()
 
 # Load from Sites form

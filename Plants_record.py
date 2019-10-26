@@ -284,7 +284,7 @@ def load_plants_from_records_file():
 
 # Load Plants from fulcrum
 def load_plants_from_fulcrum():
-  RE.backup_records_from_forms()
+  #RE.backup_records_from_forms()
   return load_plants_from_records_file()
 
 # Load from Plants form

@@ -300,7 +300,7 @@ def load_panel_calibrations_from_records_file():
 
 # Load Panel calibrations from fulcrum
 def load_panelCalibrations_from_fulcrum():
-  RE.backup_records_from_forms()
+  #RE.backup_records_from_forms()
   return load_panelCalibrations_from_json_file()
 
 # Load Panel Calibrations from form

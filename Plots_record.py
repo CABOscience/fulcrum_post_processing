@@ -251,7 +251,7 @@ def load_plots_from_json_file():
 
 # Load Plots from fulcrum
 def load_plots_from_fulcrum():
-  RE.backup_records_from_forms()
+  #RE.backup_records_from_forms()
   return load_plots_from_json_file()
 
 # Load from Plots form

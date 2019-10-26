@@ -217,6 +217,9 @@ def add_Records_in_spectrum(calibrations,rec):
   my_list = []
   pool = mp.Pool(processes=PA.NumberOfProcesses)
   results = [pool.apply_async(add_Record_in_spectrum, args=(calibrations,record_raw)) for record_raw in rec.records[:]]
+  #results = []
+  #for record_raw in rec.records[:]:
+  #  results.append(add_Record_in_spectrum(calibrations,record_raw))
   pool.close()
   pool.join()
   for r in results:
@@ -331,6 +334,8 @@ def extract_leafspectra_record(record):
       if record.fv_manufacturer_short_name_sphere == 'SVC':
         record.fv_extFile = '.sig'
         record.fv_measureType = 'tgt_counts'
+      #if '5d3ca27b-c67d-4b85-835c-9d418141fc25' not in record.id:
+      #  record.isValid = False
     else:
       tab = ['base_file_name','working_folder','scientific_name','properties_measured']
       s = ""

@@ -67,12 +67,12 @@ class SpectroscopyPanel(RE.Record):
     self.hasCalibrations = False
 
   def update_record_with_calibrations(self):
-    if self.fv_calibrations:
+    if self.fv_calibrations and self.fv_calibrations != '':
       self.fv_calibrations = SPC.extract_SpectroscopyPanels_calibration_values(self.fv_serial_number,self.fv_calibrations)
       #self.fv_calibrations.toPrint()
     else:
-      print('no calibrations')
-    #for calibration in self.fv_calibrations:
+      print('No calibrations for {} and sn {}'.format(self.id,self.fv_serial_number))
+      self.isValid = False
 
 def extract_spectroscopyPanel_record(self):
     """ This will extract a spectroscopy panel record data from a record "form values"
@@ -224,7 +224,7 @@ def load_spectroscopypanels_from_records_file():
 
 # Load Spectroscopypanels from fulcrum
 def load_spectroscopypanels_from_fulcrum():
-  RE.backup_records_from_forms()
+  #RE.backup_records_from_forms()
   return load_spectroscopypanels_from_records_file()
 
 # Load from Spectroscopypanels form

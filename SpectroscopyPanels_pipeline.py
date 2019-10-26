@@ -45,8 +45,16 @@ def main():
   PA.set_parameters()
   recordType= PA.SpectroscopyPanelsLogFile+"_from_form_file"
   LO.create_log("main","",recordType)
+
+  spectroPanels = SPR.load_spectroscopypanels()
+
+  for panelID in spectroPanels.recordsDict.keys():
+    print('panelID: {}'.format(panelID))
+    calibrations = spectroPanels.recordsDict[panelID].fv_calibrations.calibrations
+    for calib in calibrations:
+      print('calibDate: {}'.format(calib.dDate))
+
   
-  SPR.load_spectroscopypanels()
 
 ##############################################
 # MAIN

@@ -42,10 +42,11 @@ def make_SpectroscopyPanels_calibrations(calibsTab):
 def get_calibration_for_record_time(calibrations, t):
   ts = TO.from_date_to_s(t)
   calib = SpectroscopyPanels_calibration()
-  tp = 0
+  tp = 10000000000000000000000
   for calibration in calibrations:
-    td = int(ts)-int(calibration.cDate)
-    if td>0 and td>tp:
+    tc = TO.from_date_to_s(calibration.dDate)
+    td = int(ts)-int(tc)
+    if td>=0 and td<tp:
       calib = calibration
       tp = td
   if calib.cID != '':
@@ -67,7 +68,7 @@ class SpectroscopyPanels_calibration(object):
     self.spectre = spectre
   
   def __str__(self):
-    s = 'calibID>'+self.cID+'< calibUDate>'+self.uDate+'< calibCDate>'+self.cDate
+    s = 'calibID>'+self.cID+'< calibUDate>'+self.uDate+'< calibCDate>'+self.cDate+' cFilePath >'+self.cFilePath+' dDate >'+self.dDate+''
     return s
   
   def print_csv(self):

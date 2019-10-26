@@ -5,6 +5,7 @@ import logs as LO
 # System
 import io, os
 from datetime import datetime 
+import time
 # files
 import csv, codecs, cStringIO, json
 # Spectroscopy
@@ -277,13 +278,12 @@ def from_date_to_s(timestamp):
   :return: a string in three formats
   :rtype: String
   '''
-  import time
-  if len(timestamp)>18:
-    return time.strftime("%s", time.strptime(timestamp[:19], "%Y-%m-%dT%H:%M:%S"))
-  if len(timestamp)==10:
-    return time.strftime("%s", time.strptime(timestamp, "%Y-%m-%d"))
-  print timestamp
-  return time.strftime("%s", timestamp)
+  if '-' in timestamp:
+    if len(timestamp)>10:
+      return time.strftime("%s", time.strptime(timestamp[:19], "%Y-%m-%dT%H:%M:%S"))
+    else:
+      return time.strftime("%s", time.strptime(timestamp, "%Y-%m-%d"))
+  return timestamp
 
 # Get all files from a path
 def get_files_from_path(fpath):

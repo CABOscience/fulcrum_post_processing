@@ -291,14 +291,14 @@ def backup_photos_from_records(form,recs):
   formName = form.name_cleaned
   bName = TO.get_FormsPath()+""+formName
   photosID = []
-  LO.l_info('Start searching photos for the form "{}" with {} records'.format(formName,form.record_count))
+  LO.l_info('Start searching photos for the form "{}" with {} records'.format(formName,len(recs)))
   for record in recs.records:
     photosID += search_for_photo_id(record)
   
   if photosID and len(photosID)>0:
     photosID = list(set(photosID))
     
-  LO.l_info('Start backup photos for the form "{}" with {} records'.format(formName,form.record_count))
+  LO.l_info('Start backup photos for the form "{}" with {} records'.format(formName,len(recs)))
   for photoID in photosID:
     fname = get_photo_file_name(bName,photoID)
     if not TO.file_is_here(fname):

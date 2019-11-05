@@ -240,21 +240,21 @@ def get_dictKeysDataName_from_formid(form_id):
   if form_id in fs.formsDictID:
     return fs.formsDictID[form_id].dictKeysDataName
 
-def get_formName_from_formid(form_id,fs=[]):
+def get_formName_from_formid(form_id,fs=[],n=0):
   if isinstance(fs, Forms):
     if form_id in fs.formsDictIDName:
       return fs.formsDictIDName[form_id]
-  elif len(fs)<1:
-    return get_formName_from_formid(form_id,load_forms())
+  elif len(fs)<1 and n<1:
+    return get_formName_from_formid(form_id,load_forms(),1)
   else:
     return ""
 
-def get_projects_enabled_status(form_id,fs=[]):
+def get_projects_enabled_status(form_id,fs=[],n=0):
   if isinstance(fs, Forms):
     if form_id in fs.formsDictID:
       return fs.formsDictID[form_id].projects_enabled
-  elif len(fs)<1:
-    return get_projects_enabled_status(form_id,load_forms())
+  elif len(fs)<1 and n<1:
+    return get_projects_enabled_status(form_id,load_forms(),1)
   LO.l_war('get_projects_enabled_status : The form {} was not found in formsDictID'.format(form_id))
   return ""
 

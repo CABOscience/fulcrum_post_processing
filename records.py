@@ -23,6 +23,8 @@ class Records(object):
   def __init__(self):
     self.records=[]
     self.recordsDict={}
+    self.cleanAfter=3000
+    self.numCleaned=0
     
   def __len__(self):
     return len(self.records)
@@ -50,9 +52,23 @@ class Records(object):
   
   def add_record(self,record_raw):
     if record_raw.isValid:
+      if record_raw.id in self.recordsDict:
+        # check the version keep only the latest
+        savedRec = self.recordsDict[record_raw.id]
+        if savedRec.version < record_raw.version:
+          # you keep record_raw
+          # you have to change the version and remove it from table
+          self.recordsDict[record_raw.id] = record_raw
+          self.records.remove(savedRec)
+          self.records.append(record_raw)
+      else:
+        self.records.append(record_raw)
+        self.recordsDict[record_raw.id]=record_raw
+
+  def append_record(self,record_raw):
+    if record_raw.isValid:
       self.records.append(record_raw)
-      self.recordsDict[record_raw.id]=record_raw
-  
+
   def clean_records(self):
     self.records = []
     self.recordsDict = {}
@@ -229,7 +245,7 @@ def get_records_from_list(listRecords,forms=[],projects=[]):
   return records
 
 ##############################################
-# Backup Records From Forms
+# Backup Records latest version From Forms
 ##############################################
 def backup_records_from_forms():
   PA.set_parameters()
@@ -266,100 +282,170 @@ def mp_backup_records_from_form(form = FO.Form()):
   formID   = form.id
   start = time.time()
   if formID:
-  #if formID == 'fd35169b-186c-4548-a5e5-488bd7432152':
+  # Leaf_are_water_samples
+  #if formID == 'fee4d9d4-a8f5-4310-99f3-a7be668abd2c': # Leaf_are_water_samples
+  # Plants
+  #if formID == '7a98cdf1-a37c-4f83-9a21-f7ea215ee0f6':
+  # Pressed_Specimens
+  #if formID == 'f6405c31-9030-459b-9ed3-49f170dd3b89':
+
     # Backup records
-    records = backup_records_from_form(form)
+    LO.l_info('Start backup for the form "{}" with {} records'.format(formName,form.record_count))
+    records = load_records_from_fulcrum(form)
     
+    fbase = TO.get_FormsPath()+formName+'/'+formName
+    # Backup raw records 
+    fname = fbase+'_records.json'
+    numRecords  = len(records)
+    TO.save_in_json_file(fname,records.to_json())
+    
+    # Backup records with datanames
+    update_records_with_dataname(form.dictKeysDataName,records.records)
+    fname = fbase+'_records_with_dataname.json'
+    TO.save_in_json_file(fname,records.to_json())
+    
+    LO.l_info('End backup for the form "{}", there are {} records available'.format(formName,len(records)))
+
+    # Backup images
+    LO.l_info('Start backup images for the form "{}" with {} records'.format(formName,len(records)))
+    PH.backup_photos_from_records(form,records)
+    LO.l_info('End backup images for the form "{}"'.format(formName))
+
+    endtime = time.time()
+    print('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start))
+    return formID
+
+##############################################
+# Backup Records Versions From Forms
+##############################################
+def backup_records_versions_from_forms():
+  PA.set_parameters()
+  LO.create_log("main","",'backup_fulcrum_versions')
+  TOFA.check_fulcrum_version()
+  # Backup projects
+  PR.backup_projects_from_Fulcrum()
+  # Backup Forms (Applications)
+  formsO = FO.load_fulcrum_formsJson()
+  for form in formsO.forms[:]:
+    mp_backup_records_versions_from_form(form)
+  #mp_backup_records_from_forms(formsO)
+  TOFA.print_num_of_request()
+
+def mp_backup_records_versions_from_forms(formsO = FO.Forms()):
+  """
+  This parallelisation of backup_form
+  """
+  # parallelisation here
+  output = mp.Queue()
+  wraps = []
+  pool = mp.Pool(processes=PA.NumberOfProcesses)
+  recordsForm = [pool.apply_async(mp_backup_records_from_form, args=(form,)) for form in formsO.forms[:]]
+  pool.close()
+  pool.join()
+  
+def mp_backup_records_versions_from_form(form = FO.Form()):
+  formName = form.name_cleaned
+  formID   = form.id
+  start = time.time()
+  if formID:
+  # Leaf_are_water_samples
+  #if formID == 'fee4d9d4-a8f5-4310-99f3-a7be668abd2c': # Leaf_are_water_samples
+  # Plants
+  #if formID == '7a98cdf1-a37c-4f83-9a21-f7ea215ee0f6':
+  # Pressed_Specimens
+  #if formID == 'f6405c31-9030-459b-9ed3-49f170dd3b89':
     # Backup records versions
+    fbase = TO.get_FormsPath()+formName+'/'+formName
+    # Backup raw records 
+    fname = fbase+'_records.json'
+
     if form.script and '/* SAVE VERSIONS */' in form.script:
-      backup_records_versions(form,records)
+      bName = TO.get_FormsPath()+formName+''
+      
+      # preload projects and forms
+      projects = PR.load_projects()
+      forms = FO.load_forms()
+      recs = load_records_from_json(fname)
+      #recs = load_records_from_fulcrum(form)
+      
+      LO.l_info('Start backup version for the form "{}" with {} records'.format(formName,len(recs)))
+      LO.l_debug('size of recs {} before version'.format(len(recs)))
+      
+      recordsV = Records()
+      for record in recs.recordsDict.values():
+        currentVersion = record.version
+        recordID      = record.id
+        fname         = bName+'/versions/'+recordID+'_versions.json'
+        recordsHistory= TO.load_json_file(fname)
+        versionIsUpToDate = False
+
+        if len(recordsHistory)>0:
+          latestHistoryVersion = get_record_latest_history_version(recordsHistory)
+          if (currentVersion == latestHistoryVersion):
+            versionIsUpToDate = True
+        
+        if not versionIsUpToDate and currentVersion > 1:
+          recordsHistory = TOFA.get_record_history(recordID)
+          LO.l_debug('recordsHistory')
+          LO.l_debug(len(recordsHistory))
+          
+        recordsV.append_record(record)
+          
+        if recordsHistory:
+          TO.save_in_json_file(fname,recordsHistory)
+          for recordHistoryTemp in recordsHistory[:]:
+            recHT = create_record_from_json(recordHistoryTemp,forms,projects)
+            if recHT.version != currentVersion:
+              LO.l_debug('add_record {} version {}'.format(recHT.id,recHT.version))
+              recordsV.append_record(recHT)
+              
+        if len(recordsV)>recordsV.cleanAfter:
+          recordsV.numCleaned += 1
+          jocker = 0
+          if recordsV.numCleaned>0:
+            jocker = 1
+          numB = (recordsV.numCleaned-1)*recordsV.cleanAfter+jocker
+          numA = recordsV.numCleaned*recordsV.cleanAfter
+          #fname = fbase+'_records_versions_from_'+numB+'_to_'+numA+'.json'
+          fname = fbase+'_records_versions_from_{}_to_{}.json'.format(numB,numA)
+          TO.save_in_json_file(fname,recordsV.to_json())
+          
+          #fname = fbase+'_records_versions_with_dataname_from_'+numB+'_to_'+numA+'.json'
+          fname = fbase+'_records_versions_with_dataname_from_{}_to_{}.json'.format(numB,numA)
+          update_records_with_dataname(form.dictKeysDataName,recordsV.records)
+          TO.save_in_json_file(fname,recordsV.to_json())
+          recordsV.records = []
+      
+      numtp =''
+      if recordsV.numCleaned>0:
+        TO.delete_a_file(fbase+'_records_versions.json')
+        TO.delete_a_file(fbase+'_records_versions_with_dataname.json')
+        jocker = 0
+        if recordsV.numCleaned>0:
+          jocker = 1
+        numB = (recordsV.numCleaned-1)*recordsV.cleanAfter+jocker
+        numA = recordsV.numCleaned*recordsV.cleanAfter
+        numtp= '_from_{}_to_{}'.format(numB,numA)
+
+      LO.l_debug('size of recs {} after version'.format(len(recordsV)))
+      fname = fbase+'_records_versions'+numtp+'.json'
+      TO.save_in_json_file(fname,recordsV.to_json())
+      
+      fname = fbase+'_records_versions_with_dataname'+numtp+'.json'
+      update_records_with_dataname(form.dictKeysDataName,recordsV.records)
+      TO.save_in_json_file(fname,recordsV.to_json())
+      
+      LO.l_info('End backup version for the form "{}", there are {} records available'.format(formName,len(recordsV)+recordsV.numCleaned*recordsV.cleanAfter))
     else:
       LO.l_war("No records versions for {st} will not be saved.\n\
                 If you need to saved records versions for {st}.\n\
                 Please add /* SAVE VERSIONS */ in the top of it's 'data events'\n\
                 ".format(st=formName))
     
-    # Backup images
-    PH.backup_photos_from_records(form,records)
     endtime = time.time()
-    print('########################\nTime to backup form {} IS {}\n########################\n'.format(formID,endtime-start))
-    return records
-
-##############################################
-# Backup Records and Records Version
-##############################################
-# Backup Records
-def backup_records_from_form(form = FO.Form()):
-  formName = form.name_cleaned
-  LO.l_info('Start backup for the form "{}" with {} records'.format(formName,form.record_count))
-  records = load_records_from_fulcrum(form)
-  
-  fbase = TO.get_FormsPath()+formName+'/'+formName
-  # Backup raw records 
-  fname = fbase+'_records.json'
-  numRecords  = len(records)
-  TO.save_in_json_file(fname,records.to_json())
-  
-  # Backup records with datanames
-  recordsTemp = copy.deepcopy(records)
-  update_records_with_dataname(recordsTemp)
-  fname = fbase+'_records_with_dataname.json'
-  TO.save_in_json_file(fname,recordsTemp.to_json())
-  
-  LO.l_info('End backup for the form "{}", there are {} records available'.format(formName,len(records)))
-  return records
-
-# Backup records versions
-def backup_records_versions(form = FO.Form(),recs = Records()):
-  formName = form.name_cleaned
-  bName = TO.get_FormsPath()+formName+''
-  
-  # preload projects and forms
-  projects = PR.load_projects()
-  forms = FO.load_forms()
-  
-  LO.l_debug('size of recs {} before version'.format(len(recs)))
-  LO.l_info('Start backup version for the form "{}" with {} records'.format(formName,form.record_count))
-  for record in recs.records[:]:
-    currentVersion = record.version
-    recordID      = record.id
-    fname         = bName+'/versions/'+recordID+'_versions.json'
-    recordsHistory= TO.load_json_file(fname)
-    versionIsUpToDate = False
-
-    if len(recordsHistory)>0:
-      latestHistoryVersion = get_record_latest_history_version(recordsHistory)
-      if (currentVersion == latestHistoryVersion):
-        versionIsUpToDate = True
-    
-    if not versionIsUpToDate and currentVersion > 1:
-      recordsHistory = TOFA.get_record_history(recordID)
-      LO.l_debug('recordsHistory')
-      LO.l_debug(len(recordsHistory))
-      
-    if recordsHistory:
-      TO.save_in_json_file(fname,recordsHistory)
-      recordsHistoryTemp = get_records_from_list(recordsHistory,forms,projects)
-      
-      # add records versions from backup file to the records history list
-      # but without the latest version which is already there
-      for recordHistory in recordsHistoryTemp.records[:]:
-        if recordHistory.version != currentVersion:
-          LO.l_debug('add_record {} version {}'.format(recordHistory.id,recordHistory.version))
-          recs.add_record(recordHistory)
-    
-  LO.l_debug('size of recs {} after version'.format(len(recs)))
-  fname = bName+'/'+formName+'_records_versions.json'
-  TO.save_in_json_file(fname,recs.to_json())
-  
-  # Backup records versions with datanames
-  recordsTemp = copy.deepcopy(recs)
-  fname = bName+'/'+formName+'_records_versions_with_dataname.json'
-  update_records_with_dataname(recordsTemp)
-  TO.save_in_json_file(fname,recordsTemp.to_json())
-  
-  LO.l_info('End backup version for the form "{}", there are {} records available'.format(formName,len(recs)))
-  return recs
+    print('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start))
+    #return records
+    return formID
 
 # Record history
 def get_record_latest_history_version(records):
@@ -392,7 +478,7 @@ def search_datanames_keys_recu(dictKeysDataname,info):
     for v in info.values():
       search_for_keys_recu(dictKeysDataname,v)
 
-def update_records_with_dataname(recs):
+def update_records_with_dataname_old(recs):
   recordsTemp = copy.deepcopy(recs.records)
   for recordTemp in recordsTemp:
     dictKeysDataName = FO.get_dictKeysDataName_from_formid(recordTemp.form_id)
@@ -401,7 +487,12 @@ def update_records_with_dataname(recs):
   recs.clean_records()
   for recordTemp in recordsTemp:
     recs.add_record(recordTemp)
-    
+
+def update_records_with_dataname(dictKeysDataName,records):
+  for record in records:
+    if record.form_values:
+      search_for_keys_recu(dictKeysDataName,record.form_values)
+
 # Records sub functions
 # Recursive search for keys to dataname
 def search_for_keys_recu(dictKeysDataName,info):
@@ -415,7 +506,6 @@ def search_for_keys_recu(dictKeysDataName,info):
         info[dictKeysDataName[k]] = info.pop(k)
     for v in info.values():
       search_for_keys_recu(dictKeysDataName,v)
-
 
 def update_json_record_from_dataname_to_keys(record,recordjson):
   dataNameToKey = FO.get_Keys_from_formId(record.form_id)
@@ -463,7 +553,6 @@ def load_webhook_records_with_formID_from_formFile(formFile):
         recs.add_record(record)
   return recs
 
-
 # Load records from File Name
 ##############################################
 def load_records_from_json(fileName):
@@ -482,4 +571,5 @@ def load_records_from_form(form):
 def load_records_from_fulcrum(form):
   records_raw = TOFA.get_fulcrum_records(form.id,form.name_cleaned)
   return get_records_from_list(records_raw)
-  
+
+

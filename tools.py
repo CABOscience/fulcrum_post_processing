@@ -44,6 +44,15 @@ def get_WebhookFormsPath():
   create_directory(PA.FulcrumWebhook+"forms/")
   return PA.FulcrumWebhook+"forms/"
 
+# try to delete a file
+def delete_a_file(fname,logName="main"):
+  try:
+    os.remove(fname)
+    return True
+  except Exception, e:
+    LO.l_err(e,logName)
+    return False
+
 # Test if a file is available and not empty
 def file_is_here(fname,logName="main"):
   ''' Test if a file is available and not empty

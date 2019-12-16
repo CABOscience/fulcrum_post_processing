@@ -68,7 +68,14 @@ class Records(object):
   def append_record(self,record_raw):
     if record_raw.isValid:
       self.records.append(record_raw)
-
+  
+  def number_of_valid(self):
+    number_of_valid = 0
+    for rec in self.records[:]:
+      if rec.isValid:
+        number_of_valid = number_of_valid + 1
+    return number_of_valid
+    
   def clean_records(self):
     self.records = []
     self.recordsDict = {}

@@ -489,14 +489,13 @@ def process_leafspectra_records(rec):
   """
   This parallelisation of process_record
   """
-
   """
-  wraps = []
+  spectrum = LeafSpectrum()
   for record in rec.records[:]:
-    b = process_leafspectra_record(record)
-    if b:
-      wraps.append(b)
-  return wraps
+    rec = process_leafspectra_record(record)
+    if rec:
+      spectrum.add_record(rec)
+  return spectrum
       
   """
   # parallelisation here
@@ -511,7 +510,8 @@ def process_leafspectra_records(rec):
     if record:
       spectrum.add_record(record)
   return spectrum
-  
+
+ 
 def process_leafspectra_record(record):
   """Process a leaf spectra record
   This function take a leafspectra record object and return a processed leafspectra record processed object
@@ -696,7 +696,7 @@ def large_leaf_calculation(record):
       record.fv_transDiffRef    = distD0D1
     else:
       record.isProcessed = False
-      st = "The record {} haven't the right number of reference measurments to process the reference of transmittance calculation. Number of D measurments = {}. Number of D measurments = {} (need to be = 2).".format(record.id,len(transRefAll))
+      st = "The record {} haven't the right number of reference measurments to process the reference of transmittance calculation. Number of D measurments = {} (need to be = 2).".format(record.id,len(transRefAll))
       LO.l_war(st)
       record.add_toLog(st)
   else:
@@ -1047,6 +1047,7 @@ def print_log_records(rec):
 def extract_log_record(record):
   if record.fv_processedPath != '':
     TO.create_directory(record.fv_processedPath+'')
-    TO.string_to_file(record.fv_processedPath+'/'+record.fv_sample_id+'.log','{}'.format(record.logInfo))
+    TO.string_to_file(record.fv_processedPath+'/'+record.fv_sample_id+'_log.txt','{}'.format(record.logInfo))
   else:
-    print 'no fv_processedPath for record {}'.format(record.id)
+    #PA.ProjectWebsitePath+'Rec_without_processedPath'
+    LO.l_war('no fv_processedPath for record {}'.format(record.id))

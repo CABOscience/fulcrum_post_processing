@@ -45,6 +45,7 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
       if 'interpolated_files' in root and projectinroot(root,projects):
         sigTxtFiles.append(os.path.join(root, filename))
   
+  LO.l_info('\nNumber of allCSV before {}\n\n'.format(len(allCSV)))
   # Add filter by records:
   # Concat only if the record has a status > than verified
   for recID in recs.recordsDict.keys():
@@ -53,7 +54,7 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
     v = TO.get_record_status_value(recStatus)
     if v < 4:
       recs.recordsDict[recID].add_toLog('The current record status is no submitted or higher. It will not be used in files concatenation. For more information contact Etienne.')
-      for acsv in allCSV:
+      for acsv in allCSV[:]:
         if recWf in acsv:
           allCSV.remove(acsv)
       for lcsv in leavesCSV[:]:
@@ -62,7 +63,8 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
       for rcsv in refCSV[:]:
         if recWf in rcsv:
           refCSV.remove(rcsv)
-  
+
+  LO.l_info('\nNumber of allCSV after {}\n\n'.format(len(allCSV)))
   c_list = []
   c_list.append([allCSV,3,'project_all_combined'])
   c_list.append([allCSV,2,'all_combined'])

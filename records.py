@@ -25,6 +25,7 @@ class Records(object):
     self.recordsDict={}
     self.cleanAfter=3000
     self.numCleaned=0
+    self.ttCount=0
     
   def __len__(self):
     return len(self.records)
@@ -405,44 +406,34 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
             if recHT.version != currentVersion:
               LO.l_debug('add_record {} version {}'.format(recHT.id,recHT.version))
               recordsV.append_record(recHT)
-              
+        
         if len(recordsV)>recordsV.cleanAfter:
-          recordsV.numCleaned += 1
-          jocker = 0
+          jocker = "w"
           if recordsV.numCleaned>0:
-            jocker = 1
-          numB = (recordsV.numCleaned-1)*recordsV.cleanAfter+jocker
-          numA = recordsV.numCleaned*recordsV.cleanAfter
-          #fname = fbase+'_records_versions_from_'+numB+'_to_'+numA+'.json'
-          fname = fbase+'_records_versions_from_{}_to_{}.json'.format(numB,numA)
-          TO.save_in_json_file(fname,recordsV.to_json())
+            jocker = "a"
+          fname = fbase+'_records_versions.json'
+          TO.save_in_json_file(fname,recordsV.to_json(),"main",jocker)
           
-          #fname = fbase+'_records_versions_with_dataname_from_'+numB+'_to_'+numA+'.json'
-          fname = fbase+'_records_versions_with_dataname_from_{}_to_{}.json'.format(numB,numA)
+          fname = fbase+'_records_versions_with_dataname.json'
           update_records_with_dataname(form.dictKeysDataName,recordsV.records)
-          TO.save_in_json_file(fname,recordsV.to_json())
-          recordsV.records = []
+          TO.save_in_json_file(fname,recordsV.to_json(),"main",jocker)
+          recordsV.ttCount += len(recordsV.records)
+          recordsV.records[:] = []
+          recordsV.numCleaned += 1
       
-      numtp =''
+      jocker = "w"
       if recordsV.numCleaned>0:
-        TO.delete_a_file(fbase+'_records_versions.json')
-        TO.delete_a_file(fbase+'_records_versions_with_dataname.json')
-        jocker = 0
-        if recordsV.numCleaned>0:
-          jocker = 1
-        numB = (recordsV.numCleaned-1)*recordsV.cleanAfter+jocker
-        numA = recordsV.numCleaned*recordsV.cleanAfter
-        numtp= '_from_{}_to_{}'.format(numB,numA)
-
-      LO.l_debug('size of recs {} after version'.format(len(recordsV)))
-      fname = fbase+'_records_versions'+numtp+'.json'
-      TO.save_in_json_file(fname,recordsV.to_json())
+        jocker = "a"
       
-      fname = fbase+'_records_versions_with_dataname'+numtp+'.json'
+      fname = fbase+'_records_versions.json'
+      TO.save_in_json_file(fname,recordsV.to_json(),"main",jocker)
+      
+      fname = fbase+'_records_versions_with_dataname.json'
       update_records_with_dataname(form.dictKeysDataName,recordsV.records)
-      TO.save_in_json_file(fname,recordsV.to_json())
+      TO.save_in_json_file(fname,recordsV.to_json(),"main",jocker)
       
-      LO.l_info('End backup version for the form "{}", there are {} records available'.format(formName,len(recordsV)+recordsV.numCleaned*recordsV.cleanAfter))
+      recordsV.ttCount += len(recordsV.records)
+      LO.l_info('End backup version for the form "{}", there are {} records available'.format(formName,recordsV.ttCount))
     else:
       LO.l_war("No records versions for {st} will not be saved.\n\
                 If you need to saved records versions for {st}.\n\
@@ -578,5 +569,6 @@ def load_records_from_form(form):
 def load_records_from_fulcrum(form):
   records_raw = TOFA.get_fulcrum_records(form.id,form.name_cleaned)
   return get_records_from_list(records_raw)
+
 
 

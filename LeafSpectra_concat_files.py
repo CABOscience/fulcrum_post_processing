@@ -5,7 +5,7 @@ import parameters as PA
 import records as RE
 import projects as PR
 import tools as TO
-import logs
+import logs as LO
 
 # System
 import os, sys
@@ -65,6 +65,9 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
           refCSV.remove(rcsv)
 
   LO.l_info('\nNumber of allCSV after {}\n\n'.format(len(allCSV)))
+  for al in allCSV[:]:
+    LO.l_info('{}'.format(al))
+  LO.l_info('\n\n')
   c_list = []
   c_list.append([allCSV,3,'project_all_combined'])
   c_list.append([allCSV,2,'all_combined'])

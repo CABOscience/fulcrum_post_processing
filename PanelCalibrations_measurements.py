@@ -51,7 +51,7 @@ class CalibrationMeasurement(object):
     self.logInfo += "\n"+st
 
   def __str__(self):
-    return '>{} - {}'.format(self.file_name, self.file_path)
+    return '>{} - {}'.format(self.files_name, self.files_path)
 
   def to_csv(self):
     sc = ''
@@ -140,7 +140,7 @@ def extract_replicate_spectra_measurement(rmt_raw):
     rmt.measurement_id  = rmt_raw['measurement_id']
     
     if 'file_name_4'    in rmt_raw:     rmt.files_name.append(rmt_raw['file_name_4'])
-    if 'file_name_4'    in rmt_raw:     rmt.files_name.append(rmt_raw['file_name_5'])
+    if 'file_name_5'    in rmt_raw:     rmt.files_name.append(rmt_raw['file_name_5'])
     if 'measurement_remarks'in rmt_raw: rmt.measurement_remarks = rmt_raw['measurement_remarks']
     if 'primary_light_port' in rmt_raw: rmt.primary_light_port = rmt_raw['primary_light_port']
     if 'reflectance_port'   in rmt_raw: rmt.reflectance_port = rmt_raw['reflectance_port'][cv][0]

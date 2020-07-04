@@ -5,8 +5,7 @@ import parameters as PA
 import records as RE
 import tools as TO
 import logs as LO
-import SpectroscopyPanels_calibrations as SPC
-import PanelCalibrations_measurements as RPC
+import PanelCalibrations_measurements as PCM
 
 # System
 import os, sys
@@ -27,7 +26,9 @@ np.set_printoptions(threshold='nan')
 #########################
 
 class PanelCalibrations(RE.Records):
-
+  '''
+  This is just a comment
+  '''
 
 class PanelCalibration(RE.Record):
   def __init__(self, record):
@@ -183,12 +184,15 @@ def extract_panel_calibrations_record(record):
     if 'verified_by' in rv: record.fv_verified_by = rv['verified_by']
     if 'working_folder' in rv: record.fv_working_folder = rv['working_folder']
     
+    rpd = record.fv_parent_directory
+    if rpd.startswith("PANEL-CALIBRATIONS"):
+      record.fv_parent_directory = rpd[18:]
     record.fv_processedPath = PA.WebsitePath+'PanelCalibrationsCalculated'+'/'+record.fv_parent_directory+'/'+record.fv_working_folder+'/'
     record.fv_sourcePath = PA.PanelCalibPath+'/'+record.fv_parent_directory+'/'+record.fv_working_folder+'/'
     if record.fv_manufacturer_short_name_sphere == 'SVC':
       record.fv_extFile = '.sig'
       record.fv_measureType = 'tgt_counts'
-    record.fv_measurements = PCR.extract_panel_calibrations_measurements(record.fv_measurements_raw)
+    record.fv_measurements = PCM.extract_panel_calibrations_measurements(record.fv_measurements_raw)
     validate_panel_calibrations_measurements(record)
     update_panel_calibrations_measurements(record)
 
@@ -231,12 +235,12 @@ def validate_panel_calibrations_measurements(record):
           nFa = "The record id {} has not {} available.".format(rid,fName)
           LO.l_war(nFa)
           record.add_toLog(nFa)
+    if len(mt.files_path) < 3:
+      nFp = "The record id {} has not at least 3 records available.".format(rid,fName)
+      LO.l_war(nFa)
+      record.add_toLog(nFa)
+      record.isValid = False
   if not measurmentsDone:
-    record.isValid = False
-  if len(files_path) < 3:
-    nFp = "The record id {} has not at least 3 records available.".format(rid,fName)
-    LO.l_war(nFa)
-    record.add_toLog(nFa)
     record.isValid = False
 
 def update_panel_calibrations_measurements(record):
@@ -270,8 +274,8 @@ def update_panel_calibrations_measurements(record):
           spect = TO.create_spectrum(fName,measureType)
           mt.spectres.append(spect)
           mt.spectres[i].interpolate(method='cubic')
-          wvl_max = mt.spectres[i].spectre.metadata['wavelength_range'][1]
-          wvl_min = mt.spectres[i].spectre.metadata['wavelength_range'][0]
+          wvl_max = mt.spectres[i].metadata['wavelength_range'][1]
+          wvl_min = mt.spectres[i].metadata['wavelength_range'][0]
           if vmax == -1 or wvl_max < vmax:
             vmax = wvl_max
           if vmin == -1 or wvl_min > vmin:

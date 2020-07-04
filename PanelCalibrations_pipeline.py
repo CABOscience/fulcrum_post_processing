@@ -7,8 +7,8 @@ import tools as TO
 import logs as LO
 import sys, time
 from datetime import datetime 
-import PanelCalibration_concat_files as LSCF
-import PanelCalibration_record as PCR
+import PanelCalibrations_concat_files as LSCF
+import PanelCalibrations_record as PCR
 #import SpectroscopyPanels_calibrations as SPC
 import SpectroscopyPanels_record as SPR
 
@@ -50,11 +50,11 @@ def main():
   
   LO.l_info('\n\n## Start load records from Panel Calibrations')
   records = PCR.load_panelCalibrations()
-  time_spr = TO.print_time(time_pa,time_pr,'Panel Calibrations')
+  time_spr = TO.print_time(time_pa,datetime.now(),'Panel Calibrations')
   
   LO.l_info('\n\n## Process records\nNumber of Records {}\n######\n'.format(len(records)))
   records = PCR.process_panel_calibrations_records(records)
-  time_plr = TO.print_time(start_time,time_llr,'process_leafspectra_records')
+  time_plr = TO.print_time(time_spr,datetime.now(),'process_leafspectra_records')
   LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
   # plots

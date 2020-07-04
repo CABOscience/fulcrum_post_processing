@@ -148,3 +148,4 @@ def extract_replicate_spectra_measurement(rmt_raw):
     if 'target_type'        in rmt_raw: rmt.target_type = rmt_raw['target_type']
     if 'transmission_port'  in rmt_raw: rmt.transmission_port = rmt_raw['transmission_port'][cv][0]
 
+  return rmt

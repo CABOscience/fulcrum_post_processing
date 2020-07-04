@@ -136,7 +136,7 @@ def extract_replicate_spectra_measurement(rmt_raw):
     rmt.files_name.append(rmt_raw['file_name_1'])
     rmt.files_name.append(rmt_raw['file_name_2'])
     rmt.files_name.append(rmt_raw['file_name_3'])
-    rmt.sphere_configuration = rmt_raw['sphere_configuration']
+    rmt.sphere_configuration = rmt_raw['sphere_configuration'][cv][0]
     rmt.measurement_id  = rmt_raw['measurement_id']
     
     if 'file_name_4'    in rmt_raw:     rmt.files_name.append(rmt_raw['file_name_4'])

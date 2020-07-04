@@ -186,9 +186,9 @@ def extract_panel_calibrations_record(record):
     
     rpd = record.fv_parent_directory
     if rpd.startswith("PANEL-CALIBRATIONS"):
-      record.fv_parent_directory = rpd[18:]
-    record.fv_processedPath = PA.WebsitePath+'PanelCalibrationsCalculated'+'/'+record.fv_parent_directory+'/'+record.fv_working_folder+'/'
-    record.fv_sourcePath = PA.PanelCalibPath+'/'+record.fv_parent_directory+'/'+record.fv_working_folder+'/'
+      record.fv_parent_directory = rpd[19:]
+    record.fv_processedPath = PA.WebsitePath+'PanelCalibrationsCalculated'+'/'+record.fv_parent_directory+'/'+record.fv_working_folder+''
+    record.fv_sourcePath = PA.PanelCalibPath+''+record.fv_parent_directory+''+record.fv_working_folder+''
     if record.fv_manufacturer_short_name_sphere == 'SVC':
       record.fv_extFile = '.sig'
       record.fv_measureType = 'tgt_counts'
@@ -397,6 +397,7 @@ def panel_calibration_calculation(record):
   mts   = record.fv_measurements.measurements
   
   for mt in mts[:]:
+    LO.l_war("{}".format(mt))
     # Reflectance
     if 'A:' in mt.sphere_configuration:
       reflRefs.append(mt)

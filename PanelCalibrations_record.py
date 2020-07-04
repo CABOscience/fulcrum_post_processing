@@ -291,6 +291,19 @@ def update_panel_calibrations_measurements(record):
           LO.l_war("The record id {} has not {} available.".format(rid,fName))
           record.add_toLog("The record id {} has not {} available.".format(rid,fName))
           measurmentsDone = False
+       # Average and Standard Deviation
+      arr     = np.array([spectre.measurement for spectre in mt.spectres])
+      arrIndex= np.array(mt.spectres[0].measurement.index)
+      arrMean = np.mean(arr, axis=0)
+      arrStd  = np.std(arr, axis=0, ddof=1)
+      
+      reflecAverage = pd.Series(arrMean, index=arrIndex, name="reflectance_average")
+      reflecAverage.index.name = 'wavelength'
+      mt.reflecAverage = reflecAverage
+      reflecStadDev = pd.Series(arrStd, index=arrIndex, name="reflectance_standard_deviation")
+      reflecStadDev.index.name = 'wavelength'
+      mt.reflecStadDev = reflecStadDev
+
     if not measurmentsDone:
       LO.l_war("The record id {} will not be used because it has not all its spectre available.".format(rid))
       record.add_toLog("The record id {} will not be used because it has not all its spectre available.".format(rid))
@@ -397,7 +410,6 @@ def panel_calibration_calculation(record):
   mts   = record.fv_measurements.measurements
   
   for mt in mts[:]:
-    LO.l_war("{}".format(mt))
     # Reflectance
     if 'A:' in mt.sphere_configuration:
       reflRefs.append(mt)
@@ -407,7 +419,10 @@ def panel_calibration_calculation(record):
       reflStrays.append(mt)
     if 'C:' in mt.sphere_configuration:
       reflTargets.append(mt)
-
+ 
+  for reflRef in reflRefs[:]:
+    LO.l_war("{}".format(reflRef.reflecAverage))
+      
   # REFLECTANCE CALCULATION
   if len(reflStrays)>0 and len(reflRefs)>0 and len(reflTargets)>0:
     # (A - B):

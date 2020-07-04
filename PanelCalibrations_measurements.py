@@ -21,8 +21,12 @@ class CalibrationMeasurements(object):
     self.measurementsDict={}
     
   def __len__(self):
-    return len(self.records)
+    return len(self.measurements)
     
+  def __str__(self):
+    for mt in self.measurements[:]:
+      print mt
+
   def add_record(self,CalibrationMeasurement):
     self.measurements.append(CalibrationMeasurement)
     self.measurementsDict[CalibrationMeasurement.measurement_id]=CalibrationMeasurement
@@ -32,6 +36,8 @@ class CalibrationMeasurement(object):
     self.files_name = []
     self.files_path = []
     self.reflectances = [] # pd.DataFrame()
+    self.reflecAverage = pd.DataFrame()
+    self.reflecStadDev = pd.DataFrame()
     self.spectres = [] # TO.create_empty_spectrum()
     self.file_numbers = ''
     self.measurement_id = '' #

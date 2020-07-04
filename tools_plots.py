@@ -215,19 +215,19 @@ def get_leafspectra_record_leaves_plot(record):
     if len(imgFiles)>0:
       f, axarr = plt.subplots(3, 2, figsize=(10,10))
       f.suptitle(record.fv_sample_id+' leaves')
-      y=1
-      x=2
-      for imgFile in imgFiles:
+      y=0
+      x=0
+      for imgFile in sorted(imgFiles):
         img = mpimg.imread(imgFile)
         axarr[x,y].imshow(img, interpolation='none')
         #head, tail = os.path.split(imgFile)
         #axarr.set_title(fv_sample_id+' leaves')
         axarr[x,y].axis('off')
-        if x == 0:
-          y -= 1
-          x = 2
+        if y == 1:
+          x += 1
+          y = 0
         else:
-          x -=1
+          y +=1
       plt.savefig(record.fv_processedPath+'/'+record.fv_sample_id+'_leaves.png', dpi=150)
       #time.sleep(5)
       plt.close('all')

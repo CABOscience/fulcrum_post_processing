@@ -225,7 +225,7 @@ def validate_panel_calibrations_measurements(record):
   
   measurmentsDone = True
   LO.l_debug('Start validate record {} measurements'.format(rid))
-  for mt in mts[:]:
+  for i, mt in enumerate(mts):
     for file_name in mt.files_name[:]:
       if file_name:
         fName = rsp+file_name+''+ext
@@ -236,7 +236,7 @@ def validate_panel_calibrations_measurements(record):
           LO.l_war(nFa)
           record.add_toLog(nFa)
     if len(mt.files_path) < 3:
-      nFp = "The record id {} has not at least 3 records available.".format(rid,fName)
+      nFp = "The record id {} has not at least 3 records available for measurment {}.".format(rid,fName,i)
       LO.l_war(nFa)
       record.add_toLog(nFa)
       record.isValid = False

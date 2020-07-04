@@ -390,7 +390,6 @@ def process_record(record):
 def panel_calibration_calculation(record):
   boo = True
   
-  pm = record.properties_measured
   wvlMax = record.wvlMax
   wvlMin = record.wvlMin
   reflTargets, reflStrays, reflRefs = ([] for i in range(3))
@@ -407,17 +406,9 @@ def panel_calibration_calculation(record):
       reflStrays.append(mt)
     if 'C:' in mt.sphere_configuration:
       reflTargets.append(mt)
-  
-  # Fix the range, if not use of calibration
-  if not pmR:
-    wvlMax = transRefAll[0].spectre.metadata['wavelength_range'][1]
-    wvlMin = transRefAll[0].spectre.metadata['wavelength_range'][0]
 
   # REFLECTANCE CALCULATION
-  # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=67
-  if pmR and len(reflStrays)>0 and len(reflRefs)>0 and len(reflTargets)>0:
-    # Calibration
-    calib = record.calibration.spectre.measurement.sort_index().loc[wvlMin:wvlMax]
+  if len(reflStrays)>0 and len(reflRefs)>0 and len(reflTargets)>0:
     # (A - B):
     divisorsTar = reflRefs[0].spectre.measurement.sub(reflStrays[0].spectre.measurement)
     # Calculations per leafs:
@@ -467,38 +458,6 @@ def panel_calibration_calculation(record):
   else:
     boo = False
     LO.l_err("the record {} doesn't have all spectrum measurments to process the reflectance calculation.".format(record.id))
-  
-  # Transmittance
-  # https://www.protocols.io/view/measuring-spectral-reflectance-and-transmittance-3-p8pdrvn?step=68
-  if pmT and len(transTargets)>0 and len(transRefAll)>0:
-    for transTarget in transTargets:
-      trans = transTarget.spectre.measurement.div(transRefAll[0].spectre.measurement)
-      # Create the sample (wvl,transmittance)
-      transmittance = trans.sort_index().loc[wvlMin:wvlMax]
-      transTarget.transmittance = transmittance
-      
-    # Average and Standard Deviation
-    arr = np.array([transTarget.transmittance for transTarget in transTargets])
-    arrIndex = np.array(transTargets[0].transmittance.index)
-    arrMean = np.mean(arr, axis=0)
-    arrStd = np.std(arr, axis=0, ddof=1)
 
-    transAverage = pd.Series(arrMean, index=arrIndex, name="transmittance_average")
-    transAverage.index.name = 'wavelength'
-    record.transAverage = transAverage
-    transStadDev = pd.Series(arrStd, index=arrIndex, name="transmittance_standard_deviation")
-    transStadDev.index.name = 'wavelength'
-    record.transStadDev = transStadDev
-
-    # Calculation of (D1/D0):
-    distD0D1 = pd.Series()
-    if len(transRefAll) == 2:
-      distD0D1 = transRefAll[1].spectre.measurement.div(transRefAll[0].spectre.measurement)
-      record.transDiffRef    = distD0D1
-    else:
-      LO.l_war("the record {} haven't the right number of reference measurments to process the reference of transmittance calculation.".format(record.id))
-  else:
-    boo = False
-    LO.l_err("the record {} doesn't have all spectrum measurments to process the transmittance calculation.".format(record.id))
   return boo
 

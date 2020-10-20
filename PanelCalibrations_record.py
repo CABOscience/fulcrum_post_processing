@@ -384,19 +384,29 @@ def load_panelCalibrations():
 def process_panel_calibrations_records(rec):
   # parallelisation here
   output = mp.Queue()
-  wraps = []
   pool = mp.Pool(processes=3)
   results = [pool.apply_async(process_record, args=(record,)) for record in rec.records[:]]
   pool.close()
   pool.join()
+  panelCalibrations = PanelCalibrations()
   for r in results:
-    b = r.get()
-    if b:
-      wraps.append(b)
-  
+    record = r.get()
+    if record:
+      panelCalibrations.add_record(record)
+  return panelCalibrations
+
+  """
+  for record in rec.records[:]:
+    process_record(record)
+  return PanelCalibrations()
+  """ 
+
 def process_record(record):
   LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
   boo = panel_calibration_calculation(record)
+  if boo:
+    record.isProcessed = True
+  return record
 
 ## Panel Calibration Calculations
 ########################
@@ -419,30 +429,30 @@ def panel_calibration_calculation(record):
       reflStrays.append(mt)
     if 'C:' in mt.sphere_configuration:
       reflTargets.append(mt)
- 
-  for reflRef in reflRefs[:]:
-    LO.l_war("{}".format(reflRef.reflecAverage))
-      
+
   # REFLECTANCE CALCULATION
   if len(reflStrays)>0 and len(reflRefs)>0 and len(reflTargets)>0:
     # (A - B):
-    divisorsTar = reflRefs[0].spectre.measurement.sub(reflStrays[0].spectre.measurement)
+    divisorsTar = reflRefs[0].reflecAverage.sub(reflStrays[0].reflecAverage)
     # Calculations per leafs:
     for reflTarget in reflTargets:
       # (C - B):
-      dividendsTar = reflTarget.spectre.measurement.sub(reflStrays[0].spectre.measurement)
+      dividendsTar = reflTarget.reflecAverage.sub(reflStrays[0].reflecAverage)
       # [ (C - B) ÷ (A - B) ]
       divisionTar = dividendsTar.div(divisorsTar)
+      """
       # ([ (C - B) ÷ (A - B) ]) × calib.refl
-      mseries = get_monotonic_series(divisionTar)
+      mseries = TO.get_monotonic_series(divisionTar)
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
         for ind, row in mserie.iteritems():
-          mserie.set_value(ind,row*calib.at[ind])
+          mserie.set_value(ind,row)
         mseries[i] = mserie
         i+=1
       reflectance = pd.concat(mseries)
       reflTarget.reflectance= reflectance
+      """
+      reflTarget.reflectance= divisionTar
 
     # Average and Standard Deviation
     arr     = np.array([reflTarget.reflectance for reflTarget in reflTargets])
@@ -459,15 +469,15 @@ def panel_calibration_calculation(record):
 
     # Calculation of (A1/A0):
     distA0A1 = pd.Series()
-    if len(reflRefs) == 2:
-      distA0A1 = reflRefs[1].spectre.measurement.div(reflRefs[0].spectre.measurement)
+    if len(reflRefs) >= 3:
+      distA0A1 = reflRefs[len(reflRefs)-1].reflecAverage.div(reflRefs[0].reflecAverage)
       record.reflecDiffRef = distA0A1
     else:
       LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.id))
     # Calculation of (B0/A0):
     distB0A1 = pd.Series()
     if len(reflStrays) > 0 and len(reflRefs) > 0 :
-      distB0A1 = reflStrays[0].spectre.measurement.div(reflRefs[0].spectre.measurement)
+      distB0A1 = reflStrays[0].reflecAverage.div(reflRefs[0].reflecAverage)
       record.reflecRef = distB0A1
     else:
       LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.id))

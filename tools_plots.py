@@ -307,3 +307,93 @@ def img_reflect_and_transmi(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.Data
     plt.savefig(imgpath, dpi=150)
     #time.sleep(5)
     plt.close('all')
+
+################################################
+# Panel Calibrations
+################################################
+
+def get_panel_calibrations_record_plot(record):
+  #if '23a4dc4c-d41e-49f9-ddbdf4-3f1d737f9549' == record.id:
+    reflecAverage = record.fv_reflecAverage
+    reflecDiffRef = record.fv_reflecDiffRef
+    reflecRef     = record.fv_reflecRef
+    reflecStadDev = record.fv_reflecStadDev
+    transAverage  = record.fv_transAverage
+    transDiffRef  = record.fv_transDiffRef
+    transStadDev  = record.fv_transStadDev
+    imgpath = record.fv_processedPath+''+record.fv_serial_number+'.png'
+    LO.l_info(imgpath)
+    #xmin = record.get_wavelength_min()
+    #xmax = record.get_wavelength_max()
+    xmin = record.wvlMin
+    xmax = record.wvlMax
+    title = record.fv_parent_directory+' '+record.fv_working_folder+' '+record.fv_serial_number+' average'
+    img_reflect_and_transmi_panel_calibrations(xmin,xmax,reflecAverage,transAverage,imgpath,title)
+
+def img_reflect_and_transmi_panel_calibrations(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.DataFrame(), imgpath ="", title=''):
+  indexV = []
+  reflecV = []
+  if reflec.count>0:
+    indexV = reflec.index.values.tolist()
+    reflecV = reflec.values.tolist()
+  fig = plt.figure()
+  if len(reflecV)>0:
+    ax1 = fig.add_subplot(111)
+    ax1.plot(indexV, reflecV, color='#998ec3')
+    ax1.set_ylabel('reflectance', color='#998ec3')
+    ax1.set_xlabel('wavelength (nm)')
+    ax1.set_title(title)
+    for tl in ax1.get_yticklabels():
+      tl.set_color('#998ec3')
+    ax1.set_ylim(0.95, 1.05)
+    loc = plticker.MultipleLocator(base=250) # this locator puts ticks at regular intervals
+    ax1.xaxis.set_major_locator(loc)
+    ax1.set_xlim(xmin,xmax)
+
+  if (len(reflecV)>0) and imgpath != "":
+    plt.savefig(imgpath, dpi=150)
+    #time.sleep(5)
+    plt.close('all')
+
+def get_panel_calibrations_record_measurments_plot(record):
+  xmin = record.wvlMin
+  xmax = record.wvlMax
+
+  reflecReplicates  = record.fv_reflecReplicates
+  
+  imgdir = record.fv_processedPath+'/replicates'
+  TO.create_directory(imgdir)
+  replicatesVal = reflecReplicates.keys()
+  if len(replicatesVal)>0:
+    for replicateNum in replicatesVal:
+      imgPath = imgdir+'/'+record.fv_serial_number+'_replicate_'+replicateNum+'.png'
+      reflectance = pd.DataFrame()
+      reflectance = reflecReplicates[replicateNum].reflectance
+      reflectance = TO.from_series_to_dataframe(reflectance)
+      reflectance = reflectance.rename(columns={"tgt_counts": "reflectance"})
+      reflectance = reflectance.set_index('wavelength')
+      title = record.fv_serial_number+' replicate num: '+replicateNum
+      img_reflect_and_transmi_panel_calibrations(xmin,xmax,reflectance,pd.DataFrame(),imgPath,title)
+
+    imgFiles = TO.get_files_from_path(imgdir+'/')
+    if len(imgFiles)>0:
+      f, axarr = plt.subplots(3, 2, figsize=(10,10))
+      f.suptitle(record.fv_serial_number+' replicates')
+      y=0
+      x=0
+      for imgFile in sorted(imgFiles):
+        img = mpimg.imread(imgFile)
+        axarr[x,y].imshow(img, interpolation='none')
+        axarr[x,y].axis('off')
+        if y == 1:
+          x += 1
+          y = 0
+        else:
+          y +=1
+      record.replicate_plot = record.fv_processedPath+'/'+record.fv_serial_number+'_replicates.png'
+      plt.savefig(record.replicate_plot, dpi=150)
+      plt.close('all')
+  else:
+     record.isProcessed = False
+  return record
+

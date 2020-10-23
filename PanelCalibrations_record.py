@@ -4,8 +4,10 @@
 import parameters as PA
 import records as RE
 import tools as TO
+import tools_plots as TOP
 import logs as LO
 import PanelCalibrations_measurements as PCM
+import SpectroscopyPanels_record as SPR
 
 # System
 import os, sys
@@ -35,6 +37,7 @@ class PanelCalibration(RE.Record):
     super(PanelCalibration,self).__init__(record.altitude, record.assigned_to, record.assigned_to_id, record.client_created_at, record.client_updated_at, record.course, record.created_at, record.created_by, record.created_by_id, record.created_duration, record.created_location, record.edited_duration, record.form_id, record.form_name, record.form_values, record.horizontal_accuracy, record.id, record.latitude, record.longitude, record.project_id, record.speed, record.status, record.updated_at, record.updated_by, record.updated_by_id, record.updated_duration, record.updated_location, record.version, record.vertical_accuracy, record.project_name)
     self.fv_approved_by = '' 
     self.fv_base_file_name = '' #
+    self.fv_calibration = SPR.get_empty_calib()
     self.fv_cleaning = ''
     self.fv_computer = '' #
     self.fv_computer_type = '' 
@@ -59,7 +62,7 @@ class PanelCalibration(RE.Record):
     self.fv_number_of_rejections = '' 
     self.fv_number_of_replicate = '' 
     self.fv_number_of_scans = '' 
-    self.fv_panel_photos = '' 
+    self.fv_panel_photos = ''
     self.fv_parent_directory = '' #
     self.fv_protocol_url = '' 
     self.fv_published_by = '' 
@@ -187,7 +190,7 @@ def extract_panel_calibrations_record(record):
     rpd = record.fv_parent_directory
     if rpd.startswith("PANEL-CALIBRATIONS"):
       record.fv_parent_directory = rpd[19:]
-    record.fv_processedPath = PA.WebsitePath+'PanelCalibrationsCalculated'+'/'+record.fv_parent_directory+'/'+record.fv_working_folder+''
+    record.fv_processedPath = PA.WebsitePath+'PanelCalibrationsCalculated'+'/'+record.fv_parent_directory+''+record.fv_working_folder+''
     record.fv_sourcePath = PA.PanelCalibPath+''+record.fv_parent_directory+''+record.fv_working_folder+''
     if record.fv_manufacturer_short_name_sphere == 'SVC':
       record.fv_extFile = '.sig'
@@ -312,9 +315,45 @@ def update_panel_calibrations_measurements(record):
     record.wvlMin = vmin
   return record
 
-##############################################
-# Get From Plants
-##############################################
+def link_panel_calibrations_records_and_calibration(spectroPanels,recs):
+  """ This will link calibration and a leaf spectra record
+  
+  :param arg1: a Calibrations list
+  :type arg1: Calibrations
+
+  :param arg2: a fulcrum measurements list
+  :type arg2: LeafSpectra
+
+  :return: True if a calibration has been found, false if the calibration has not been found
+  :rtype: boolean (True/False)
+  """
+  panelCalibrations = PanelCalibrations()
+  for record in recs.records[:]:
+    if record.isValid:
+      rID     = record.id
+      panel_id= record.fv_reference_panel[0]['record_id']
+      
+      LO.l_info('panel id is>{}'.format(panel_id))
+      
+      temp    = record.fv_date_measured
+      calib   = SPR.get_calibration_from_panelID(temp, panel_id, spectroPanels)
+      st = 'Start update record {} with calibration and date {}'.format(rID,temp)
+      LO.l_debug(st)
+      record.add_toLog(st)
+    
+      if calib:
+        record.fv_calibration = calib
+        st = "The record calibration file path is: {}".format(calib.cFilePath)
+        LO.l_debug(st)
+        record.add_toLog(st)
+      else:
+        record.isValid = False
+        st = "The record id {} with the time {} with calibration panel {} was not found. Please update calibrations.".format(rID,temp,panel_id)
+        LO.l_war(st)
+        record.add_toLog(st)
+    panelCalibrations.add_record(record)
+  return panelCalibrations
+
 
 ##############################################
 # Get Panel calibrations
@@ -383,6 +422,7 @@ def load_panelCalibrations():
 
 def process_panel_calibrations_records(rec):
   # parallelisation here
+  
   output = mp.Queue()
   pool = mp.Pool(processes=3)
   results = [pool.apply_async(process_record, args=(record,)) for record in rec.records[:]]
@@ -399,13 +439,14 @@ def process_panel_calibrations_records(rec):
   for record in rec.records[:]:
     process_record(record)
   return PanelCalibrations()
-  """ 
+  """
 
 def process_record(record):
-  LO.l_info('Start prepare spectrum data for record {}'.format(record.id))
-  boo = panel_calibration_calculation(record)
-  if boo:
-    record.isProcessed = True
+  LO.l_info('Start prepare panel calibration data for record {}'.format(record.id))
+  if record.isValid:
+    boo = panel_calibration_calculation(record)
+    if boo:
+      record.isProcessed = True
   return record
 
 ## Panel Calibration Calculations
@@ -419,6 +460,7 @@ def panel_calibration_calculation(record):
   transRefAll, transTargets = ([] for i in range(2))
   mts   = record.fv_measurements.measurements
   
+  numberOfC=1
   for mt in mts[:]:
     # Reflectance
     if 'A:' in mt.sphere_configuration:
@@ -429,9 +471,14 @@ def panel_calibration_calculation(record):
       reflStrays.append(mt)
     if 'C:' in mt.sphere_configuration:
       reflTargets.append(mt)
+      record.fv_reflecReplicates["{}".format(numberOfC)] = mt
+      numberOfC+=1
+
 
   # REFLECTANCE CALCULATION
   if len(reflStrays)>0 and len(reflRefs)>0 and len(reflTargets)>0:
+    # Calibration
+    calib = record.fv_calibration.spectre.measurement.sort_index().loc[wvlMin:wvlMax]
     # (A - B):
     divisorsTar = reflRefs[0].reflecAverage.sub(reflStrays[0].reflecAverage)
     # Calculations per leafs:
@@ -440,7 +487,6 @@ def panel_calibration_calculation(record):
       dividendsTar = reflTarget.reflecAverage.sub(reflStrays[0].reflecAverage)
       # [ (C - B) ÷ (A - B) ]
       divisionTar = dividendsTar.div(divisorsTar)
-      """
       # ([ (C - B) ÷ (A - B) ]) × calib.refl
       mseries = TO.get_monotonic_series(divisionTar)
       for i in range(len(mseries)):
@@ -451,8 +497,7 @@ def panel_calibration_calculation(record):
         i+=1
       reflectance = pd.concat(mseries)
       reflTarget.reflectance= reflectance
-      """
-      reflTarget.reflectance= divisionTar
+      #reflTarget.reflectance= divisionTar
 
     # Average and Standard Deviation
     arr     = np.array([reflTarget.reflectance for reflTarget in reflTargets])
@@ -462,23 +507,23 @@ def panel_calibration_calculation(record):
     
     reflecAverage = pd.Series(arrMean, index=arrIndex, name="reflectance_average")
     reflecAverage.index.name = 'wavelength'
-    record.reflecAverage = reflecAverage
+    record.fv_reflecAverage = reflecAverage
     reflecStadDev = pd.Series(arrStd, index=arrIndex, name="reflectance_standard_deviation")
     reflecStadDev.index.name = 'wavelength'
-    record.reflecStadDev = reflecStadDev
+    record.fv_reflecStadDev = reflecStadDev
 
     # Calculation of (A1/A0):
     distA0A1 = pd.Series()
-    if len(reflRefs) >= 3:
+    if len(reflRefs) > 3:
       distA0A1 = reflRefs[len(reflRefs)-1].reflecAverage.div(reflRefs[0].reflecAverage)
-      record.reflecDiffRef = distA0A1
+      record.fv_reflecDiffRef = distA0A1
     else:
       LO.l_war("the record {} haven't the right number of reference measurments to process the reference of reflectance calculation.".format(record.id))
     # Calculation of (B0/A0):
     distB0A1 = pd.Series()
     if len(reflStrays) > 0 and len(reflRefs) > 0 :
       distB0A1 = reflStrays[0].reflecAverage.div(reflRefs[0].reflecAverage)
-      record.reflecRef = distB0A1
+      record.fv_reflecRef = distB0A1
     else:
       LO.l_war("the record {} have just one reference measurments to process the stray light vs reference.".format(record.id))
   else:
@@ -486,4 +531,23 @@ def panel_calibration_calculation(record):
     LO.l_err("the record {} doesn't have all spectrum measurments to process the reflectance calculation.".format(record.id))
 
   return boo
+
+##############################################
+# Record to plot
+##############################################
+def plots_panel_calibrations_records(recs):
+  panelCalibrations = PanelCalibrations()  
+  for record in recs.records[:]:
+    if record.isProcessed == True:
+      LO.l_info('Start prepare plots data for record {}'.format(record.id))
+      TOP.get_panel_calibrations_record_plot(record)
+      TOP.get_panel_calibrations_record_measurments_plot(record)
+      LO.l_info("{}".format(record.replicate_plot))
+    if not record.isProcessed:
+        s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
+        LO.l_war(s)
+        record.add_toLog(s)
+    panelCalibrations.add_record(record) 
+  return panelCalibrations
+
 

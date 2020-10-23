@@ -50,13 +50,23 @@ def main():
   
   LO.l_info('\n\n## Start load records from Panel Calibrations')
   records = PCR.load_panelCalibrations()
-  time_spr = TO.print_time(time_pa,datetime.now(),'Panel Calibrations')
+  time_lpc = TO.print_time(time_pa,datetime.now(),'Panel Calibrations')
   
+  LO.l_info('\n\n## Start load records from Spectroscopy panels')
+  spectroPanels = SPR.load_spectroscopypanels()
+  time_spr = TO.print_time(start_time,time_lpc,'SpectroPanels')
+
   LO.l_info('\n\n## Process records\nNumber of Records {}\n######\n'.format(len(records)))
+  records = PCR.link_panel_calibrations_records_and_calibration(spectroPanels,records)
   records = PCR.process_panel_calibrations_records(records)
   time_plr = TO.print_time(time_spr,datetime.now(),'process_leafspectra_records')
   LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
-  
+
+  LO.l_info('\n\n## Plots records\nNumber of Records {}\n######\n'.format(len(records)))
+  records = PCR.plots_panel_calibrations_records(records)
+  time_plotr = TO.print_time(start_time,time_plr,'plots_panel_calibrations_records')
+  LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+
   # plots
   # update calibrations records
   ''' FOM LEAFSPECTRA
@@ -67,7 +77,7 @@ def main():
   
   LO.l_info('\n\n## Update records\nNumber of Records {}\n######\n'.format(len(records)))
   records = LSR.update_leafspectra_records(records)
-  time_ulr = TO.print_time(start_time,time_plotr,'update_leafspectra_records')
+  time_ulr = TO.print_time(start_time,time_plotr,'update_leafspectra_records')1
   LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
   LO.l_info('\n\n## Print records log\nNumber of Records {}\n######\n'.format(len(records)))

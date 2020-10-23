@@ -175,7 +175,7 @@ def get_calibration_from_panelID(temp, panelID, spectroPanels=SpectroscopyPanels
     calib = SPC.get_calibration_for_record_time(calibs, temp)
     return calib
   else:
-    LO.l_error('The panel ID {} has not been found in Spectroscopy Panels records'.format(panelID))
+    LO.l_err('The panel ID {} has not been found in Spectroscopy Panels records'.format(panelID))
     return []
     
 def get_empty_calib():

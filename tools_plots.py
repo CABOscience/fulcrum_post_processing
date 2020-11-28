@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import logs as LO
-import tools as TO
+from . import logs as LO
+from . import tools as TO
 
 # Plot
 import os, time
@@ -190,9 +190,9 @@ def get_leafspectra_record_leaves_plot(record):
   transLeaves = record.fv_transLeaves
   imgdir = record.fv_processedPath+'/leaves'
   TO.create_directory(imgdir)
-  leavesVal = reflecLeaves.keys()
+  leavesVal = list(reflecLeaves.keys())
   if len(leavesVal)<1:
-    leavesVal = transLeaves.keys()
+    leavesVal = list(transLeaves.keys())
   if len(leavesVal)>0:
     for leafNum in leavesVal:
       imgPath = imgdir+'/'+record.fv_sample_id+'_leaf_'+leafNum+'.png'
@@ -363,7 +363,7 @@ def get_panel_calibrations_record_measurments_plot(record):
   
   imgdir = record.fv_processedPath+'/replicates'
   TO.create_directory(imgdir)
-  replicatesVal = reflecReplicates.keys()
+  replicatesVal = list(reflecReplicates.keys())
   if len(replicatesVal)>0:
     for replicateNum in replicatesVal:
       imgPath = imgdir+'/'+record.fv_serial_number+'_replicate_'+replicateNum+'.png'

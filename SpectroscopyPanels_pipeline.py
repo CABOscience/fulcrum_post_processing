@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import projects as PR
-import parameters as PA
-import records as RE
-import tools as TO
-import tools_plots as PL
-import logs as LO
+from . import projects as PR
+from . import parameters as PA
+from . import records as RE
+from . import tools as TO
+from . import tools_plots as PL
+from . import logs as LO
 import sys
-import LeafSpectra_concat_files as LSCF
-import LeafSpectra_record as LSR
-import SpectroscopyPanels_record as SPR
+from . import LeafSpectra_concat_files as LSCF
+from . import LeafSpectra_record as LSR
+from . import SpectroscopyPanels_record as SPR
 
 '''
 # Use config parser to set parameters it will allow to simplify the loading and be able to set default values
@@ -48,11 +48,11 @@ def main():
 
   spectroPanels = SPR.load_spectroscopypanels()
 
-  for panelID in spectroPanels.recordsDict.keys():
-    print('panelID: {}'.format(panelID))
+  for panelID in list(spectroPanels.recordsDict.keys()):
+    print(('panelID: {}'.format(panelID)))
     calibrations = spectroPanels.recordsDict[panelID].fv_calibrations.calibrations
     for calib in calibrations:
-      print('calibDate: {}'.format(calib.dDate))
+      print(('calibDate: {}'.format(calib.dDate)))
 
   
 

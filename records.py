@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import forms as FO
-import photos as PH
-import projects as PR
-import tools as TO
-import tools_fulcrum_api as TOFA
-import logs as LO
+from . import parameters as PA
+from . import forms as FO
+from . import photos as PH
+from . import projects as PR
+from . import tools as TO
+from . import tools_fulcrum_api as TOFA
+from . import logs as LO
 
 # System
 import sys, copy, time
@@ -36,7 +36,7 @@ class Records(object):
   def __str__(self):
     tp = ""
     for record in self.records:
-      print record
+      print(record)
       '''
       if tp:
         tp += '\n{}'.format(record)
@@ -132,7 +132,7 @@ class Record(object):
     return []
 
   def whoami(self):
-    print type(self).__name__
+    print(type(self).__name__)
     
   def is_record(self):
     if self.id and self.form_id:
@@ -320,7 +320,7 @@ def mp_backup_records_from_form(form = FO.Form()):
     LO.l_info('End backup images for the form "{}"'.format(formName))
 
     endtime = time.time()
-    print('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start))
+    print(('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start)))
     return formID
 
 ##############################################
@@ -380,7 +380,7 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
       LO.l_debug('size of recs {} before version'.format(len(recs)))
       
       recordsV = Records()
-      for record in recs.recordsDict.values():
+      for record in list(recs.recordsDict.values()):
         currentVersion = record.version
         recordID      = record.id
         fname         = bName+'/versions/'+recordID+'_versions.json'
@@ -441,7 +441,7 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
                 ".format(st=formName))
     
     endtime = time.time()
-    print('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start))
+    print(('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start)))
     #return records
     return formID
 
@@ -470,10 +470,10 @@ def search_datanames_keys_recu(dictKeysDataname,info):
       if v:
         search_for_keys_recu(dictKeysDataname,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       if k in dictKeysDataname:
         info[dictKeysDataname[k]] = info.pop(k)
-    for v in info.values():
+    for v in list(info.values()):
       search_for_keys_recu(dictKeysDataname,v)
 
 def update_records_with_dataname_old(recs):
@@ -499,10 +499,10 @@ def search_for_keys_recu(dictKeysDataName,info):
       if v:
         search_for_keys_recu(dictKeysDataName,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       if k in dictKeysDataName:
         info[dictKeysDataName[k]] = info.pop(k)
-    for v in info.values():
+    for v in list(info.values()):
       search_for_keys_recu(dictKeysDataName,v)
 
 def update_json_record_from_dataname_to_keys(record,recordjson):
@@ -518,10 +518,10 @@ def search_for_dataName_recu(dataNameToKey,rjson):
       if v:
         search_for_dataName_recu(dataNameToKey,v)
   elif isinstance(rjson, dict):
-    for k in rjson.keys():
+    for k in list(rjson.keys()):
       if k in dataNameToKey:
         info[dataNameToKey[k]] = info.pop(k)
-    for v in rjson.values():
+    for v in list(rjson.values()):
       search_for_dataName_recu(dataNameToKey,v)
 
 ##############################################

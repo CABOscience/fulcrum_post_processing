@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import projects as PR
-import parameters as PA
-import tools as TO
-import logs as LO
+from . import projects as PR
+from . import parameters as PA
+from . import tools as TO
+from . import logs as LO
 import sys, time
 from datetime import datetime 
-import LeafSpectra_concat_files as LSCF
-import LeafSpectra_record as LSR
+from . import LeafSpectra_concat_files as LSCF
+from . import LeafSpectra_record as LSR
 #import SpectroscopyPanels_calibrations as SPC
-import SpectroscopyPanels_record as SPR
+from . import SpectroscopyPanels_record as SPR
 
 '''
 # Use config parser to set parameters it will allow to simplify the loading and be able to set default values

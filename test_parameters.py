@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import projects as PR
-import parameters as PA
-import Plants_record as PLR
-import forms as FO
-import tools as TO
-import logs as LO
+from . import projects as PR
+from . import parameters as PA
+from . import Plants_record as PLR
+from . import forms as FO
+from . import tools as TO
+from . import logs as LO
 
 # Spectroscopy
 import specdal

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import projects as PR
-import parameters as PA
-import tools as TO
-import logs as LO
+from . import projects as PR
+from . import parameters as PA
+from . import tools as TO
+from . import logs as LO
 
 # Spectroscopy
 #import specdal
@@ -25,7 +25,7 @@ class SpectroscopyPanels_calibrations(object):
   
   def toPrint(self):
     s = '\n'+''.join(x.toPrint()+'\n' for x in self.calibrations)
-    print s
+    print(s)
 
 def make_SpectroscopyPanels_calibrations(calibsTab):
   calib = SpectroscopyPanels_calibrations()

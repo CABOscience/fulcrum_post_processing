@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import projects as PR
-import parameters as PA
-import records as RE
-import tools as TO
-import logs as LO
-import forms as FO
-import SpectroscopyPanels_calibrations as SPC
+from . import projects as PR
+from . import parameters as PA
+from . import records as RE
+from . import tools as TO
+from . import logs as LO
+from . import forms as FO
+from . import SpectroscopyPanels_calibrations as SPC
 
 # Spectroscopy
 #import specdal
@@ -71,7 +71,7 @@ class SpectroscopyPanel(RE.Record):
       self.fv_calibrations = SPC.extract_SpectroscopyPanels_calibration_values(self.fv_serial_number,self.fv_calibrations)
       #self.fv_calibrations.toPrint()
     else:
-      print('No calibrations for {} and sn {}'.format(self.id,self.fv_serial_number))
+      print(('No calibrations for {} and sn {}'.format(self.id,self.fv_serial_number)))
       self.isValid = False
 
 def extract_spectroscopyPanel_record(self):

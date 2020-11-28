@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import tools
+from . import parameters as PA
+from . import tools
 
 # System
 import os, logging
@@ -24,17 +24,17 @@ def create_log(logName="main",recordID="",recordType=""):
 
 def l_info(v,logName="main"):
   logger = logging.getLogger(logName)
-  print v
+  print(v)
   logger.info(v)
 
 def l_war(v,logName="main"):
   logger = logging.getLogger(logName)
-  print v
+  print(v)
   logger.warning(v)
 
 def l_err(v,logName="main"):
   logger = logging.getLogger(logName)
-  print v
+  print(v)
   logger.error(v)
 
 def l_debug(v,logName="main"):

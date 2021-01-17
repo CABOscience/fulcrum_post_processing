@@ -46,7 +46,7 @@ def main():
   PA.set_parameters()
   time_pa = TO.print_time(start_time,start_time,'Parameters')
   recordType= PA.PanelCalibrationLogFile+"_from_form_file"
-  LO.create_log("main","",recordType)
+  LO.create_log(recordType)
   
   LO.l_info('\n\n## Start load records from Panel Calibrations')
   records = PCR.load_panelCalibrations()
@@ -57,13 +57,13 @@ def main():
   time_spr = TO.print_time(start_time,time_lpc,'SpectroPanels')
 
   LO.l_info('\n\n## Process records\nNumber of Records {}\n######\n'.format(len(records)))
-  records = PCR.link_panel_calibrations_records_and_calibration(spectroPanels,records)
-  records = PCR.process_panel_calibrations_records(records)
+  PCR.link_panel_calibrations_records_and_calibration(spectroPanels,records)
+  PCR.process_panel_calibrations_records(records)
   time_plr = TO.print_time(time_spr,datetime.now(),'process_leafspectra_records')
   LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
 
   LO.l_info('\n\n## Plots records\nNumber of Records {}\n######\n'.format(len(records)))
-  records = PCR.plots_panel_calibrations_records(records)
+  PCR.plots_panel_calibrations_records(records)
   time_plotr = TO.print_time(start_time,time_plr,'plots_panel_calibrations_records')
   LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
 

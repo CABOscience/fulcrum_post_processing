@@ -318,19 +318,14 @@ def get_panel_calibrations_record_plot(record):
     reflecDiffRef = record.fv_reflecDiffRef
     reflecRef     = record.fv_reflecRef
     reflecStadDev = record.fv_reflecStadDev
-    transAverage  = record.fv_transAverage
-    transDiffRef  = record.fv_transDiffRef
-    transStadDev  = record.fv_transStadDev
     imgpath = record.fv_processedPath+''+record.fv_serial_number+'.png'
     LO.l_info(imgpath)
-    #xmin = record.get_wavelength_min()
-    #xmax = record.get_wavelength_max()
     xmin = record.wvlMin
     xmax = record.wvlMax
     title = record.fv_parent_directory+' '+record.fv_working_folder+' '+record.fv_serial_number+' average'
-    img_reflect_and_transmi_panel_calibrations(xmin,xmax,reflecAverage,transAverage,imgpath,title)
+    img_reflect_and_transmi_panel_calibrations(xmin,xmax,reflecAverage,imgpath,title)
 
-def img_reflect_and_transmi_panel_calibrations(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.DataFrame(), imgpath ="", title=''):
+def img_reflect_and_transmi_panel_calibrations(xmin , xmax, reflec =pd.DataFrame(), imgpath ="", title=''):
   indexV = []
   reflecV = []
   if reflec.count>0:
@@ -345,7 +340,7 @@ def img_reflect_and_transmi_panel_calibrations(xmin , xmax, reflec =pd.DataFrame
     ax1.set_title(title)
     for tl in ax1.get_yticklabels():
       tl.set_color('#998ec3')
-    ax1.set_ylim(0.95, 1.05)
+    ax1.set_ylim(0.90, 1.0)
     loc = plticker.MultipleLocator(base=250) # this locator puts ticks at regular intervals
     ax1.xaxis.set_major_locator(loc)
     ax1.set_xlim(xmin,xmax)
@@ -373,7 +368,7 @@ def get_panel_calibrations_record_measurments_plot(record):
       reflectance = reflectance.rename(columns={"tgt_counts": "reflectance"})
       reflectance = reflectance.set_index('wavelength')
       title = record.fv_serial_number+' replicate num: '+replicateNum
-      img_reflect_and_transmi_panel_calibrations(xmin,xmax,reflectance,pd.DataFrame(),imgPath,title)
+      img_reflect_and_transmi_panel_calibrations(xmin,xmax,reflectance,imgPath,title)
 
     imgFiles = TO.get_files_from_path(imgdir+'/')
     if len(imgFiles)>0:
@@ -395,5 +390,4 @@ def get_panel_calibrations_record_measurments_plot(record):
       plt.close('all')
   else:
      record.isProcessed = False
-  return record
 

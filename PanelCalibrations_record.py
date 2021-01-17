@@ -9,15 +9,19 @@ import logs as LO
 import PanelCalibrations_measurements as PCM
 import SpectroscopyPanels_record as SPR
 
+#import matplotlib.pyplot as plt
+#import csaps
+
 # System
 import os, sys
 import multiprocessing as mp
 # Spectroscopy
-#import specdal
+#from specdal.operators import stitch
 # Data Science
 import math
 import pandas as pd
 import numpy as np
+from scipy import interpolate
 np.set_printoptions(threshold='nan')
 
 ##############################################
@@ -275,14 +279,15 @@ def update_panel_calibrations_measurements(record):
         if fName and TO.file_is_here(fName):
           LO.l_debug("\tStart spectre extraction for {}".format(fName))
           spect = TO.create_spectrum(fName,measureType)
-          mt.spectres.append(spect)
-          mt.spectres[i].interpolate(method='cubic')
-          wvl_max = mt.spectres[i].metadata['wavelength_range'][1]
-          wvl_min = mt.spectres[i].metadata['wavelength_range'][0]
+          spect = TO.stitch(spect,'max')
+          spect.interpolate(method='cubic')
+          wvl_max = spect.metadata['wavelength_range'][1]
+          wvl_min = spect.metadata['wavelength_range'][0]
           if vmax == -1 or wvl_max < vmax:
             vmax = wvl_max
           if vmin == -1 or wvl_min > vmin:
             vmin = wvl_min
+          mt.spectres.append(spect)
           TO.create_directory(record.fv_processedPath+'/interpolated_files/')
           spectreProcessed = record.fv_processedPath+'/interpolated_files/'+mt.files_name[i]+ext+'.txt'
           s = '{}'.format(mt.spectres[i])
@@ -313,7 +318,6 @@ def update_panel_calibrations_measurements(record):
       record.isValid = False
     record.wvlMax = vmax
     record.wvlMin = vmin
-  return record
 
 def link_panel_calibrations_records_and_calibration(spectroPanels,recs):
   """ This will link calibration and a leaf spectra record
@@ -327,7 +331,6 @@ def link_panel_calibrations_records_and_calibration(spectroPanels,recs):
   :return: True if a calibration has been found, false if the calibration has not been found
   :rtype: boolean (True/False)
   """
-  panelCalibrations = PanelCalibrations()
   for record in recs.records[:]:
     if record.isValid:
       rID     = record.id
@@ -351,8 +354,6 @@ def link_panel_calibrations_records_and_calibration(spectroPanels,recs):
         st = "The record id {} with the time {} with calibration panel {} was not found. Please update calibrations.".format(rID,temp,panel_id)
         LO.l_war(st)
         record.add_toLog(st)
-    panelCalibrations.add_record(record)
-  return panelCalibrations
 
 
 ##############################################
@@ -422,50 +423,55 @@ def load_panelCalibrations():
 
 def process_panel_calibrations_records(rec):
   # parallelisation here
-  
+  """ 
   output = mp.Queue()
   pool = mp.Pool(processes=3)
   results = [pool.apply_async(process_record, args=(record,)) for record in rec.records[:]]
   pool.close()
   pool.join()
-  panelCalibrations = PanelCalibrations()
-  for r in results:
-    record = r.get()
-    if record:
-      panelCalibrations.add_record(record)
-  return panelCalibrations
+#  panelCalibrations = PanelCalibrations()
+#  for r in results:
+#    record = r.get()
+#    if record:
+#      panelCalibrations.add_record(record)
+#  return panelCalibrations
 
   """
   for record in rec.records[:]:
     process_record(record)
   return PanelCalibrations()
-  """
 
 def process_record(record):
   LO.l_info('Start prepare panel calibration data for record {}'.format(record.id))
+  boo = False
   if record.isValid:
     boo = panel_calibration_calculation(record)
     if boo:
       record.isProcessed = True
-  return record
+  return boo
 
 ## Panel Calibration Calculations
 ########################
 def panel_calibration_calculation(record):
   boo = True
   
-  wvlMax = record.wvlMax
-  wvlMin = record.wvlMin
   reflTargets, reflStrays, reflRefs = ([] for i in range(3))
   transRefAll, transTargets = ([] for i in range(2))
   mts   = record.fv_measurements.measurements
   
+  wvlMax = record.fv_calibration.cMax
+  wvlMin = record.fv_calibration.cMin
+  if record.wvlMax < wvlMax:
+    wvlMax = record.wvlMax
+  if record.wvlMin > wvlMin:
+    wvlMin = record.wvlMin
+
   numberOfC=1
   for mt in mts[:]:
     # Reflectance
     if 'A:' in mt.sphere_configuration:
       reflRefs.append(mt)
-      if len(reflRefs)==0:
+    if len(reflRefs)==0:
         LO.l_war("the record {} doesn't have any reference. The wvlMax and wvlMin used will come from calibration".format(record.id))
     if 'B:' in mt.sphere_configuration:
       reflStrays.append(mt)
@@ -492,21 +498,111 @@ def panel_calibration_calculation(record):
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
         for ind, row in mserie.iteritems():
-          mserie.set_value(ind,row)
+          mserie.at[ind] = row*calib.at[ind]
         mseries[i] = mserie
         i+=1
       reflectance = pd.concat(mseries)
       reflTarget.reflectance= reflectance
-      #reflTarget.reflectance= divisionTar
 
     # Average and Standard Deviation
     arr     = np.array([reflTarget.reflectance for reflTarget in reflTargets])
     arrIndex= np.array(reflTargets[0].reflectance.index)
-    arrMean = np.mean(arr, axis=0)
+    arrMeant = np.mean(arr, axis=0)
     arrStd  = np.std(arr, axis=0, ddof=1)
+    reflecAveraget = pd.Series(arrMeant, index=arrIndex, name="reflectance_average")
+    reflecAveraget.index.name = 'wavelength'
+
+
+    #LO.l_info("\n\n\narrMeant\n\n\n{}".format(reflecAveraget.to_string()))
+
+
+
+    mseries = TO.get_monotonic_series(reflecAveraget)
+    for i in range(len(mseries)):
+      mserieIndex = mseries[i].index
+      mserieValues = mseries[i].values
+      mserieInner = pd.Series()
+      LO.l_debug("min \n{}".format(mseries[i].index.to_series().idxmin()))
+      LO.l_debug("max \n{}".format(mseries[i].index.to_series().idxmax()))
+      localmin = mseries[i].index.to_series().idxmin()
+      localmax = mseries[i].index.to_series().idxmax()
+      for ind, row in mserie.iteritems():
+        if ind > localmin and ind < localmax:
+          mserieInner.at[ind] = row
+
+      #mserieIndexInner = mserieIndex without extrem point
+      #mserieIndexInner = mserieIndex.to_series().between(wvlMin+1.0,wvlMax-1.0)
+      #LO.l_info("{}".format(mserieInner))
+      #mserieValuesInner = mserieValues without extrem point
+      #spl = interpolate.CubicSpline(mserieIndex,mseries[i].values,bc_type='natural')
+
+      spl = interpolate.UnivariateSpline(mserieIndex,mserieValues,k=2)
+      #spl.set_smoothing_factor(0.5)
+      xs = np.linspace(localmin, localmax,len(mserieInner)*20)
+      #spl = interpolate.pchip_interpolate(mserieIndex,mserieValues,xs)
+      #LO.l_info("\n\n\nspl\n\n\n{}".format(spl))
+      #spl = interpolate.InterpolatedUnivariateSpline(mserieIndex,mseries[i].values)
+
+      #spl = interpolate.interp1d(mserieIndex, mseries[i].values, kind='cubic')
+
+      #spl = interpolate.splrep(mserieIndex, mserieValues, s=2)
+      #spl2 = interpolate.splev(mserieInner.index,spl)
+      
+      #spl = interpolate.BSpline(mserieIndex,mseries[i].values,2)
+
+      #mseriesTmp = pd.Series(spl(mserieInner.index), index=mserieInner.index, name="reflectance_average")
+      mseriesTmp = pd.Series(spl(xs), index=xs, name="reflectance_average")
+      mseriesTmp[localmin]=mseries[i].at[localmin]
+      mseriesTmp[localmax]=mseries[i].at[localmax]
+      mseriesTmp.index.name = 'wavelength'
+      mseriesTmp = mseriesTmp.sort_index()
+      mseries[i] = mseriesTmp
+
+      #LO.l_info("{}".format(mseries[i].to_string()))
+      LO.l_info("\n\n\nmseriesTmp\n\n\n{}".format(mseriesTmp.to_string()))
+
+
+    arrMean = pd.concat(mseries)
     
+    #LO.l_info("\n\n\narrMean\n\n\n{}".format(arrMean.to_string()))
+    #exit()
+
     reflecAverage = pd.Series(arrMean, index=arrIndex, name="reflectance_average")
     reflecAverage.index.name = 'wavelength'
+    
+    """
+    LO.l_info('{}'.format(arrIndex))
+    
+    #spl = interpolate.UnivariateSpline(arrIndex,arrMean)
+    #spl.set_smoothing_factor(1)
+
+    #Not working
+    #spl = interpolate.interp1d(sorted(arrIndex),arrMean,kind='cubic')
+
+    #spl = interpolate.splrep(np.arange(arrIndex),arrMean,s=0)
+
+    mseries = TO.get_monotonic_series()
+      for i in range(len(mseries)):
+        mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
+        for ind, row in mserie.iteritems():
+          mserie.set_value(ind,row*calib.at[ind])
+        mseries[i] = mserie
+        i+=1
+      reflectance = pd.concat(mseries)
+
+
+
+    spl = interpolate.CubicSpline(arrIndex,arrMean,bc_type='natural')
+    
+    #spl = interpolate.InterpolatedUnivariateSpline(arrIndex,arrMean)
+    #spl = interpolate.BSpline(arrIndex,arrMean,2)
+    
+    #t2 = np.interp(0.5, arrIndex, arr)
+
+    LO.l_info('\n################\n{}\n################\n'.format(spl(arrIndex)))
+    reflecAverage = pd.Series(spl(arrIndex), index=arrIndex, name="reflectance_average")
+    reflecAverage.index.name = 'wavelength'
+    """
     record.fv_reflecAverage = reflecAverage
     reflecStadDev = pd.Series(arrStd, index=arrIndex, name="reflectance_standard_deviation")
     reflecStadDev.index.name = 'wavelength'
@@ -536,7 +632,6 @@ def panel_calibration_calculation(record):
 # Record to plot
 ##############################################
 def plots_panel_calibrations_records(recs):
-  panelCalibrations = PanelCalibrations()  
   for record in recs.records[:]:
     if record.isProcessed == True:
       LO.l_info('Start prepare plots data for record {}'.format(record.id))
@@ -547,7 +642,4 @@ def plots_panel_calibrations_records(recs):
         s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
         LO.l_war(s)
         record.add_toLog(s)
-    panelCalibrations.add_record(record) 
-  return panelCalibrations
-
 

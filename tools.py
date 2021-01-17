@@ -599,6 +599,11 @@ def get_monotonic_series(series):
       result += [series.iloc[head_positions[N-1]:]]
       return result
 
+def stitch(spect, method='mean'):
+  spect.measurement = specdal.operators.stitch(spect.measurement, method)
+  spect.stitched = True
+  return spect
+
 def create_spectrum(fName,measureType):
   return specdal.Spectrum(filepath=fName, measure_type= measureType)
 

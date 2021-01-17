@@ -21,7 +21,7 @@ import sys
 def main():
   PA.set_parameters()
   recordType= PA.PlantsLogFile+"_plants_test"
-  LO.create_log("main","",recordType)
+  LO.create_log(recordType)
   plants = PLAR.load_plants()
   print len(plants)
   

@@ -21,7 +21,7 @@ import sys
 def main():
   PA.set_parameters()
   recordType= PA.PlotsLogFile+"_plots_test"
-  LO.create_log("main","",recordType)
+  LO.create_log(recordType)
   plots = PLOR.load_plots()
   print len(plots)
   

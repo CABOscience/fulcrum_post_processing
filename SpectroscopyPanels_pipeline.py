@@ -44,7 +44,7 @@ $ sudo apt install python-configparser python-pandas python-scipy python-setupto
 def main():
   PA.set_parameters()
   recordType= PA.SpectroscopyPanelsLogFile+"_from_form_file"
-  LO.create_log("main","",recordType)
+  LO.create_log(recordType)
 
   spectroPanels = SPR.load_spectroscopypanels()
 

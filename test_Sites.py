@@ -21,7 +21,7 @@ import sys
 def main():
   PA.set_parameters()
   recordType= PA.SitesLogFile+"_sites_test"
-  LO.create_log("main","",recordType)
+  LO.create_log(recordType)
   sites = SIR.load_sites()
   print len(sites)
   

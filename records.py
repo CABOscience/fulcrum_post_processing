@@ -257,7 +257,7 @@ def get_records_from_list(listRecords,forms=[],projects=[]):
 ##############################################
 def backup_records_from_forms():
   PA.set_parameters()
-  LO.create_log("main","",'backup_fulcrum')
+  LO.create_log('backup_fulcrum')
   TOFA.check_fulcrum_version()
   # Backup projects
   PR.backup_projects_from_Fulcrum()
@@ -328,7 +328,7 @@ def mp_backup_records_from_form(form = FO.Form()):
 ##############################################
 def backup_records_versions_from_forms():
   PA.set_parameters()
-  LO.create_log("main","",'backup_fulcrum_versions')
+  LO.create_log('backup_fulcrum_versions')
   TOFA.check_fulcrum_version()
   # Backup projects
   PR.backup_projects_from_Fulcrum()

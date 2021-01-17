@@ -25,7 +25,8 @@ FulcrumForms      = []
 FulcrumProjects   = []
 FulcrumRecords    = []
 KeysDataname      = []
-FormsProcess      = False
+LogTitle          = "main"
+FormsProcess      = True
 WebhookProcess    = False
 DirectoriesProcess= False
 NumberOfRequests  = 0
@@ -85,6 +86,10 @@ def set_parameters():
     c = get_config(ConfFile)
     set_global_from_config(c)
   get_arguments()
+
+def wrong_parameters():
+  print("You have some wrong parameters or arguments")
+  sys.exit(1)
 
 def get_config(confFile):
   config = configparser.ConfigParser()
@@ -225,9 +230,6 @@ def get_arguments():
   if args.form and len(args.form)>0:
     global FulcrumForms
     FulcrumForms = args.form
-  else:
-    global FormsProcess
-    FormsProcess=True
   
   if args.projects and len(args.projects)>0:
     global FulcrumProjects
@@ -236,6 +238,10 @@ def get_arguments():
   if args.webhooks:
     global WebhookProcess
     WebhookProcess = True
+    global FormsProcess
+    FormsProcess = False
+    global LogTitle
+    LogTitle = "webhook" 
   
   if args.records and len(args.records)>0:
     global FulcrumRecords

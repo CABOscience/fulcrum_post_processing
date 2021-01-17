@@ -46,11 +46,10 @@ def main():
   PA.set_parameters()
   time_pa = TO.print_time(start_time,start_time,'Parameters')
   recordType= PA.LeafSpectraLogFile+"_from_form_file"
-  LO.create_log("main","",recordType)
+  LO.create_log(recordType)
   projects = PR.load_projects()
   PR.create_project_website_view_directories(projects)
   time_pr = TO.print_time(start_time,time_pa,'Project')
-  
   LO.l_info('\n\n## Start load records from Spectroscopy panels')
   #calibrations  = SPC.extract_SpectroscopyPanels_calibrations()
   spectroPanels = SPR.load_spectroscopypanels()
@@ -66,35 +65,39 @@ def main():
     LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   else:
     LO.l_info('\n\n## Start load records from webhook')
-    records = LSR.load_leafspectra_webhook_Records(calibrations)
+    records = LSR.load_leafspectra_webhook_Records(spectroPanels)
     LO.l_info('\n\n## End load records from webhook')
     time_llr = TO.print_time(start_time,time_spr,'load_leafspectra_webhook_Records')
     LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  LO.l_info('\n\n## Process records\nNumber of Records {}\n######\n'.format(len(records)))
-  records = LSR.process_leafspectra_records(records)
-  time_plr = TO.print_time(start_time,time_llr,'process_leafspectra_records')
-  LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+  if not PA.FormsProcess:
+    print('{}'.format(len(records)))
+    sys.exit(1)
+  if len(records)>0:
+    LO.l_info('\n\n## Process records\nNumber of Records {}\n######\n'.format(len(records)))
+    records = LSR.process_leafspectra_records(records)
+    time_plr = TO.print_time(start_time,time_llr,'process_leafspectra_records')
+    LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  LO.l_info('\n\n## Plots records\nNumber of Records {}\n######\n'.format(len(records)))
-  records = LSR.plots_leafspectra_records(records)
-  time_plotr = TO.print_time(start_time,time_plr,'plots_leafspectra_records')
-  LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+    LO.l_info('\n\n## Plots records\nNumber of Records {}\n######\n'.format(len(records)))
+    records = LSR.plots_leafspectra_records(records)
+    time_plotr = TO.print_time(start_time,time_plr,'plots_leafspectra_records')
+    LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  LO.l_info('\n\n## Update records\nNumber of Records {}\n######\n'.format(len(records)))
-  records = LSR.update_leafspectra_records(records)
-  time_ulr = TO.print_time(start_time,time_plotr,'update_leafspectra_records')
-  LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+    LO.l_info('\n\n## Update records\nNumber of Records {}\n######\n'.format(len(records)))
+    records = LSR.update_leafspectra_records(records)
+    time_ulr = TO.print_time(start_time,time_plotr,'update_leafspectra_records')
+    LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  LO.l_info('\n\n## Print records log\nNumber of Records {}\n######\n'.format(len(records)))
-  LSR.print_log_records(records)
-  time_plor = TO.print_time(start_time,time_ulr,'print_log_records')
-  LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+    LO.l_info('\n\n## Print records log\nNumber of Records {}\n######\n'.format(len(records)))
+    LSR.print_log_records(records)
+    time_plor = TO.print_time(start_time,time_ulr,'print_log_records')
+    LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  LO.l_info('## Concat Files\nNumber of Records {}\n######\n'.format(len(records)))
-  LSCF.concat_files(records, projects)
-  time_clr = TO.print_time(start_time,time_plor,'concat_files')
-  LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+    LO.l_info('## Concat Files\nNumber of Records {}\n######\n'.format(len(records)))
+    LSCF.concat_files(records, projects)
+    time_clr = TO.print_time(start_time,time_plor,'concat_files')
+    LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
 
 ##############################################
 # MAIN

@@ -128,7 +128,7 @@ class LeafSpectra(RE.Record):
 ##############################################
 # LOAD Record
 ##############################################
-def load_leafspectra_webhook_Records(calibrations):
+def load_leafspectra_webhook_Records(spectroPanels):
   """ This will load Leaf spectra object from webhook
   
   :param arg1: calibrations
@@ -137,38 +137,20 @@ def load_leafspectra_webhook_Records(calibrations):
   :return: LeafSpectrum object full of LeafSpectra processible
   :rtype: LeafSpectrum
   """
-  leafSpectraForm = TO.load_json_file(PA.LeafSpectraFormFile)
-  leafSpectraFormID = leafSpectraForm['id']
+  #leafSpectraForm = TO.load_json_file(PA.LeafSpectraFormFile)
+  leafSpectraForm = FO.load_form_from_json_file(PA.LeafSpectraFormFile)
+  leafSpectraFormID = leafSpectraForm.id
   webhookRecords = RE.load_webhook_records()
-  spectrum = LeafSpectrum()
+  rec = RE.Records()
   for record_raw in webhookRecords.records[:]:
-    if leafSpectraFormID not in record.form_id:
+    if leafSpectraFormID not in record_raw.form_id:
       st = 'The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id)
       LO.l_debug(st)
       record_raw.add_toLog(st)
     else:
-      record = LeafSpectra(record_raw)
-      st = 'Start update record {} with measurments'.format(record.id)
-      LO.l_debug(st)
-      record.add_toLog(st)
-      if extract_leafspectra_record(record):
-        st = 'Start update record {} with calibration and date {}'.format(record.id,record.fv_date_measured)
-        LO.l_debug(st)
-        record.add_toLog(st)
-        if link_leafspectra_record_and_calibration(calibrations,record):
-          st = 'The record {} is complete for processing'.format(record.id)
-          LO.l_debug(st)
-          spectrum.add_record(record)
-          record.add_toLog(st)
-        else:
-          st = 'The record {} will not be used'.format(record.id)
-          LO.l_war(st)
-          record.add_toLog(st)
-      else:
-        st = 'The record {} will not be used'.format(record.id)
-        LO.l_war(st)
-        record.add_toLog(st)
-  return spectrum
+      RE.update_record_with_dataname(leafSpectraForm.dictKeysDataName,record_raw)
+      rec.add_record(record_raw)
+  return get_spectrum(spectroPanels,rec)
 
 def load_leafspectra_Records(spectroPanels):
   """ This will load Leaf spectra object from the Leaf Spectra Backup
@@ -179,9 +161,12 @@ def load_leafspectra_Records(spectroPanels):
   :return: LeafSpectrum object full of LeafSpectra processible
   :rtype: LeafSpectrum
   """
-  spectrum = LeafSpectrum()
   # Load records
   rec = load_leafspectra_Records_from_file()
+  return get_spectrum(spectroPanels,rec)
+
+def get_spectrum(spectroPanels,rec):
+  spectrum = LeafSpectrum()
   my_list = []
   #for record_raw in rec.records[:]:
   #  my_list.append(add_Record_in_spectrum(spectroPanels,record_raw))

@@ -457,10 +457,11 @@ def get_record_latest_history_version(records):
 # Update Record with dataname
 ##############################################
 def record_add_dataname_from_formFile(record,formFile):
-  form_raw = TO.load_json_file(formFile)
-  dictKeysDataname = form_raw['dictKeysDataname']
+  form_raw = FO.load_form_from_json_file(formFile)
+  #dictKeysDataname = form_raw['dictKeysDataname']
+  dictKeysDataname = form_raw.dictKeysDataName
   if 'form_values' in record:
-    search_datanames_keys_recu(dictKeysDataname,record['form_values'])
+    update_record_with_dataname(dictKeysDataname,record['form_values'])
 
 # Records sub functions
 # Recursive search for keys to dataname
@@ -490,6 +491,10 @@ def update_records_with_dataname(dictKeysDataName,records):
   for record in records:
     if record.form_values:
       search_for_keys_recu(dictKeysDataName,record.form_values)
+
+def update_record_with_dataname(dictKeysDataName,record):
+  if record.form_values:
+    search_for_keys_recu(dictKeysDataName,record.form_values)
 
 # Records sub functions
 # Recursive search for keys to dataname

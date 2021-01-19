@@ -240,7 +240,6 @@ def get_form_from_fileName(fileName):
   form_raw = TO.load_json_file(fileName)
   return create_form_from_json(form_raw)
 
-
 def get_forms_from_formsJson(formsJson):
   forms = Forms()
   for form_raw in formsJson:
@@ -249,45 +248,35 @@ def get_forms_from_formsJson(formsJson):
   return forms
 
 def get_dictKeysDataName_from_formid(form_id):
-  fs = load_forms()
-  if form_id in fs.formsDictID:
-    return fs.formsDictID[form_id].dictKeysDataName
+  form = get_form_from_formid(formId)
+  return form.dictKeysDataName
 
-def get_formName_from_formid(form_id,fs=[],n=0):
-  if isinstance(fs, Forms):
-    if form_id in fs.formsDictIDName:
-      return fs.formsDictIDName[form_id]
-  elif len(fs)<1 and n<1:
-    return get_formName_from_formid(form_id,load_forms(),1)
-  else:
-    return ""
+def get_formName_from_formid(formId,fs=[],n=0):
+  form = get_form_from_formid(formId)
+  return form.name
 
-def get_projects_enabled_status(form_id,fs=[],n=0):
-  if isinstance(fs, Forms):
-    if form_id in fs.formsDictID:
-      return fs.formsDictID[form_id].projects_enabled
-  elif len(fs)<1 and n<1:
-    return get_projects_enabled_status(form_id,load_forms(),1)
-  LO.l_war('get_projects_enabled_status : The form {} was not found in formsDictID'.format(form_id))
-  return ""
+def get_projects_enabled_status(formId,fs=[],n=0):
+  form = get_form_from_formid(formId)
+  return form.projects_enabled
 
 def get_Keys_from_DataNames(formId, dataNames = []):
-  forms = load_forms()
-  form = forms.formsDictID[formId]
+  form = get_form_from_formid(formId)
   keyValues = {}
   for dataName in dataNames[:]:
     if dataName in form.dictDataNameKeys:
       keyValues[dataName] = form.dictDataNameKeys[dataName]
   return keyValues
 
-def get_Keys_from_formId(formId):
-  forms = load_forms()
-  form = forms.formsDictID[formId]
-  keyValues = {}
-  for dataName in dataNames[:]:
-    if dataName in form.dictDataNameKeys:
-      keyValues[dataName] = form.dictDataNameKeys[dataName]
-  return keyValues
+def get_form_from_formid(formId):
+  form = Form()
+  fileUid = TO.get_FormsPath()+"uid"+'/'+formId+'_form.json'
+  if TO.file_is_here(fileUid):
+    form = load_form_from_json_file(fileUid)
+    return form 
+  else:
+    forms = load_forms()
+    form = forms.formsDictID[formId]
+  return form
 
 ##############################################
 # LOAD SOURCES

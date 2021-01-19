@@ -213,6 +213,7 @@ def clean_name(s):
   '''
   s = space_to_underscore(s)
   s = colon_to_underscore(s)
+  s = slash_to_underscore(s)
   return s
 
 # Change \s (' ') to _
@@ -238,6 +239,19 @@ def colon_to_underscore(s):
   :rtype: string
   '''
   return s.replace(':','_')
+
+# Change / to _
+def slash_to_underscore(s):
+  ''' This function changes colon for underscore in a string
+  
+  :param arg1: a string
+  :type arg1: string
+
+  :return: a string with slash changed by underscore
+  :rtype: string
+  '''
+  return s.replace('/','_')
+
 
 # Get the script directory
 def get_script_directory():

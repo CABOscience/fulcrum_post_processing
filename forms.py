@@ -143,7 +143,14 @@ class Form(object):
     TO.save_in_json_file(fname,self.__dict__)
     LO.l_debug('The form {} is saved'.format(formName))
     self.add_toLog('The form {} is saved'.format(formName))
-    
+    # Create forms uid
+    create_form_uid_directories()
+    fname = TO.get_FormsPath()+"uid"+'/'+self.id+'_form.json'
+    TO.save_in_json_file(fname,self.__dict__)
+    LO.l_debug('The form uid {} is saved'.format(formName))
+    self.add_toLog('The form uid {} is saved'.format(formName))
+
+
 # Forms sub functions
 # Recursive search for keys to dataname
 def search_for_keys_form_recu(dictKeysDataName,info):
@@ -168,7 +175,13 @@ def create_form_directories(formName):
     directory = TO.get_FormsPath()+formName+'/'+directory
     if not os.path.exists(directory):
       os.makedirs(directory)
- 
+
+def create_form_uid_directories():
+  directory = TO.get_FormsPath()+"uid"+'/'
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+
+
 def from_DataName_to_Keys(dictKeysDataName):
   dictDataNameKeys = {}
   for k in dictKeysDataName.keys():

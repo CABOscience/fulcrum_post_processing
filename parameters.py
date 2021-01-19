@@ -242,6 +242,8 @@ def get_arguments():
     FormsProcess = False
     global LogTitle
     LogTitle = "webhook" 
+    global NumberOfProcesses
+    NumberOfProcesses = 1
   
   if args.records and len(args.records)>0:
     global FulcrumRecords

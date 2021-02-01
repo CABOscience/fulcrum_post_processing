@@ -19,7 +19,10 @@ def create_log(recordType="",recordID="",logName=""):
   logPath = PA.FulcrumPath+"/logs/"+today+"/"
   if not os.path.exists(logPath):
     os.makedirs(logPath)
-  logFilename = logPath+today+"_"+logName+"_"+recordType+"_"+recordID+".log"
+  logFilename = logPath+today+"_"+logName+"_"+recordType
+  if recordID != "":
+    logFilename = logFilename+"_"+recordID
+  logFilename = logFilename+".log"
   logging.basicConfig(name=logName, level=logging.INFO,
                       filename=logFilename, filemode="a+",
                       format="%(asctime)-15s %(levelname)-8s %(message)s")

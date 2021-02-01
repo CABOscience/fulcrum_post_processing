@@ -82,10 +82,15 @@ ConfFile           = ScriptPath+'/config.ini'
 # Set Variables from config files
 ##############################################
 def set_parameters():
+  TOFA.check_fulcrum_version()
   if TO.file_is_here(ConfFile):
     c = get_config(ConfFile)
     set_global_from_config(c)
   get_arguments()
+
+def set_logTitle(s):
+  global LogTitle
+  LogTitle = s
 
 def wrong_parameters():
   print("You have some wrong parameters or arguments")
@@ -242,8 +247,8 @@ def get_arguments():
     FormsProcess = False
     global LogTitle
     LogTitle = "webhook" 
-    global NumberOfProcesses
-    NumberOfProcesses = 1
+    #global NumberOfProcesses
+    #NumberOfProcesses = 1
   
   if args.records and len(args.records)>0:
     global FulcrumRecords

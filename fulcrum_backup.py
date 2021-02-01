@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 import records as RE
 import time
+import projects as PR
+import parameters as PA
+import tools as TO
+import logs as LO
+import sys, time
+from datetime import datetime
 
 '''
 Usage:
@@ -21,7 +27,12 @@ optional arguments:
 # MAIN FUNCTION
 ##############################################
 def main():
-  RE.backup_records_from_forms()
+  start_time = datetime.now()
+  LO.create_log("forms")
+  if PA.FormsProcess:
+    RE.backup_records_from_fulcrumforms()
+  else:
+    RE.backup_records_from_webhookforms()
 
 ##############################################
 # MAIN

@@ -52,10 +52,12 @@ class Project():
     self.file_name = ""
     self.name = name
     self.name_cleaned = ""
+    self.fulcrum_cleaned_name = ""
     self.updated_at = updated_at
   
   def set_NameCleaned(self):
     self.name_cleaned = TO.clean_name(self.name)
+    self.fulcrum_name_cleaned = TO.fulcrum_clean_name(self.name)
   
   def set_file_name(self):
     self.file_name = get_ProjectsPath()+'/'+self.name_cleaned+'.json'

@@ -255,10 +255,7 @@ def get_records_from_list(listRecords,forms=[],projects=[]):
 ##############################################
 # Backup Records latest version From Forms
 ##############################################
-def backup_records_from_forms():
-  PA.set_parameters()
-  LO.create_log('backup_fulcrum')
-  TOFA.check_fulcrum_version()
+def backup_records_from_fulcrumforms():
   # Backup projects
   PR.backup_projects_from_Fulcrum()
   # Backup Forms (Applications)
@@ -267,6 +264,21 @@ def backup_records_from_forms():
   #  mp_backup_records_from_form(form)
   mp_backup_records_from_forms(formsO)
   TOFA.print_num_of_request()
+
+def backup_records_from_webhookforms():
+  # Backup projects
+  PR.backup_projects_from_Fulcrum()
+  # Backup Forms (Applications)
+  load = FO.load_webhook_forms()
+  webhookForms = load[0]
+  webhookFiles = load[1]
+  #for form in formsO.forms[:]:
+  #  mp_backup_records_from_form(form)
+  mp_backup_records_from_forms(webhookForms)
+  TOFA.print_num_of_request()
+  if len(webhookFiles) > 0:
+    for f in webhookFiles:
+      TO.delete_a_file(f)
 
 def mp_backup_records_from_forms(formsO = FO.Forms()):
   """

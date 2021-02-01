@@ -10,6 +10,8 @@ import time
 import csv, codecs, cStringIO, json
 # Spectroscopy
 import specdal
+# Math
+import re
 # Data Science
 import pandas as pd
 import numpy as np
@@ -200,6 +202,13 @@ def photo_to_file(fname, photo, logName="main"):
   except ValueError:
     LO.l_err(ValueError,logName)
     return False
+
+def fulcrum_clean_name(s):
+  s = s.lower()
+  s = space_to_underscore(s)
+  pat = re.compile('[^a-z0-9_]+')
+  s = pat.sub('', s)
+  return s
 
 # Change string colon or space by underscore
 def clean_name(s):

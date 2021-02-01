@@ -56,7 +56,7 @@ class Forms(object):
 
 
 class Form(object):
-  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
+  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', fulcrum_name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
     self.assignment_enabled = assignment_enabled
     self.auto_assign = auto_assign
     self.bounding_box = bounding_box
@@ -76,6 +76,7 @@ class Form(object):
     self.image_thumbnail = image_thumbnail
     self.name = name
     self.name_cleaned = name_cleaned
+    self.fulcrum_cleaned_name = fulcrum_name_cleaned
     self.projects_enabled = projects_enabled
     self.record_count = record_count
     self.record_title_key = record_title_key
@@ -128,9 +129,9 @@ class Form(object):
       self.add_toLog(st)
 
   def set_NameCleaned(self):
-    if not self.name_cleaned:
-      self.name_cleaned = TO.clean_name(self.name)
-    
+    self.name_cleaned = TO.clean_name(self.name)
+    self.fulcrum_name_cleaned = TO.fulcrum_clean_name(self.name)
+
   # Extract Forms
   def backup_form(self):
     formName = self.name_cleaned
@@ -284,8 +285,9 @@ def get_form_from_formid(formId):
 
 # Load from Webhooks
 def load_webhook_forms():
-  webhookForms = TO.get_files_from_path(TO.get_WebhookFormsPath())
-  return get_forms_from_form_files_list(webhookForms)
+  webhookFiles = TO.get_files_from_path(TO.get_WebhookFormsPath())
+  webhookForms = get_forms_from_form_files_list(webhookFiles)
+  return [webhookForms,webhookFiles]
 
 # Load from File Name
 def load_forms_from_json_file(fileName):

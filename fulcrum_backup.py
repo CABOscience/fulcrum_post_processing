@@ -27,6 +27,7 @@ optional arguments:
 # MAIN FUNCTION
 ##############################################
 def main():
+  PA.set_parameters()
   start_time = datetime.now()
   LO.create_log("forms")
   if PA.FormsProcess:

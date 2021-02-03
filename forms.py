@@ -248,7 +248,7 @@ def get_forms_from_formsJson(formsJson):
     forms.add_form(form)
   return forms
 
-def get_dictKeysDataName_from_formid(form_id):
+def get_dictKeysDataName_from_formid(formId):
   form = get_form_from_formid(formId)
   return form.dictKeysDataName
 

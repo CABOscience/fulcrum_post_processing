@@ -230,7 +230,7 @@ def create_form_from_json(form_raw):
   if 'created_at'         in form_raw:  created_at = form_raw['created_at']
   if 'description'        in form_raw:  description = form_raw['description']
   if 'dictKeysDataName'   in form_raw:  dictKeysDataName = form_raw['dictKeysDataName']
-  if 'dictKeysTypes'      in form_raw:  dictKeysTypes = form_raw['dictKeysTypes']
+  if 'dictKeysTypes'      in form_raw:  dictKeysTypes = form_raw['dictKeysTyoes']
   if 'elements'           in form_raw:  elements = form_raw['elements']
   if 'geometry_required'  in form_raw:  geometry_required = form_raw['geometry_required']
   if 'geometry_types'     in form_raw:  geometry_types = form_raw['geometry_types']

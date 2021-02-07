@@ -93,11 +93,13 @@ def main():
     time_plor = TO.print_time(start_time,time_ulr,'print_log_records')
     LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-    if not PA.FormsProcess:
+    if PA.FormsProcess:
       LO.l_info('## Concat Files\nNumber of Records {}\n######\n'.format(len(records)))
       LSCF.concat_files(records, projects)
       time_clr = TO.print_time(start_time,time_plor,'concat_files')
       LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
+    else:
+      LSR.clean_webhook_records(records)
 
 ##############################################
 # MAIN

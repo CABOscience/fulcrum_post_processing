@@ -152,6 +152,10 @@ def load_leafspectra_webhook_Records(spectroPanels):
       rec.add_record(record_raw)
   return get_spectrum(spectroPanels,rec)
 
+def clean_webhook_records(rec):
+  RE.clean_webhook_records(rec.records)
+
+
 def load_leafspectra_Records(spectroPanels):
   """ This will load Leaf spectra object from the Leaf Spectra Backup
   

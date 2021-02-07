@@ -338,6 +338,14 @@ def mp_backup_records_from_form(form = FO.Form()):
 ##############################################
 # Backup Records Versions From Forms
 ##############################################
+def clean_webhook_records(records):
+  for rec in records[:]:
+    fname = TO.get_WebhookRecordsPath()+'/'+rec.id+''
+    TO.delete_a_file(fname)
+
+##############################################
+# Backup Records Versions From Forms
+##############################################
 def backup_records_versions_from_forms():
   PA.set_parameters()
   LO.create_log('backup_fulcrum_versions')

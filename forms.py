@@ -114,20 +114,14 @@ class Form(object):
     self.logInfo += "\n"+st
   
   def set_KeysDataName(self):
-    if len(self.dictKeysDataName)<1:
+    if len(self.dictKeysDataName)<1 or len(self.dictKeysTypes)<1:
       dictKeysDataName = {}
-      search_for_keys_form_recu(dictKeysDataName,self.elements)
-      self.dictKeysDataName = dictKeysDataName
-      st = 'The form {} has now a dictKeysDataName'.format(self.name_cleaned)
-      LO.l_debug(st)
-      self.add_toLog(st)
-
-  def set_KeysTypes(self):
-    if len(self.dictKeysTypes)<1:
       dictKeysTypes = {}
-      search_for_types_form_recu(dictKeysTypes,self.elements)
+      search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,self.elements)
+      self.dictKeysDataName = dictKeysDataName
       self.dictKeysTypes = dictKeysTypes
-      st = 'The form {} has now a dictKeysTypes'.format(self.name_cleaned)
+      st = 'The form {} has now a dictKeysDataName'.format(self.name_cleaned)
+      st += 'The form {} has now a dictKeysTypes'.format(self.name_cleaned)
       LO.l_debug(st)
       self.add_toLog(st)
 
@@ -164,40 +158,23 @@ class Form(object):
 
 # Forms sub functions
 # Recursive search for keys to dataname
-def search_for_keys_form_recu(dictKeysDataName,info):
+def search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,info):
   if isinstance(info, list):
     for v in info:
       if v:
-        search_for_keys_form_recu(dictKeysDataName,v)
+        search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,v)
   elif isinstance(info, dict):
     if 'elements' in info:
-      search_for_keys_form_recu(dictKeysDataName,info['elements'])
+      search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,info['elements'])
     if 'data_name' in info and 'key' in info:
       dictKeysDataName[info['key']]=info['data_name']
-    for vs in info.values():
-      if isinstance(vs, list):
-        for v in vs:
-          if v:
-            search_for_keys_form_recu(dictKeysDataName,v)
-
-# Forms sub functions
-# Recursive search for keys to dataname
-def search_for_types_form_recu(dictKeysTypes,info):
-  if isinstance(info, list):
-    for v in info:
-      if v:
-        search_for_types_form_recu(dictKeysTypes,v)
-  elif isinstance(info, dict):
-    if 'elements' in info:
-      search_for_types_form_recu(dictKeysTypes,info['elements'])
     if 'key' in info and 'type' in info:
       dictKeysTypes[info['key']]=info['type']
     for vs in info.values():
       if isinstance(vs, list):
         for v in vs:
           if v:
-            search_for_types_form_recu(dictKeysTypes,v)
-
+            search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,v)
 
 def create_form_directories(formName):
   directories = ['versions', 'images']
@@ -230,7 +207,7 @@ def create_form_from_json(form_raw):
   if 'created_at'         in form_raw:  created_at = form_raw['created_at']
   if 'description'        in form_raw:  description = form_raw['description']
   if 'dictKeysDataName'   in form_raw:  dictKeysDataName = form_raw['dictKeysDataName']
-  if 'dictKeysTypes'      in form_raw:  dictKeysTypes = form_raw['dictKeysTyoes']
+  if 'dictKeysTypes'      in form_raw:  dictKeysTypes = form_raw['dictKeysTypes']
   if 'elements'           in form_raw:  elements = form_raw['elements']
   if 'geometry_required'  in form_raw:  geometry_required = form_raw['geometry_required']
   if 'geometry_types'     in form_raw:  geometry_types = form_raw['geometry_types']
@@ -253,7 +230,6 @@ def create_form_from_json(form_raw):
   form = Form(assignment_enabled, auto_assign, bounding_box, created_at, description, dictKeysDataName, dictKeysTypes, elements, geometry_required, geometry_types, hidden_on_dashboard, ID, image, image_large, image_small, image_thumbnail, name, name_cleaned, projects_enabled, record_count, record_title_key, script, status_field, title_field_keys, updated_at, version, backup_file)
   form.set_NameCleaned()
   form.set_KeysDataName()
-  form.set_KeysTypes()
   form.set_dictDataNameKeys()
   return form
 

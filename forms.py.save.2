@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Local Modules
+import parameters as PA
+import tools as TO
+import tools_fulcrum_api as TOFA
+import logs as LO
+
+# System
+import sys, os
+import json
+
+##############################################
+# Forms = fulcrumapp in Fulcrum
+##############################################
+
+# OBJECTS
+#########################
+class Forms(object):
+  def __init__(self):
+    self.forms=[]
+    self.formsDictID={}
+    self.formsDictName={}
+    self.formsDictIDName={}
+    
+  def __len__(self):
+    return len(self.forms)
+    
+  def get_forms(self):
+    return self.forms
+  
+  def __str__(self):
+    tp = ""
+    for form in self.forms:
+      if tp:
+        tp += '\n {}'.format(form)
+      else:
+        tp = '{}'.format(form)
+    return tp
+
+  def to_csv(self):
+    tp = []
+    for form in self.forms:
+      tp.append(form.to_csv())
+    return tp
+  
+  def add_form(self,form):
+    self.forms.append(form)
+    self.formsDictID[form.id]=form
+    self.formsDictName[form.name]=form
+    self.formsDictIDName[form.id]=form.name
+
+  def backup_forms(self):
+    for form in self.forms[:]:
+      form.backup_form()
+
+
+class Form(object):
+  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', dictKeysTypes = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', fulcrum_name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
+    self.assignment_enabled = assignment_enabled
+    self.auto_assign = auto_assign
+    self.bounding_box = bounding_box
+    self.created_at = created_at
+    self.description = description
+    self.dictKeysDataName = dictKeysDataName
+    self.dictKeysTypes = dictKeysTypes
+    self.dictDataNameKeys= {}
+    self.backup_file = backup_file
+    self.elements = elements
+    self.geometry_required = geometry_required
+    self.geometry_types = geometry_types
+    self.hidden_on_dashboard = hidden_on_dashboard
+    self.id = ID
+    self.image = image
+    self.image_large = image_large
+    self.image_small = image_small
+    self.image_thumbnail = image_thumbnail
+    self.name = name
+    self.name_cleaned = name_cleaned
+    self.fulcrum_cleaned_name = fulcrum_name_cleaned
+    self.projects_enabled = projects_enabled
+    self.record_count = record_count
+    self.record_title_key = record_title_key
+    self.script = script
+    self.status_field = status_field
+    self.title_field_keys = title_field_keys
+    self.updated_at = updated_at
+    self.version = version
+    self.logInfo = ""
+    self.isValid = True
+
+  def __str__(self):
+    return '>{} - {}'.format(self.id, self.name)
+
+  def to_csv(self):
+    return []
+
+  def to_info(self):
+    return []
+
+  def whoami(self):
+    print type(self).__name__
+    
+  def is_form(self):
+    if self.id and self.name:
+      return True
+    else:
+      LO.l_war('The form has no ID and/or name. We will not be able to process it.')
+      self.add_toLog('The form has no ID and/or name. We will not be able to process it.')
+      self.isValid = False
+      return False
+      
+  def add_toLog(self, st):
+    self.logInfo += "\n"+st
+  
+  def set_KeysDataName(self):
+    st = 'NAMES'
+    LO.l_debug(st)
+    if len(self.dictKeysDataName)<1 and len(self.dictKeysDataName)<1:
+      dictKeysDataName = {}
+      search_for_keys_form_recu(dictKeysDataName,self.elements)

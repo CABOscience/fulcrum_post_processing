@@ -110,7 +110,7 @@ def insertRecord(values):
 			#print cur.mogrify(insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))
 
 
-def recordWebhook2DB(rec):
+def recordWebhook2DB():
 	webhookRecords = R.load_webhook_records()
 	for record_raw in webhookRecords.records[:]:
 		FF = FO.get_form_from_formid(record_raw.form_id)

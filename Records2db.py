@@ -4,13 +4,9 @@ import forms as FO
 import parameters as PA
 import records as R
 import json
-import psycopg2
-from psycopg2.extensions import AsIs
 import os
+import tools_db as TDB
 
-conn = psycopg2.connect("dbname=cabo_test user=postgres host=vm-03")
-conn.set_session(autocommit=True)
-cur = conn.cursor()
 PA.set_parameters()
 common_fields_main = {
 	"id":"fulcrum_id",
@@ -93,8 +89,8 @@ def formatFormName(fName):
 	return fName.lower().replace(' ','_')
 
 def checkRecord(table, id):
-	cur.execute("SELECT fulcrum_id FROM %s WHERE fulcrum_id = %s", (AsIs(table),id))
-	if cur.fetchone() is not None:
+	TDB.cur.execute("SELECT fulcrum_id FROM %s WHERE fulcrum_id = %s", (TDB.AsIs(table),id))
+	if TDB.cur.fetchone() is not None:
 		return True
 	else:
 		return False
@@ -103,23 +99,21 @@ def insertRecord(values):
 	for table in values:
 		for r in values[table]:
 			if checkRecord(table, r['fulcrum_id']) == True:
-				cur.execute('DELETE FROM %s WHERE fulcrum_id = %s', (AsIs(table),r['fulcrum_id']))
+				TDB.cur.execute('DELETE FROM %s WHERE fulcrum_id = %s', (TDB.AsIs(table),r['fulcrum_id']))
 				print('Updating record')
 			else:
 				print('Inserting record')
 			columns = r.keys()
 			val = [r[column] for column in columns]
 			insert_statement = 'INSERT INTO %s (%s) VALUES %s'
-			cur.execute(insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))
+			TDB.cur.execute(insert_statement, (AsIs(table), TDB.AsIs(','.join(columns)), tuple(val)))
 			#print cur.mogrify(insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))
 
 
 def recordWebhook2DB(rec):
-	FF = FO.get_form_from_formid(rec.form_id)
-	if(FF.name != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
-		insertRecord(prepareRecordValues(rec))
+	webhookRecords = R.load_webhook_records()
+	for record_raw in webhookRecords.records[:]:
+		FF = FO.get_form_from_formid(record_raw.form_id)
+		if(FF.name != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
+			insertRecord(prepareRecordValues(record_raw))
 
-def scanWebhookFolder():
-	for filename in os.listdir('/home/canadensys/fulcrum_webhook_data/records/'):
-		rec=R.record_from_fileName('/home/canadensys/fulcrum_webhook_data/records/'+filename)
-		recordWebhook2DB(rec)

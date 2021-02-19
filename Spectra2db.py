@@ -5,14 +5,10 @@ import parameters as PA
 import records as R
 import json
 import csv
-import psycopg2
-from psycopg2.extensions import AsIs
 import os
+import tools_db as TDB
 import LeafSpectra_record as LS
 
-conn = psycopg2.connect("dbname=cabo_test user=postgres host=vm-03")
-conn.set_session(autocommit=True)
-cur = conn.cursor()
 PA.set_parameters()
 
 spectra_processed_fields = ["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","r_t_average","r_t_std"]
@@ -21,23 +17,23 @@ spectra_leaves_fields = ["record_id","sample_id","file_name","leaf_number","leaf
 
 def SpectraDBInsert(table, fields, values):
 	insert_statement = 'INSERT INTO %s (%s) VALUES %s'
-	cur.execute(insert_statement, (AsIs(table), AsIs(','.join(fields)), tuple(values)))
+	TDB.cur.execute(insert_statement, (TDB.AsIs(table), TDB.AsIs(','.join(fields)), tuple(values)))
 
 def checkRecord(table, record_id, sample_id, leaf=False):
 	if(leaf==False):
-		cur.execute("SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s", (AsIs(table),record_id,sample_id))
+		TDB.cur.execute("SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s", (TDB.AsIs(table),record_id,sample_id))
 	else:
-		cur.execute("SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s AND leaf_number=%s", (AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number)))
-	if cur.fetchone() is not None:
+		TDB.cur.execute("SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s AND leaf_number=%s", (TDB.AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number)))
+	if TDB.cur.fetchone() is not None:
 		return True
 	else:
 		return False
 
 def SpectraDBDelete(table, record_id, sample_id, leaf=False):
 	if(leaf == False):
-		cur.execute("DELETE FROM %s WHERE record_id = %s AND sample_id = %s", (AsIs(table),record_id,sample_id))
+		TDB.cur.execute("DELETE FROM %s WHERE record_id = %s AND sample_id = %s", (TDB.AsIs(table),record_id,sample_id))
 	else:
-		cur.execute("DELETE FROM %s WHERE record_id = %s AND sample_id = %s AND leaf_number=%s", (AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number)))
+		cur.execute("DELETE FROM %s WHERE record_id = %s AND sample_id = %s AND leaf_number=%s", (AsIs(table),record_id,TDB.AsIs(sample_id),TDB.AsIs(leaf_number)))
 
 def LeafSpectra2DB(record):
 	#c,l,r = LS.leafspectra_record_to_csv_values(record)
@@ -46,7 +42,7 @@ def LeafSpectra2DB(record):
 		read = csv.reader(csvfile, delimiter=',', quotechar='"')
 		SpectraDBProcessAll(read)
 
-def SpectraDBProcessAll(spectra_csv)
+def SpectraDBProcessAll(spectra_csv):
 		i = 0
 		for row in spectra_csv:
 			if i == 0 and checkRecord('spectra_processed',row[0],row[1]) == True:
@@ -56,7 +52,7 @@ def SpectraDBProcessAll(spectra_csv)
 		print('Spectra All - Inserted ' + str(i) + ' rows')
 
 
-def SpectraDBProcessLeaves(spectra_csv)
+def SpectraDBProcessLeaves(spectra_csv):
 		i = 0
 		for row in spectra_csv:
 			if i == 0 and checkRecord('spectra_processed',row[0],row[1],row[3]) == True:

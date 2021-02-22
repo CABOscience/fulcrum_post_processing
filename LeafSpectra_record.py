@@ -10,6 +10,7 @@ import logs as LO
 import LeafSpectra_measurements as LSM
 import SpectroscopyPanels_record as SPR
 import forms as FO
+import tools_db as TDB
 
 # System
 import os, sys
@@ -906,6 +907,8 @@ def small_leaf_calculation(record):
 def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
     c,l,r = leafspectra_record_to_csv_values(record)
+    SpectraDBProcessAll(c)
+    SpectraDBProcessLeaves(l)
     TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
     TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
     TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
@@ -1036,3 +1039,48 @@ def extract_log_record(record):
   else:
     #PA.ProjectWebsitePath+'Rec_without_processedPath'
     LO.l_war('no fv_processedPath for record {}'.format(record.id))
+
+##############################################
+# Spectra Records to Database
+##############################################
+
+def SpectraDBInsert(table, fields, values):
+  insert_statement = 'INSERT INTO %s (%s) VALUES %s'
+  TDB.cur.execute(insert_statement, (TDB.AsIs(table), TDB.AsIs(','.join(fields)), tuple(values)))
+
+def checkSpectraDBRecord(table, record_id, sample_id, leaf=False):
+  if(leaf==False):
+    TDB.cur.execute("SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s", (TDB.AsIs(table),record_id,sample_id))
+  else:
+    TDB.cur.execute("SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s AND leaf_number=%s", (TDB.AsIs(table),record_id,TDB.AsIs(sample_id),TDB.AsIs(leaf_number)))
+  if TDB.cur.fetchone() is not None:
+    return True
+  else:
+    return False
+
+def SpectraDBDelete(table, record_id, sample_id, leaf=False):
+  if(leaf == False):
+    TDB.cur.execute("DELETE FROM %s WHERE record_id = %s AND sample_id = %s", (TDB.AsIs(table),record_id,sample_id))
+  else:
+    cur.execute("DELETE FROM %s WHERE record_id = %s AND sample_id = %s AND leaf_number=%s", (TDB.AsIs(table),record_id,TDB.AsIs(sample_id),TDB.AsIs(leaf_number)))
+
+def SpectraDBProcessAll(spectra_csv):
+  spectra_processed_fields = ["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","r_t_average","r_t_std"]
+  i = 0
+  for row in spectra_csv:
+    if i == 0 and checkSpectraDBRecord('spectra_processed',row[0],row[1]) == True:
+      SpectraDBDelete('spectra_processed',row[0],row[1])
+    SpectraDBInsert('spectra_processed',spectra_processed_fields,row)
+    i += 1
+  LO.l_debug('Spectra All - Inserted {} rows'.format(i))
+
+
+def SpectraDBProcessLeaves(spectra_csv):
+  spectra_leaves_fields = ["record_id","sample_id","file_name","leaf_number","leaf_side_measured","reflectance_transmittance","wavelength","raw_value","calculated_value"]
+  i = 0
+  for row in spectra_csv:
+    if i == 0 and checkRecord('spectra_processed',row[0],row[1],row[3]) == True:
+      SpectraDBDelete('spectra_processed',row[0],row[1],row[3])
+    SpectraDBInsert('spectra_leaves',spectra_leaves_fields,row)
+    i += 1
+  LO.l_debug('Spectra Leaves - Inserted {} rows'.format(i))

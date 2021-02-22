@@ -7,6 +7,7 @@ import photos as PH
 import projects as PR
 import tools as TO
 import tools_fulcrum_api as TOFA
+import tools_db as TDB
 import logs as LO
 
 # System
@@ -588,4 +589,105 @@ def load_records_from_fulcrum(form):
   return get_records_from_list(records_raw)
 
 
+##############################################
+# RECORDS TO DATABASE
+##############################################
+def prepareRecordValues(record):
+  common_fields_main = {
+    "id":"fulcrum_id",
+    "assigned_to":"assigned_to", 
+    "created_at":"created_at", 
+    "created_by":"created_by", 
+    "latitude":"latitude", 
+    "longitude":"longitude", 
+    "status":"status", 
+    "updated_at":"updated_at", 
+    "updated_by":"updated_by", 
+    "version":"version", 
+    "horizontal_accuracy": "gps_horizontal_accuracy",
+    "vertical_accuracy": "gps_vertical_accuracy", 
+    "speed": "gps_speed", 
+    "course": "gps_course", 
+    "altitude": "gps_altitude"
+  }
+  common_fields_sub = [
+    "created_at", 
+    "created_by", 
+    "updated_at", 
+    "updated_by", 
+    "version", 
+  ]
+  vals={}
+  FF = FO.get_form_from_formid(record.form_id)
+  recuMapValues(vals, TO.fulcrum_clean_name(FF.name), record.form_values, record, FF.dictKeysTypes, FF.dictKeysDataName, common_fields_main, common_fields_sub, 0)
+  return vals
 
+def recuMapValues(vals, tblName, values, record, keysTypes, keysDataNames, common_fields_main, common_fields_sub, id):
+  kv = {}
+  if id == 0: #The main form table
+    for f in common_fields_main:
+      kv[common_fields_main[f]] = getattr(record, f)
+  else: # Sub tables
+    kv["fulcrum_parent_id"] = record.id
+    kv["fulcrum_record_id"] = record.id
+    kv['fulcrum_id'] = id
+    for f in common_fields_sub:
+      kv[f] = getattr(record, f)
+              
+  for v in values:
+    if v in keysTypes:
+      if keysTypes[v] in ['TextField','CalculatedField','BarcodeField','Label','DateTimeField','YesNoField','TimeField','ClassificationField','HyperlinkField']:
+        kv[keysDataNames[v]] = values[v]
+      elif keysTypes[v] in ['RecordLinkField']:
+        rf=[]
+        for r in values[v]:
+          rf.append(r['record_id'])
+        kv[keysDataNames[v]] = ",".join(rf)
+      elif keysTypes[v] in ['ChoiceField']:
+        kv[keysDataNames[v]] = ",".join(values[v]['choice_values'])
+      elif keysTypes[v] in ['Repeatable']:
+        for rep in values[v]:
+          recuMapValues(vals, tblName + '_' + keysDataNames[v], rep['form_values'], record, keysTypes, keysDataNames, common_fields_main, common_fields_sub, rep['id'])
+      elif keysTypes[v] in ['PhotoField']:
+        photos=[]
+        captions=[]
+        for p in values[v]:
+          if p['photo_id'] is not None:
+            photos.append(p['photo_id'])
+          if p['caption'] is not None:
+            captions.append(p['caption'])
+        kv[keysDataNames[v]] = ",".join(photos)
+        kv[keysDataNames[v]+"_caption"] = ",".join(captions)
+  if tblName not in vals:
+    vals[tblName]=[kv]
+  else:
+    vals[tblName].append(kv)
+
+
+def checkRecord(table, id):
+  TDB.cur.execute("SELECT fulcrum_id FROM %s WHERE fulcrum_id = %s", (TDB.AsIs(table),id))
+  if TDB.cur.fetchone() is not None:
+    return True
+  else:
+    return False
+
+def insertRecord(values):
+  for table in values:
+    for r in values[table]:
+      if checkRecord(table, r['fulcrum_id']) == True:
+        TDB.cur.execute('DELETE FROM %s WHERE fulcrum_id = %s', (TDB.AsIs(table),r['fulcrum_id']))
+        LO.l_debug('Record {} updated in DB'.format(r['fulcrum_id']))
+      else:
+        LO.l_debug('Record {} inserted in DB'.format(r['fulcrum_id']))
+      columns = r.keys()
+      val = [r[column] for column in columns]
+      insert_statement = 'INSERT INTO %s (%s) VALUES %s'
+      TDB.cur.execute(insert_statement, (TDB.AsIs(table), TDB.AsIs(','.join(columns)), tuple(val)))
+
+
+def recordWebhook2DB():
+  webhookRecords = load_webhook_records()
+  for record_raw in webhookRecords.records[:]:
+    FF = FO.get_form_from_formid(record_raw.form_id)
+    if(FF.name != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
+      insertRecord(prepareRecordValues(record_raw))

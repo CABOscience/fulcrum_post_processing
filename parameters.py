@@ -37,6 +37,9 @@ DefaultPath       = os.path.expanduser('~/')
 BulkLeafSamplesLogFile = DefaultPath
 BulkLeafSamplessFormFile = DefaultPath
 BulkLeafSamplessRecordsFile = DefaultPath
+DatabaseName = ''
+DatabaseUser = ''
+DatabaseHostName = ''
 CampaignsPath = DefaultPath = DefaultPath
 Debug = False
 FulcrumApiKey   = ""
@@ -113,6 +116,9 @@ def set_global_from_config(c):
     global CampaignsPath
     global Debug
     global DefaultPath
+    global DatabaseUser
+    global DatabaseName
+    global DatabaseHostName
     global FulcrumApiKey
     global FulcrumApiURL
     global FulcrumBackupScript
@@ -157,6 +163,9 @@ def set_global_from_config(c):
     if c.get('DEFAULT','CampaignsPath'): CampaignsPath = c.get('DEFAULT','CampaignsPath')
     if c.get('DEFAULT','Debug'): Debug = c.get('DEFAULT','Debug')
     if c.get('DEFAULT','DefaultPath'): DefaultPath = c.get('DEFAULT','DefaultPath')
+    if c.get('DEFAULT','DatabaseName'): DatabaseName = c.get('DEFAULT','DatabaseName')
+    if c.get('DEFAULT','DatabaseUser'): DatabaseUser = c.get('DEFAULT','DatabaseUser')
+    if c.get('DEFAULT','DatabaseHostName'): DatabaseHostName = c.get('DEFAULT','DatabaseHostName')
     if c.get('DEFAULT','FulcrumApiKey'): FulcrumApiKey = c.get('DEFAULT','FulcrumApiKey')
     if c.get('DEFAULT','FulcrumApiURL'): FulcrumApiURL = c.get('DEFAULT','FulcrumApiURL')
     if c.get('DEFAULT','FulcrumBackupScript'): FulcrumBackupScript = c.get('DEFAULT','FulcrumBackupScript')

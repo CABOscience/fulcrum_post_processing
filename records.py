@@ -97,7 +97,7 @@ class Record(object):
     self.client_created_at = RclientCreatedAt
     self.client_updated_at = RclientUpdatedAt
     self.course = Rcourse
-    self.gps_course = Rcourse
+    self.gps_course = self.course
     self.created_at = RcreatedAt
     self.created_by = RcreatedBy
     self.created_by_id = RcreatedById
@@ -673,27 +673,29 @@ def check_record(conn, table, id):
 
 def insert_record(values):
   conn = TDB.get_access_to_db()
-  for table in values:
-    for r in values[table]:
-      isdel=False
-      if check_record(conn, table, r['fulcrum_id']):
-        isdel = TDB.query_to_db(conn,"DELETE FROM %s WHERE fulcrum_id = %s", (AsIs(table),r['fulcrum_id']))
-      columns = r.keys()
-      val = [r[column] for column in columns]
-      insert_statement = 'INSERT INTO %s (%s) VALUES %s'
-      res = TDB.query_to_db(conn, insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))
-      if res and isdel:
-        LO.l_debug('Record {} updated in DB'.format(r['fulcrum_id']))
-      elif res:
-        LO.l_debug('Record {} inserted in DB'.format(r['fulcrum_id']))
-      else:
-        LO.l_war('Error inserting Record {} in DB'.format(r['fulcrum_id']))
+  if conn != None:
+    for table in values:
+      for r in values[table]:
+        isdel=False
+        if check_record(conn, table, r['fulcrum_id']):
+          isdel = TDB.query_to_db(conn,"DELETE FROM %s WHERE fulcrum_id = %s", (AsIs(table),r['fulcrum_id']))
+        columns = r.keys()
+        val = [r[column] for column in columns]
+        insert_statement = 'INSERT INTO %s (%s) VALUES %s'
+        res = TDB.query_to_db(conn, insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))
+        if res and isdel:
+          LO.l_debug('Record {} updated in DB'.format(r['fulcrum_id']))
+        elif res:
+          LO.l_debug('Record {} inserted in DB'.format(r['fulcrum_id']))
+        else:
+          LO.l_war('Error inserting Record {} in DB'.format(r['fulcrum_id']))
+  else:
+    LO.l_war('Could not connect to database')
   conn.close()
 
 
 def record_webhook_to_db():
   webhookRecords = load_webhook_records()
   for record_raw in webhookRecords.records[:]:
-    FF = FO.get_form_from_formid(record_raw.form_id)
-    if(FF.name != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
+    if(record_raw.form_name  != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
       insert_record(prepare_record_values(record_raw))

@@ -662,6 +662,8 @@ def recu_map_values(vals, tblName, values, record, keysTypes, keysDataNames, com
             captions.append(p['caption'])
         kv[keysDataNames[v]] = ",".join(photos)
         kv[keysDataNames[v]+"_caption"] = ",".join(captions)
+    else:
+      LO.l_war('WARNING FIELD {} NOT MAPPED! '.format(v))
   if tblName not in vals:
     vals[tblName]=[kv]
   else:

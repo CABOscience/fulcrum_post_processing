@@ -10,6 +10,8 @@ import logs as LO
 import LeafSpectra_measurements as LSM
 import SpectroscopyPanels_record as SPR
 import forms as FO
+import tools_db as TDB
+from psycopg2.extensions import AsIs
 
 # System
 import os, sys
@@ -910,6 +912,8 @@ def small_leaf_calculation(record):
 def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
     c,l,r = leafspectra_record_to_csv_values(record)
+    spectra_db_process_all(c)
+    spectra_db_process_leaves(l)
     TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
     TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
     TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
@@ -1040,3 +1044,59 @@ def extract_log_record(record):
   else:
     #PA.ProjectWebsitePath+'Rec_without_processedPath'
     LO.l_war('no fv_processedPath for record {}'.format(record.id))
+
+##############################################
+# Spectra Records to Database
+##############################################
+
+def spectra_db_insert(conn, table, fields, values):
+  query = 'INSERT INTO %s (%s) VALUES %s'
+  TDB.query_to_db(conn, query, values)
+
+def check_spectra_db_record(conn, table, record_id, sample_id, leaf=False):
+  query = "SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s"
+  if leaf:
+    query += " AND leaf_number=%s"
+    val = (AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number))
+  else:
+    val = (AsIs(table),record_id,AsIs(sample_id))
+  return TDB.query_to_db(conn, query, val)
+
+def spectra_db_delete(conn, table, record_id, sample_id, leaf=False):
+  query = "DELETE FROM %s WHERE record_id = %s AND sample_id = %s"
+  if leaf:
+    query += " AND leaf_number=%s"
+    val = (AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number))
+  else:
+    val = (AsIs(table),record_id,sample_id)
+  TDB.query_to_db(conn, query , val)
+
+def spectra_db_process_all(spectra_csv):
+  conn = TDB.get_access_to_db()
+  if conn != None:
+    spectra_processed_fields = ["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","r_t_average","r_t_std"]
+    i = 0
+    for row in spectra_csv:
+      if i == 0 and check_spectra_db_record(conn, 'spectra_processed',row[0],row[1]):
+        LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
+        spectra_db_delete(conn, 'spectra_processed', row[0], row[1])
+      spectra_db_insert(conn, 'spectra_processed', spectra_processed_fields, row)
+      i += 1
+    LO.l_debug('Spectra All - Inserted {} rows'.format(i))
+  else:
+    LO.l_war('Could not connect to database')
+
+def spectra_db_process_leaves(spectra_csv):
+  conn = TDB.get_access_to_db()
+  if conn != None:
+    spectra_leaves_fields = ["record_id","sample_id","file_name","leaf_number","leaf_side_measured","reflectance_transmittance","wavelength","raw_value","calculated_value"]
+    i = 0
+    for row in spectra_csv:
+      if i == 0 and check_spectra_db_record(conn, 'spectra_leaves',row[0],row[1],row[3]):
+        LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
+        spectra_db_delete(conn, 'spectra_leaves',row[0],row[1],row[3])
+      spectra_db_insert(conn, 'spectra_leaves',spectra_leaves_fields,row)
+      i += 1
+    LO.l_debug('Spectra Leaves - Inserted {} rows'.format(i))
+  else:
+    LO.l_war('Could not connect to database')

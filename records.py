@@ -7,7 +7,10 @@ import photos as PH
 import projects as PR
 import tools as TO
 import tools_fulcrum_api as TOFA
+import tools_db as TDB
 import logs as LO
+from psycopg2.extensions import AsIs
+
 
 # System
 import sys, copy, time
@@ -88,11 +91,13 @@ class Records(object):
 class Record(object):
   def __init__(self, Raltitude= "", RassignedTo= "", RassignedToId= "", RclientCreatedAt= "", RclientUpdatedAt= "", Rcourse= "", RcreatedAt= "", RcreatedBy= "", RcreatedById= "", RcreatedDuration= "", RcreatedLocation= "", ReditedDuration= "", RformId= "", RformName= "", RformValues= "", RhorizontalAccuracy= "", RID= "", Rlatitude= "", Rlongitude= "", RprojectId= "", Rspeed= "", Rstatus= "", RupdatedAt= "", RupdatedBy= "", RupdatedById= "", RupdatedDuration= "", RupdatedLocation= "", Rversion= "", RverticalAccuracy= "", RprojectName=''):
     self.altitude = Raltitude
+    self.gps_altitude = self.altitude
     self.assigned_to = RassignedTo
     self.assigned_to_id = RassignedToId
     self.client_created_at = RclientCreatedAt
     self.client_updated_at = RclientUpdatedAt
     self.course = Rcourse
+    self.gps_course = self.course
     self.created_at = RcreatedAt
     self.created_by = RcreatedBy
     self.created_by_id = RcreatedById
@@ -103,11 +108,14 @@ class Record(object):
     self.form_name = RformName
     self.form_values = RformValues
     self.horizontal_accuracy = RhorizontalAccuracy
+    self.gps_horizontal_accuracy = self.horizontal_accuracy
     self.id = RID
+    self.fulcrum_id = self.id
     self.latitude = Rlatitude
     self.longitude = Rlongitude
     self.project_id = RprojectId
     self.speed = Rspeed
+    self.gps_speed = self.speed
     self.status = Rstatus
     self.updated_at = RupdatedAt
     self.updated_by = RupdatedBy
@@ -116,11 +124,11 @@ class Record(object):
     self.updated_location = RupdatedLocation
     self.version = Rversion
     self.vertical_accuracy = RverticalAccuracy
+    self.gps_vertical_accuracy = self.vertical_accuracy
     self.project_name = RprojectName
     self.isValid = True
     self.isProcessed = False
     self.logInfo = ""
-     
 
   def __str__(self):
     return '>{}'.format([self.altitude, self.assigned_to, self.assigned_to_id, self.client_created_at, self.client_updated_at, self.course, self.created_at, self.created_by, self.created_by_id, self.created_duration, self.created_location, self.edited_duration, self.form_id, self.horizontal_accuracy, self.id, self.latitude, self.longitude, self.project_id, self.speed, self.status, self.updated_at, self.updated_by, self.updated_by_id, self.updated_duration, self.updated_location, self.version, self.vertical_accuracy, self.form_values])
@@ -596,4 +604,108 @@ def load_records_from_fulcrum(form):
   return get_records_from_list(records_raw)
 
 
+##############################################
+# RECORDS TO DATABASE
+##############################################
+def prepare_record_values(record):
+  common_fields_sub = [
+    "created_at", 
+    "created_by", 
+    "updated_at", 
+    "updated_by", 
+    "version", 
+  ]
 
+  common_fields_main = common_fields_sub + [
+    "fulcrum_id",
+    "assigned_to", 
+    "latitude", 
+    "longitude", 
+    "status", 
+    "gps_horizontal_accuracy",
+    "gps_vertical_accuracy", 
+    "gps_speed", 
+    "gps_course", 
+    "gps_altitude"
+  ]
+
+  vals={}
+  FF = FO.get_form_from_formid(record.form_id)
+  recu_map_values(vals, TO.fulcrum_clean_name(FF.name), record.form_values, record, FF.dictKeysTypes, FF.dictKeysDataName, common_fields_main, common_fields_sub, 0)
+  return vals
+
+def recu_map_values(vals, tblName, values, record, keysTypes, keysDataNames, common_fields_main, common_fields_sub, id):
+  kv = {}
+  if id == 0: #The main form table
+    for f in common_fields_main:
+      kv[f] = getattr(record, f)
+  else: # Sub tables
+    kv["fulcrum_parent_id"] = record.id
+    kv["fulcrum_record_id"] = record.id
+    kv['fulcrum_id'] = id
+    for f in common_fields_sub:
+      kv[f] = getattr(record, f)
+              
+  for v in values:
+    if v in keysTypes:
+      if keysTypes[v] in ['TextField','CalculatedField','BarcodeField','Label','DateTimeField','YesNoField','TimeField','ClassificationField','HyperlinkField']:
+        kv[keysDataNames[v]] = values[v]
+      elif keysTypes[v] in ['RecordLinkField']:
+        rf=[]
+        for r in values[v]:
+          rf.append(r['record_id'])
+        kv[keysDataNames[v]] = ",".join(rf)
+      elif keysTypes[v] in ['ChoiceField']:
+        kv[keysDataNames[v]] = ",".join(values[v]['choice_values'])
+      elif keysTypes[v] in ['Repeatable']:
+        for rep in values[v]:
+          recu_map_values(vals, tblName + '_' + keysDataNames[v], rep['form_values'], record, keysTypes, keysDataNames, common_fields_main, common_fields_sub, rep['id'])
+      elif keysTypes[v] in ['PhotoField']:
+        photos=[]
+        captions=[]
+        for p in values[v]:
+          if p['photo_id'] is not None:
+            photos.append(p['photo_id'])
+          if p['caption'] is not None:
+            captions.append(p['caption'])
+        kv[keysDataNames[v]] = ",".join(photos)
+        kv[keysDataNames[v]+"_caption"] = ",".join(captions)
+    else:
+      LO.l_war('WARNING FIELD {} NOT MAPPED! '.format(v))
+  if tblName not in vals:
+    vals[tblName]=[kv]
+  else:
+    vals[tblName].append(kv)
+
+
+def check_record(conn, table, id):
+  return TDB.query_to_db(conn, "SELECT fulcrum_id FROM %s WHERE fulcrum_id = %s", (AsIs(table),id))
+
+def insert_record(values):
+  conn = TDB.get_access_to_db()
+  if conn != None:
+    for table in values:
+      for r in values[table]:
+        isdel=False
+        if check_record(conn, table, r['fulcrum_id']):
+          isdel = TDB.query_to_db(conn,"DELETE FROM %s WHERE fulcrum_id = %s", (AsIs(table),r['fulcrum_id']))
+        columns = r.keys()
+        val = [r[column] for column in columns]
+        insert_statement = 'INSERT INTO %s (%s) VALUES %s'
+        res = TDB.query_to_db(conn, insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))
+        if res and isdel:
+          LO.l_debug('Record {} updated in DB'.format(r['fulcrum_id']))
+        elif res:
+          LO.l_debug('Record {} inserted in DB'.format(r['fulcrum_id']))
+        else:
+          LO.l_war('Error inserting Record {} in DB'.format(r['fulcrum_id']))
+  else:
+    LO.l_war('Could not connect to database')
+  conn.close()
+
+
+def record_webhook_to_db():
+  webhookRecords = load_webhook_records()
+  for record_raw in webhookRecords.records[:]:
+    if(record_raw.form_name  != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
+      insert_record(prepare_record_values(record_raw))

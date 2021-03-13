@@ -147,7 +147,7 @@ def load_bulkleafsample_Records(calibrations,projects):
   
   my_list2 = []
   if len(my_list)>0:
-    my_list2 = update_leafspectra_records_measurements(my_list):
+    my_list2 = update_leafspectra_records_measurements(my_list)
 
   if len(my_list2)>0:
     for wrap in my_list2[:]:
@@ -276,7 +276,7 @@ def extract_bulkLeafSamples_record(record):
     s = ""
     for t in tab:
       if t in 'plant':
-        if ('plant' in rv or 'plant2' in rv):
+        #if ('plant' in rv or 'plant2' in rv):
         if s:
           s+=', '
         s += t

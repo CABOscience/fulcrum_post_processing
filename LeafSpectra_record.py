@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import records as RE
-import tools as TO
-import tools_plots as TOP
-import tools_fulcrum_api as TOFA
-import logs as LO
-import LeafSpectra_measurements as LSM
-import SpectroscopyPanels_record as SPR
-import forms as FO
-import tools_db as TDB
+from . import parameters as PA
+from . import records as RE
+from . import tools as TO
+from . import tools_plots as TOP
+from . import tools_fulcrum_api as TOFA
+from . import logs as LO
+from . import LeafSpectra_measurements as LSM
+from . import SpectroscopyPanels_record as SPR
+from . import forms as FO
+from . import tools_db as TDB
 from psycopg2.extensions import AsIs
 
 # System
@@ -612,7 +612,7 @@ def large_leaf_calculation(record):
       mseries = TO.get_monotonic_series(divisionTar)
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
+        for ind, row in mserie.items():
           mserie.set_value(ind,row*calib.at[ind])
         mseries[i] = mserie
         i+=1
@@ -806,7 +806,7 @@ def small_leaf_calculation(record):
       mseries = TO.get_monotonic_series(rightGri)
       for x in range(len(mseries)):
         mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
+        for ind, row in mserie.items():
           val = row * calib.at[ind] * dGri400
           mserie.set_value(ind,val)
         mseries[x] = mserie
@@ -868,7 +868,7 @@ def small_leaf_calculation(record):
       mseries = TO.get_monotonic_series(IH)
       for x in range(len(mseries)):
         mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
+        for ind, row in mserie.items():
           val = (row - Gti) * dGti
           mserie.set_value(ind,val)
         mseries[x] = mserie

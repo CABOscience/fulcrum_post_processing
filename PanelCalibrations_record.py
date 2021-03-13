@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import records as RE
-import tools as TO
-import tools_plots as TOP
-import logs as LO
-import PanelCalibrations_measurements as PCM
-import SpectroscopyPanels_record as SPR
+from . import parameters as PA
+from . import records as RE
+from . import tools as TO
+from . import tools_plots as TOP
+from . import logs as LO
+from . import PanelCalibrations_measurements as PCM
+from . import SpectroscopyPanels_record as SPR
 
 # System
 import os, sys
@@ -491,7 +491,7 @@ def panel_calibration_calculation(record):
       mseries = TO.get_monotonic_series(divisionTar)
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
+        for ind, row in mserie.items():
           mserie.set_value(ind,row)
         mseries[i] = mserie
         i+=1

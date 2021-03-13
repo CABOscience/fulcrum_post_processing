@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import records as RE
-import projects as PR
-import tools as TO
-import logs as LO
+from . import parameters as PA
+from . import records as RE
+from . import projects as PR
+from . import tools as TO
+from . import logs as LO
 
 # System
 import os, sys
@@ -48,7 +48,7 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
   LO.l_info('\nNumber of allCSV before {}\n\n'.format(len(allCSV)))
   # Add filter by records:
   # Concat only if the record has a status > than verified
-  for recID in recs.recordsDict.keys():
+  for recID in list(recs.recordsDict.keys()):
     recStatus = recs.recordsDict[recID].status
     recWf = recs.recordsDict[recID].fv_working_folder
     v = TO.get_record_status_value(recStatus)
@@ -84,7 +84,7 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
 # Test if the root contains a projects name
 def projectinroot(root,projects=[]):
   b = False
-  for projectName in projects.nameId.keys():
+  for projectName in list(projects.nameId.keys()):
     if projectName in root and PA.ProjectWebsitePath in root:
       b = True
       pass
@@ -113,7 +113,7 @@ def create_files(c_list):
 
 def create_files_from_l(l):
   dic = TO.get_directories(l[1],l[0])
-  for k in dic.keys():
+  for k in list(dic.keys()):
     combined_csv = pd.concat( [ pd.read_csv(f) for f in dic[k] ] )
     combined_csv.to_csv( k+"/"+l[2]+".csv", index=False )
   return True
@@ -137,7 +137,7 @@ def create_zip(z_list):
 
 def create_zip_from_l(l):
   dic = TO.get_directories(l[1],l[0])
-  for k in dic.keys(): 
+  for k in list(dic.keys()): 
     zipf = zipfile.ZipFile(k+'/'+l[2]+'.zip', 'w', zipfile.ZIP_DEFLATED)
     for f in dic[k]:
       zipf.write(f)

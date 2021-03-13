@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import parameters as PA
-import logs as LO
+from . import parameters as PA
+from . import logs as LO
 # System
 import io, os, sys
 # files
-import csv, codecs, cStringIO, json
+import csv, codecs, io, json
 # Spectroscopy
 #import specdal
 # Data Science
@@ -99,7 +99,7 @@ def test_fulcrum_access():
           ):
     if not PA.FulcrumApiKey:
       print("A Fulcrum API is needed")
-      print parser.print_help()
+      print(parser.print_help())
     else:
       t = 'Connexion to Fulcrum has failed due to'
       endString = ''
@@ -109,13 +109,13 @@ def test_fulcrum_access():
         endString = 'invalid API version.'
       elif InternalServerErrorException:
         endString = 'internal server error.'
-      print(t+' '+endString)
+      print((t+' '+endString))
     sys.exit(1)
   except NotFoundException as n:
-    print('{} {}'.format(s,PA.NotFoundStr))
+    print(('{} {}'.format(s,PA.NotFoundStr)))
     sys.exit(1)
   except RateLimitExceededException as r:
-    print('{} {}'.format(s,PA.LimitExceededStr))
+    print(('{} {}'.format(s,PA.LimitExceededStr)))
     sys.exit(1)
 
 # get forms
@@ -260,26 +260,26 @@ def fulcrum_update_record(recordID, obj={}, logName="main"):
     fulcrumApp = get_fulcrum_access()
     update = fulcrumApp.records.update(recordID, obj)
     st = 'Record {} has been updated with the object:\n {}'.format(recordID, obj)
-    print st
+    print(st)
     LO.l_debug(st,logName)
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Update Record has failed for {}'.format(recordID)
     return exception_api(e,s,logName)
   except InvalidAPIVersionException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
   except UnauthorizedException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
   except InternalServerErrorException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
   except BadRequestException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
 
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import projects as PR
-import parameters as PA
-import Plants_record as PLAR
-import forms as FO
-import tools as TO
-import logs as LO
+from . import projects as PR
+from . import parameters as PA
+from . import Plants_record as PLAR
+from . import forms as FO
+from . import tools as TO
+from . import logs as LO
 
 # Spectroscopy
 import specdal
@@ -23,13 +23,13 @@ def main():
   recordType= PA.PlantsLogFile+"_plants_test"
   LO.create_log(recordType)
   plants = PLAR.load_plants()
-  print len(plants)
+  print(len(plants))
   
   plant = PLAR.get_plant_with_plant_id_from_plants('hello-world')
-  print plant
+  print(plant)
 
   plant = PLAR.get_plant_with_plant_id_from_plants('e8adadd6-be8c-4ee2-acad-e250ee012851')
-  print plant
+  print(plant)
 
 ##############################################
 # MAIN

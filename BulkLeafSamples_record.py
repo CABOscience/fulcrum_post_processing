@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import records as RE
-import tools as TO
-import logs as LO
-import LeafSpectra_measurements as LSM
-import SpectroscopyPanels_calibrations as SPC
+from . import parameters as PA
+from . import records as RE
+from . import tools as TO
+from . import logs as LO
+from . import LeafSpectra_measurements as LSM
+from . import SpectroscopyPanels_calibrations as SPC
 
 # System
 import os, sys
@@ -147,7 +147,7 @@ def load_bulkleafsample_Records(calibrations,projects):
   
   my_list2 = []
   if len(my_list)>0:
-    my_list2 = update_leafspectra_records_measurements(my_list):
+    my_list2 = update_leafspectra_records_measurements(my_list)
 
   if len(my_list2)>0:
     for wrap in my_list2[:]:
@@ -276,7 +276,7 @@ def extract_bulkLeafSamples_record(record):
     s = ""
     for t in tab:
       if t in 'plant':
-        if ('plant' in rv or 'plant2' in rv):
+        #if ('plant' in rv or 'plant2' in rv):
         if s:
           s+=', '
         s += t

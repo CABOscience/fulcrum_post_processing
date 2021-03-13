@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from parameters import *
-import parameters as PA
-import tools as TO
-import tools_fulcrum_api as TOFA
+from .parameters import *
+from . import parameters as PA
+from . import tools as TO
+from . import tools_fulcrum_api as TOFA
 # System
 import os
 
@@ -34,7 +34,7 @@ class Projects():
     
   def __str__(self):
     st = ''
-    print self.get_projects_size()
+    print(self.get_projects_size())
     for project in self.projects[:]:
       if project.id != "":
         st += '{}'.format(project)
@@ -135,7 +135,7 @@ def load_projects():
 # Website Project(s) directories (with symbolic links)
 #
 def create_project_website_view_directories(projects):
-  for project in projects.idName.values():
+  for project in list(projects.idName.values()):
     create_project_directories(project)
     create_symbolic_links(project)
 

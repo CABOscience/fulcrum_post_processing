@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import parameters as PA
-import logs as LO
+from . import parameters as PA
+from . import logs as LO
 # System
 import io, os
 from datetime import datetime 
 import time
 # files
-import csv, codecs, cStringIO, json
+import csv, codecs, io, json
 # Spectroscopy
 import specdal
 # Math
@@ -55,7 +55,7 @@ def delete_a_file(fname,logName="main"):
     try:
       os.remove(fname)
       return True
-    except Exception, e:
+    except Exception as e:
       LO.l_err(e,logName)
   return False
 
@@ -101,7 +101,7 @@ def create_directory(d,logName="main"):
     try:
       os.makedirs(d)
       return True
-    except Exception, e:
+    except Exception as e:
       LO.l_err(e,logName)
       return False
   else:
@@ -115,7 +115,7 @@ def print_as_json(var):
   :param arg1: something (string, list, dictionnary)
   :type arg1: something
   '''
-  print json.dumps(var, indent=4, sort_keys=True)
+  print(json.dumps(var, indent=4, sort_keys=True))
 
 # save json object in a file according to a mode
 def save_in_json_file(fileName,data,logName="main",arg = "w"):
@@ -139,7 +139,7 @@ def save_in_json_file(fileName,data,logName="main",arg = "w"):
   :rtype: boolean
   '''
   try:
-      to_unicode = unicode
+      to_unicode = str
   except NameError:
       to_unicode = str
 
@@ -528,7 +528,7 @@ class UnicodeWriter:
     """
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
         # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
+        self.queue = io.StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import tools as TO
-import tools_fulcrum_api as TOFA
-import logs as LO
+from . import parameters as PA
+from . import tools as TO
+from . import tools_fulcrum_api as TOFA
+from . import logs as LO
 
 # System
 import sys, os
@@ -99,7 +99,7 @@ class Form(object):
     return []
 
   def whoami(self):
-    print type(self).__name__
+    print(type(self).__name__)
     
   def is_form(self):
     if self.id and self.name:
@@ -170,7 +170,7 @@ def search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,info):
       dictKeysDataName[info['key']]=info['data_name']
     if 'key' in info and 'type' in info:
       dictKeysTypes[info['key']]=info['type']
-    for vs in info.values():
+    for vs in list(info.values()):
       if isinstance(vs, list):
         for v in vs:
           if v:
@@ -191,7 +191,7 @@ def create_form_uid_directories():
 
 def from_DataName_to_Keys(dictKeysDataName):
   dictDataNameKeys = {}
-  for k in dictKeysDataName.keys():
+  for k in list(dictKeysDataName.keys()):
     dictDataNameKeys[dictKeysDataName[k]] = k
   return dictDataNameKeys
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import tools as TO
+from . import tools as TO
 # Spectroscopy
 #import specdal
 # Data Science
@@ -25,7 +25,7 @@ class CalibrationMeasurements(object):
     
   def __str__(self):
     for mt in self.measurements[:]:
-      print mt
+      print(mt)
 
   def add_record(self,CalibrationMeasurement):
     self.measurements.append(CalibrationMeasurement)

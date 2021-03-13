@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import tools_fulcrum_api as TOFA
-import tools as TO
+from . import tools_fulcrum_api as TOFA
+from . import tools as TO
 # System
 import argparse, os, sys
 import configparser
@@ -105,7 +105,7 @@ def get_config(confFile):
   try:
     config.read(os.path.expanduser(confFile))
     return config
-  except Exception, e:
+  except Exception as e:
     print(e)
     sys.exit(1)
 
@@ -205,12 +205,12 @@ def set_global_from_config(c):
     if c.get('DEFAULT','CaboWebsite'): CaboWebsite = c.get('DEFAULT','CaboWebsite')
     
     if Debug == 'True':
-      print 'Debug is enabled'
+      print('Debug is enabled')
     else:
-      print 'Debug is disable'
+      print('Debug is disable')
       
     if TOFA.test_fulcrum_access():
-      print 'Fulcrum is accessible'
+      print('Fulcrum is accessible')
 
 # Arguments
 ##############################################
@@ -286,5 +286,5 @@ def get_arguments():
       print('Pssst: FulcrumPath from config is override by an argument')
       FulcrumPath = argPath
     else:
-      print('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath))
+      print(('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath)))
 

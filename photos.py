@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-import parameters as PA
-import tools as TO
-import tools_fulcrum_api as TOFA
-import logs as LO
+from . import parameters as PA
+from . import tools as TO
+from . import tools_fulcrum_api as TOFA
+from . import logs as LO
 
 # System
 import sys
@@ -187,9 +187,9 @@ class Photo(object):
       return False
       
   def add_toLog(self, st):
-    if not isinstance(st, basestring):
-      print 'st'
-      print st
+    if not isinstance(st, str):
+      print('st')
+      print(st)
     else:
      self.logInfo += "\n"+st
 
@@ -270,7 +270,7 @@ def search_for_photo_id_recu(photos,info):
       if v:
         photos = search_for_photo_id_recu(photos,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       v = info[k]
       if 'photo_id' in k:
         #print 'photo_id value >'+v+'<<'
@@ -349,9 +349,9 @@ def search_datanames_keys_recu(dictKeysDataname,info):
       if v:
         search_for_keys_recu(dictKeysDataname,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       if k in dictKeysDataname:
         info[dictKeysDataname[k]] = info.pop(k)
-    for v in info.values():
+    for v in list(info.values()):
       search_for_keys_recu(dictKeysDataname,v)
 

@@ -11,7 +11,7 @@ import csv, codecs, io, json
 # Data Science
 import pandas as pd
 import numpy as np
-np.set_printoptions(threshold='nan')
+np.set_printoptions(threshold=sys.maxsize)
 import urllib3
 import fulcrum
 from fulcrum import Fulcrum

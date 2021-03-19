@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from .parameters import *
+from parameters import *
 import parameters as PA
 import tools as TO
 import tools_fulcrum_api as TOFA

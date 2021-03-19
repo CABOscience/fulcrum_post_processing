@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # Local Modules
 from .parameters import *
-from . import parameters as PA
-from . import tools as TO
-from . import tools_fulcrum_api as TOFA
+import parameters as PA
+import tools as TO
+import tools_fulcrum_api as TOFA
 # System
 import os
 

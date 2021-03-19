@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import parameters as PA
-from . import records as RE
-from . import tools as TO
-from . import logs as LO
-from . import LeafSpectra_measurements as LSM
-from . import SpectroscopyPanels_calibrations as SPC
+import parameters as PA
+import records as RE
+import tools as TO
+import logs as LO
+import LeafSpectra_measurements as LSM
+import SpectroscopyPanels_calibrations as SPC
 
 # System
 import os, sys

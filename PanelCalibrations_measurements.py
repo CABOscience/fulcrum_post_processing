@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from . import tools as TO
+import tools as TO
 # Spectroscopy
 #import specdal
 # Data Science

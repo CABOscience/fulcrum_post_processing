@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import parameters as PA
-from . import tools as TO
-from . import tools_fulcrum_api as TOFA
-from . import logs as LO
+import parameters as PA
+import tools as TO
+import tools_fulcrum_api as TOFA
+import logs as LO
 
 # System
 import sys, os

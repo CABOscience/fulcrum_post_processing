@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import logs as LO
-from . import parameters as PA
-from . import projects as PR
+import logs as LO
+import parameters as PA
+import projects as PR
 # System
 import os
 

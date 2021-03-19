@@ -1,6 +1,6 @@
 import psycopg2
-from . import logs as LO
-from . import parameters as PA
+import logs as LO
+import parameters as PA
 
 
 def get_access_to_db():

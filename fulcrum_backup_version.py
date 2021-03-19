@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from . import records as RE
+import records as RE
 import time
 
 '''

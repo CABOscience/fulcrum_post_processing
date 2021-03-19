@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from . import records as RE
+import records as RE
 import time
-from . import projects as PR
-from . import parameters as PA
-from . import tools as TO
-from . import logs as LO
+import projects as PR
+import parameters as PA
+import tools as TO
+import logs as LO
 import sys, time
 from datetime import datetime
 

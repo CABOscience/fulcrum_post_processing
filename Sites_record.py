@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import projects as PR
-from . import parameters as PA
-from . import records as RE
-from . import tools as TO
-from . import logs as LO
+import projects as PR
+import parameters as PA
+import records as RE
+import tools as TO
+import logs as LO
 
 # Spectroscopy
 #import specdal

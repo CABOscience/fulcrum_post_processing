@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import tools_fulcrum_api as TOFA
-from . import tools as TO
+import tools_fulcrum_api as TOFA
+import tools as TO
 # System
 import argparse, os, sys
 import configparser

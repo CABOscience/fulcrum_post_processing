@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from . import parameters as PA
-from . import logs as LO
+import parameters as PA
+import logs as LO
 # System
 import io, os
 from datetime import datetime 

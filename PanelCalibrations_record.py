@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import parameters as PA
-from . import records as RE
-from . import tools as TO
-from . import tools_plots as TOP
-from . import logs as LO
-from . import PanelCalibrations_measurements as PCM
-from . import SpectroscopyPanels_record as SPR
+import parameters as PA
+import records as RE
+import tools as TO
+import tools_plots as TOP
+import logs as LO
+import PanelCalibrations_measurements as PCM
+import SpectroscopyPanels_record as SPR
 
 # System
 import os, sys

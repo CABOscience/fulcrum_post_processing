@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import parameters as PA
-from . import forms as FO
-from . import photos as PH
-from . import projects as PR
-from . import tools as TO
-from . import tools_fulcrum_api as TOFA
-from . import tools_db as TDB
-from . import logs as LO
+import parameters as PA
+import forms as FO
+import photos as PH
+import projects as PR
+import tools as TO
+import tools_fulcrum_api as TOFA
+import tools_db as TDB
+import logs as LO
 from psycopg2.extensions import AsIs
 
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import parameters as PA
-from . import tools
+import parameters as PA
+import tools
 
 # System
 import os, logging

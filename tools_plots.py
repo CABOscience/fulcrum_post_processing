@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Local Modules
-from . import logs as LO
-from . import tools as TO
+import logs as LO
+import tools as TO
 
 # Plot
 import os, time

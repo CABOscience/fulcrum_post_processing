@@ -73,7 +73,9 @@ def file_is_here(fname,logName="main"):
   :rtype: boolean
   '''
   if os.path.isfile(fname):
-    num_lines = sum(1 for line in open(fname))
+    with open(fname, 'r', errors='ignore') as myfile:
+      lines = myfile.readlines()
+    num_lines = len(lines)
     if num_lines > 1:
       #LO.l_info("\tThe file {} is here".format(fname))
       return True

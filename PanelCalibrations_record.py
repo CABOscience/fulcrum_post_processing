@@ -18,7 +18,7 @@ import multiprocessing as mp
 import math
 import pandas as pd
 import numpy as np
-np.set_printoptions(threshold='nan')
+np.set_printoptions(threshold=sys.maxsize)
 
 ##############################################
 # Record

@@ -12,9 +12,10 @@ from datetime import date
 # Logs
 ##############################################
 
-Logger
-
 def create_log(recordType="",recordID="",logName=""):
+  # Source https://stackoverflow.com/a/49202811
+  for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
   if PA.LogTitle != "":
     logName=PA.LogTitle
   today = str(date.today())

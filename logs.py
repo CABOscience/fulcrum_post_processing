@@ -12,6 +12,8 @@ from datetime import date
 # Logs
 ##############################################
 
+Logger
+
 def create_log(recordType="",recordID="",logName=""):
   if PA.LogTitle != "":
     logName=PA.LogTitle
@@ -23,9 +25,10 @@ def create_log(recordType="",recordID="",logName=""):
   if recordID != "":
     logFilename = logFilename+"_"+recordID
   logFilename = logFilename+".log"
-  logging.basicConfig(name=logName, level=logging.INFO,
+  logging.basicConfig(level=logging.INFO,
                       filename=logFilename, filemode="a+",
                       format="%(asctime)-15s %(levelname)-8s %(message)s")
+  
 
 def l_info(v,logName=""):
   if PA.LogTitle != "":

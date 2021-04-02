@@ -236,8 +236,22 @@ def add_Record_in_spectrum(spectroPanels,record_raw):
   :return: Valid LeafSpectra
   :rtype: LeafSpectra Object
   """
+
   record = LeafSpectra(record_raw)
+  # Comment this line to load only one record
   validate_leafspectra_record(spectroPanels,record)
+
+  # Uncomment these lines to load only one record
+  """
+  if ("1c68321b-644f-4f1f-923f-8590a0d5ac45" in record.id):
+     record.isValid=True
+  else:
+     record.isValid=False
+
+  if record.isValid:
+    validate_leafspectra_record(spectroPanels,record)
+  
+  """
   if record.isValid:
     st = 'The record id {} is complete for processing'.format(record.id)
     LO.l_debug(st)

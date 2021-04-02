@@ -507,58 +507,14 @@ def write_in_csv(fname,my_list,logName="main",arg = "w"):
   :rtype: boolean
   '''
   try:
-    with open(fname, mode=arg) as csv_file:
-      p = UnicodeWriter(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    with open(fname, mode=arg, encoding="utf-8") as csv_file:
+      p = csv.writer(csv_file)
       p.writerows(my_list)
     return True
   except ValueError:
     LO.l_err(ValueError,logName)
     return False
 
-class UnicodeWriter:
-    """
-    Copyright: python.org
-    Copyright © 2001-2018 Python Software Foundation. All rights reserved.
-    Copyright © 2000 BeOpen.com. All rights reserved.
-    Copyright © 1995-2000 Corporation for National Research Initiatives. All rights reserved.
-    Copyright © 1991-1995 Stichting Mathematisch Centrum. All rights reserved.
-    Source: https://docs.python.org/2/library/csv.html
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    
-    Modified
-    """
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        # Redirect output to a queue
-        self.queue = io.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-      rr = []
-      for s in row:
-        v = ''
-        if isinstance(s, np.float64):
-          v = '{}'.format(s)
-        else:
-          v = s.encode('utf-8')
-        rr.append(v)
-      self.writer.writerow(rr)
-      # Fetch UTF-8 output from the queue ...
-      data = self.queue.getvalue()
-      data = data.decode("utf-8")
-      # ... and reencode it into the target encoding
-      data = self.encoder.encode(data)
-      # write to the target stream
-      self.stream.write(data)
-      # empty queue
-      self.queue.truncate(0)
-    
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
-      
 # From a panda serie to a panda dataframe
 def from_series_to_dataframe(se):
   ''' This function transforms a panda serie in a panda dataframe

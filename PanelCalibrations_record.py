@@ -492,7 +492,7 @@ def panel_calibration_calculation(record):
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
         for ind, row in mserie.items():
-          mserie.set_value(ind,row)
+          mserie.at[ind] = row
         mseries[i] = mserie
         i+=1
       reflectance = pd.concat(mseries)

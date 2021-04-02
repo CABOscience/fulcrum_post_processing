@@ -612,7 +612,7 @@ def large_leaf_calculation(record):
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
         for ind, row in mserie.items():
-          mserie.set_value(ind,row*calib.at[ind])
+          mserie.at[ind] = row*calib.at[ind]
         mseries[i] = mserie
         i+=1
       reflectance = pd.concat(mseries)
@@ -807,7 +807,7 @@ def small_leaf_calculation(record):
         mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
         for ind, row in mserie.items():
           val = row * calib.at[ind] * dGri400
-          mserie.set_value(ind,val)
+          mserie.at[ind] = val
         mseries[x] = mserie
       pAi = pd.concat(mseries)
       RtarAPi[i].reflectance = pAi
@@ -869,7 +869,7 @@ def small_leaf_calculation(record):
         mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
         for ind, row in mserie.items():
           val = (row - Gti) * dGti
-          mserie.set_value(ind,val)
+          mserie.at[ind] = val
         mseries[x] = mserie
       tAi = pd.concat(mseries)
       TtarAi[i].transmittance = tAi

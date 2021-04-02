@@ -925,11 +925,20 @@ def small_leaf_calculation(record):
 def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
     c,l,r = leafspectra_record_to_csv_values(record)
-    spectra_db_process_all(c)
-    spectra_db_process_leaves(l)
-    TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
-    TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
-    TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
+    if len(c)>1:
+      #spectra_db_process_all(c)
+      TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
+    else:
+      LO.l_war("c is too small for {}".format(record.id))
+    if len(l)>1:
+      #spectra_db_process_leaves(l)
+      TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
+    else:
+      LO.l_war("l is too small for {}".format(record.id))
+    if len(r)>1:
+      TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
+    else:
+      LO.l_war("r is too small for {}".format(record.id))
 
 def leafspectra_record_to_csv_values(record):
   dfrra = TO.from_series_to_dataframe(record.fv_reflecAverage)

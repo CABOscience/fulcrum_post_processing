@@ -446,7 +446,7 @@ def process_record(record):
   if record.isValid:
     boo = panel_calibration_calculation(record)
     if boo:
-      record.isProcessed = True
+      record.isValid = True
   return record
 
 ## Panel Calibration Calculations
@@ -538,12 +538,12 @@ def panel_calibration_calculation(record):
 def plots_panel_calibrations_records(recs):
   panelCalibrations = PanelCalibrations()  
   for record in recs.records[:]:
-    if record.isProcessed == True:
+    if record.isValid:
       LO.l_info('Start prepare plots data for record {}'.format(record.id))
       TOP.get_panel_calibrations_record_plot(record)
       TOP.get_panel_calibrations_record_measurments_plot(record)
       LO.l_info("{}".format(record.replicate_plot))
-    if not record.isProcessed:
+    if not record.isValid:
         s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
         LO.l_war(s)
         record.add_toLog(s)

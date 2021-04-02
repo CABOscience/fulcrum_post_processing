@@ -127,7 +127,6 @@ class Record(object):
     self.gps_vertical_accuracy = self.vertical_accuracy
     self.project_name = RprojectName
     self.isValid = True
-    self.isProcessed = False
     self.logInfo = ""
 
   def __str__(self):

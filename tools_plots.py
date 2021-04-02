@@ -394,6 +394,6 @@ def get_panel_calibrations_record_measurments_plot(record):
       plt.savefig(record.replicate_plot, dpi=150)
       plt.close('all')
   else:
-     record.isProcessed = False
+     record.isValid = False
   return record
 

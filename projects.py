@@ -9,7 +9,7 @@ import tools_fulcrum_api as TOFA
 import os
 
 def get_ProjectsPath():
-  projectsPath = PA.FulcrumPath+'Projects'
+  projectsPath = TO.get_fulcrum_path_and_basename('projects')
   TO.create_directory(projectsPath)
   return projectsPath
 
@@ -85,13 +85,13 @@ def create_project_from_json(projectJson):
 # Backup Projects
 #
 def backup_projects_from_Fulcrum():
-  bName = TO.get_file_basename('Projects')
+  bName = TO.get_fulcrum_path_and_basename('projects')
   if not os.path.exists(bName):
     os.makedirs(bName)
   
   projectsJson = TOFA.get_projects()
   if projectsJson:
-    fname = PA.FulcrumPath+'all_projects.json'
+    fname = TO.get_fulcrum_path_and_basename('all_projects.json')
     TO.save_in_json_file(fname,projectsJson)
 
     ps = create_projects_from_json(projectsJson)

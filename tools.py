@@ -34,14 +34,15 @@ $ git clone  -b caboscience  https://github.com/CABOscience/SpecDAL.git ; cd ./S
 ##############################################
 
 # get the FulcrumPath+formName of a FulcrumPath parameter
-def get_file_basename(st):
+def get_fulcrum_path_and_basename(st):
   return PA.FulcrumPath+st
 def get_FormsFile():
   create_directory(PA.FulcrumPath)
-  return PA.FulcrumPath+"all_forms.json"
+  return get_fulcrum_path_and_basename("all_forms.json")
 def get_FormsPath():
-  create_directory(PA.FulcrumPath+"forms/")
-  return PA.FulcrumPath+"forms/"
+  fpath = get_fulcrum_path_and_basename("forms/")
+  create_directory(fpath)
+  return fpath
 def get_WebhookFormsPath():
   #create_directory(PA.FulcrumWebhook+"forms/")
   return PA.FulcrumWebhook+"forms/"

@@ -19,7 +19,7 @@ def create_log(recordType="",recordID="",logName=""):
   if PA.LogTitle != "":
     logName=PA.LogTitle
   today = str(date.today())
-  logPath = PA.FulcrumPath+"logs/"+today+"/"
+  logPath = TO.get_fulcrum_path_and_basename("logs/"+today+"/")
   if not os.path.exists(logPath):
     os.makedirs(logPath)
   logFilename = logPath+today+"_"+logName+"_"+recordType

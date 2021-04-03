@@ -120,15 +120,15 @@ class Form(object):
       search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,self.elements)
       self.dictKeysDataName = dictKeysDataName
       self.dictKeysTypes = dictKeysTypes
-      st = 'The form {} has now a dictKeysDataName'.format(self.name_cleaned)
-      st += 'The form {} has now a dictKeysTypes'.format(self.name_cleaned)
+      st = 'The form {} has now a dictKeysDataName'.format(self.fulcrum_name_cleaned)
+      st += 'The form {} has now a dictKeysTypes'.format(self.fulcrum_name_cleaned)
       LO.l_debug(st)
       self.add_toLog(st)
 
   def set_dictDataNameKeys(self):
     if len(self.dictKeysDataName)>0:
       self.dictDataNameKeys = from_DataName_to_Keys(self.dictKeysDataName)
-      st = 'The form {} has now a dictDataNameKeys'.format(self.name_cleaned)
+      st = 'The form {} has now a dictDataNameKeys'.format(self.fulcrum_name_cleaned)
       LO.l_debug(st)
       self.add_toLog(st)
 
@@ -138,7 +138,7 @@ class Form(object):
 
   # Extract Forms
   def backup_form(self):
-    formName = self.name_cleaned
+    formName = self.fulcrum_name_cleaned
     # Create directories for formName
     create_form_directories(formName)
     fname = TO.get_FormsPath()+formName+'/'+formName+'_form.json'

@@ -305,7 +305,7 @@ def mp_backup_records_from_forms(formsO = FO.Forms()):
   return wraps
 
 def mp_backup_records_from_form(form = FO.Form()):
-  formName = form.name_cleaned
+  formName = form.fulcrum_name_cleaned
   formID   = form.id
   start = time.time()
   if formID:
@@ -379,7 +379,7 @@ def mp_backup_records_versions_from_forms(formsO = FO.Forms()):
   pool.join()
   
 def mp_backup_records_versions_from_form(form = FO.Form()):
-  formName = form.name_cleaned
+  formName = form.fulcrum_name_cleaned
   formID   = form.id
   start = time.time()
   if formID:
@@ -599,7 +599,7 @@ def load_records_from_form(form):
 # Load records from fulcrum
 ##############################################
 def load_records_from_fulcrum(form):
-  records_raw = TOFA.get_fulcrum_records(form.id,form.name_cleaned)
+  records_raw = TOFA.get_fulcrum_records(form.id,form.fulcrum_name_cleaned)
   return get_records_from_list(records_raw)
 
 

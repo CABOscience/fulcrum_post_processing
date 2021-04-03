@@ -60,10 +60,10 @@ class Project():
     self.fulcrum_name_cleaned = TO.fulcrum_clean_name(self.name)
   
   def set_file_name(self):
-    self.file_name = get_ProjectsPath()+'/'+self.name_cleaned+'.json'
+    self.file_name = get_ProjectsPath()+'/'+self.fulcrum_name_cleaned+'.json'
   
   def __str__(self):
-    return '{} {} {}'.format(self.id,self.file_name,self.name_cleaned)
+    return '{} {} {}'.format(self.id,self.file_name,self.fulcrum_name_cleaned)
 
 #
 # Project(s) From Json

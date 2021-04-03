@@ -288,7 +288,7 @@ def get_photo_meta_file_name(bName,photoID):
   return bName+'/images/'+photoID+'.json'
 
 def backup_photos_from_records(form,recs):
-  formName = form.name_cleaned
+  formName = form.fulcrum_name_cleaned
   bName = TO.get_FormsPath()+""+formName
   photosID = []
   LO.l_info('Start searching photos for the form "{}" with {} records'.format(formName,len(recs)))

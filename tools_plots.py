@@ -260,10 +260,10 @@ def img_reflect_and_transmi(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.Data
   indexV = []
   transmiV = []
   reflecV = []
-  if reflec.count>0:
+  if not reflec.empty:
     indexV = reflec.index.values.tolist()
     reflecV = reflec.values.tolist()
-  if transmi.count>0:
+  if not transmi.empty:
     transmiV = transmi.values.tolist()
     if len(indexV)<1:
       indexV = transmi.index.values.tolist()
@@ -333,7 +333,7 @@ def get_panel_calibrations_record_plot(record):
 def img_reflect_and_transmi_panel_calibrations(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.DataFrame(), imgpath ="", title=''):
   indexV = []
   reflecV = []
-  if reflec.count>0:
+  if not reflec.empty:
     indexV = reflec.index.values.tolist()
     reflecV = reflec.values.tolist()
   fig = plt.figure()

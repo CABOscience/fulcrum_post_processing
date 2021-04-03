@@ -401,11 +401,12 @@ def get_directories(n,files):
   '''
   d = {}
   for f in files:
-    directory = get_parent_n_times(n,f)
-    if directory in d:
-      d[directory].append(f)
-    else:
-      d[directory] = [f]
+    if not reflec.empty:
+      directory = get_parent_n_times(n,f)
+      if directory in d:
+        d[directory].append(f)
+      else:
+        d[directory] = [f]
   return d
 
 # Get the parent directory of a path or a file n times

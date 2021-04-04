@@ -52,7 +52,7 @@ class Project():
     self.file_name = ""
     self.name = name
     self.name_cleaned = ""
-    self.fulcrum_cleaned_name = ""
+    self.fulcrum_name_cleaned = ""
     self.updated_at = updated_at
   
   def set_NameCleaned(self):

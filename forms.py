@@ -77,7 +77,7 @@ class Form(object):
     self.image_thumbnail = image_thumbnail
     self.name = name
     self.name_cleaned = name_cleaned
-    self.fulcrum_cleaned_name = ""
+    self.fulcrum_name_cleaned = ""
     self.projects_enabled = projects_enabled
     self.record_count = record_count
     self.record_title_key = record_title_key

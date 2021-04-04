@@ -56,7 +56,7 @@ class Forms(object):
 
 
 class Form(object):
-  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', dictKeysTypes = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', fulcrum_name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
+  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', dictKeysTypes = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
     self.assignment_enabled = assignment_enabled
     self.auto_assign = auto_assign
     self.bounding_box = bounding_box
@@ -77,7 +77,7 @@ class Form(object):
     self.image_thumbnail = image_thumbnail
     self.name = name
     self.name_cleaned = name_cleaned
-    self.fulcrum_cleaned_name = fulcrum_name_cleaned
+    self.fulcrum_cleaned_name = ""
     self.projects_enabled = projects_enabled
     self.record_count = record_count
     self.record_title_key = record_title_key

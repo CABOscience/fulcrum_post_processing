@@ -402,7 +402,7 @@ def get_directories(n,files):
   '''
   d = {}
   for f in files:
-    if not reflec.empty:
+    if file_is_here(f):
       directory = get_parent_n_times(n,f)
       if directory in d:
         d[directory].append(f)

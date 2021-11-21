@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# swp ext
+*.swp
+
 # Distribution / packaging
 .Python
 build/
@@ -105,3 +108,6 @@ venv.bak/
 
 # Cabo ini
 config.ini
+
+# Extra python module (like specdal)
+python_modules/

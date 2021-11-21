@@ -78,6 +78,7 @@ SubplotsFormFile = DefaultPath
 SubplotsLogFile = DefaultPath
 SubplotsRecordsFile = DefaultPath
 WebsitePath = DefaultPath
+WebhookID = ''
 
 # Path to config
 ConfFile           = ScriptPath+'/config.ini'
@@ -155,6 +156,7 @@ def set_global_from_config(c):
     global SubplotsLogFile
     global SubplotsRecordsFile
     global WebsitePath
+    global WebhookID
     global CaboWebsite
     
     if c.get('DEFAULT','BulkLeafSamplesLogFile'): BulkLeafSamplesLogFile = c.get('DEFAULT','BulkLeafSamplesLogFile')
@@ -202,6 +204,7 @@ def set_global_from_config(c):
     if c.get('DEFAULT','SubplotsLogFile'): SubplotsLogFile = c.get('DEFAULT','SubplotsLogFile')
     if c.get('DEFAULT','SubplotsRecordsFile'): SubplotsRecordsFile = c.get('DEFAULT','SubplotsRecordsFile')
     if c.get('DEFAULT','WebsitePath'): WebsitePath = c.get('DEFAULT','WebsitePath')
+    if c.get('DEFAULT','WebhookID'): WebhookID = c.get('DEFAULT','WebhookID')
     if c.get('DEFAULT','CaboWebsite'): CaboWebsite = c.get('DEFAULT','CaboWebsite')
     
     if Debug == 'True':

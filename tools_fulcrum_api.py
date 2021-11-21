@@ -248,8 +248,15 @@ def get_photo_file(photoID,logName="main"):
     s = 'Search photos has failed for photo id {}'.format(photoID)
     return exception_api(e,s,logName)
 
-
-
+def get_webhook_status(webhookID,logName="main"):
+  try:
+    fulcrumApp = get_fulcrum_access()
+    webhook = fulcrumApp.webhooks.find(webhookID)
+    increase_num_of_request_by(1)
+    return webhook
+  except (NotFoundException, RateLimitExceededException) as e:
+    s = 'Search Webhook has failed for Webhook id {}'.format(webhookID)
+    return exception_api(e,s,logName)
 
 ##############################################
 # Update record
@@ -282,6 +289,31 @@ def fulcrum_update_record(recordID, obj={}, logName="main"):
     print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
 
+##############################################
+# Update webhook
+##############################################
+
+def fulcrum_update_webhook(webhookID, obj={}, logName="main"):
+  try:
+    fulcrumApp = get_fulcrum_access()
+    update = fulcrumApp.webhooks.update(webhookID, obj)
+    st = 'Webhook {} has been updated with the object:\n {}'.format(webhookID, obj)
+    LO.l_debug(st,logName)
+  except (NotFoundException, RateLimitExceededException) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except InvalidAPIVersionException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except UnauthorizedException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except InternalServerErrorException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except BadRequestException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
 
   
 ##############################################

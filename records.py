@@ -39,7 +39,7 @@ class Records(object):
   def __str__(self):
     tp = ""
     for record in self.records:
-      print record
+      print(record)
       '''
       if tp:
         tp += '\n{}'.format(record)
@@ -127,7 +127,6 @@ class Record(object):
     self.gps_vertical_accuracy = self.vertical_accuracy
     self.project_name = RprojectName
     self.isValid = True
-    self.isProcessed = False
     self.logInfo = ""
 
   def __str__(self):
@@ -140,7 +139,7 @@ class Record(object):
     return []
 
   def whoami(self):
-    print type(self).__name__
+    print(type(self).__name__)
     
   def is_record(self):
     if self.id and self.form_id:
@@ -306,7 +305,7 @@ def mp_backup_records_from_forms(formsO = FO.Forms()):
   return wraps
 
 def mp_backup_records_from_form(form = FO.Form()):
-  formName = form.name_cleaned
+  formName = form.fulcrum_name_cleaned
   formID   = form.id
   start = time.time()
   if formID:
@@ -340,7 +339,7 @@ def mp_backup_records_from_form(form = FO.Form()):
     LO.l_info('End backup images for the form "{}"'.format(formName))
 
     endtime = time.time()
-    print('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start))
+    print(('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start)))
     return formID
 
 ##############################################
@@ -380,7 +379,7 @@ def mp_backup_records_versions_from_forms(formsO = FO.Forms()):
   pool.join()
   
 def mp_backup_records_versions_from_form(form = FO.Form()):
-  formName = form.name_cleaned
+  formName = form.fulcrum_name_cleaned
   formID   = form.id
   start = time.time()
   if formID:
@@ -408,7 +407,7 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
       LO.l_debug('size of recs {} before version'.format(len(recs)))
       
       recordsV = Records()
-      for record in recs.recordsDict.values():
+      for record in list(recs.recordsDict.values()):
         currentVersion = record.version
         recordID      = record.id
         fname         = bName+'/versions/'+recordID+'_versions.json'
@@ -469,7 +468,7 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
                 ".format(st=formName))
     
     endtime = time.time()
-    print('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start))
+    print(('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start)))
     #return records
     return formID
 
@@ -499,10 +498,10 @@ def search_datanames_keys_recu(dictKeysDataname,info):
       if v:
         search_for_keys_recu(dictKeysDataname,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       if k in dictKeysDataname:
         info[dictKeysDataname[k]] = info.pop(k)
-    for v in info.values():
+    for v in list(info.values()):
       search_for_keys_recu(dictKeysDataname,v)
 
 def update_records_with_dataname_old(recs):
@@ -532,10 +531,10 @@ def search_for_keys_recu(dictKeysDataName,info):
       if v:
         search_for_keys_recu(dictKeysDataName,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       if k in dictKeysDataName:
         info[dictKeysDataName[k]] = info.pop(k)
-    for v in info.values():
+    for v in list(info.values()):
       search_for_keys_recu(dictKeysDataName,v)
 
 def update_json_record_from_dataname_to_keys(record,recordjson):
@@ -551,10 +550,10 @@ def search_for_dataName_recu(dataNameToKey,rjson):
       if v:
         search_for_dataName_recu(dataNameToKey,v)
   elif isinstance(rjson, dict):
-    for k in rjson.keys():
+    for k in list(rjson.keys()):
       if k in dataNameToKey:
         info[dataNameToKey[k]] = info.pop(k)
-    for v in rjson.values():
+    for v in list(rjson.values()):
       search_for_dataName_recu(dataNameToKey,v)
 
 ##############################################
@@ -600,7 +599,7 @@ def load_records_from_form(form):
 # Load records from fulcrum
 ##############################################
 def load_records_from_fulcrum(form):
-  records_raw = TOFA.get_fulcrum_records(form.id,form.name_cleaned)
+  records_raw = TOFA.get_fulcrum_records(form.id,form.fulcrum_name_cleaned)
   return get_records_from_list(records_raw)
 
 
@@ -689,7 +688,7 @@ def insert_record(values):
         isdel=False
         if check_record(conn, table, r['fulcrum_id']):
           isdel = TDB.query_to_db(conn,"DELETE FROM %s WHERE fulcrum_id = %s", (AsIs(table),r['fulcrum_id']))
-        columns = r.keys()
+        columns = list(r.keys())
         val = [r[column] for column in columns]
         insert_statement = 'INSERT INTO %s (%s) VALUES %s'
         res = TDB.query_to_db(conn, insert_statement, (AsIs(table), AsIs(','.join(columns)), tuple(val)))

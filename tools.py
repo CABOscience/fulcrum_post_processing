@@ -3,11 +3,11 @@
 import parameters as PA
 import logs as LO
 # System
-import io, os
+import io, os, sys
 from datetime import datetime 
 import time
 # files
-import csv, codecs, cStringIO, json
+import csv, codecs, io, json
 # Spectroscopy
 import specdal
 # Math
@@ -15,7 +15,7 @@ import re
 # Data Science
 import pandas as pd
 import numpy as np
-np.set_printoptions(threshold='nan')
+np.set_printoptions(threshold=sys.maxsize)
 
 '''
 # Use SpecDAL
@@ -34,14 +34,15 @@ $ git clone  -b caboscience  https://github.com/CABOscience/SpecDAL.git ; cd ./S
 ##############################################
 
 # get the FulcrumPath+formName of a FulcrumPath parameter
-def get_file_basename(st):
+def get_fulcrum_path_and_basename(st):
   return PA.FulcrumPath+st
 def get_FormsFile():
   create_directory(PA.FulcrumPath)
-  return PA.FulcrumPath+"all_forms.json"
+  return get_fulcrum_path_and_basename("all_forms.json")
 def get_FormsPath():
-  create_directory(PA.FulcrumPath+"forms/")
-  return PA.FulcrumPath+"forms/"
+  fpath = get_fulcrum_path_and_basename("forms/")
+  create_directory(fpath)
+  return fpath
 def get_WebhookFormsPath():
   #create_directory(PA.FulcrumWebhook+"forms/")
   return PA.FulcrumWebhook+"forms/"
@@ -55,7 +56,7 @@ def delete_a_file(fname,logName="main"):
     try:
       os.remove(fname)
       return True
-    except Exception, e:
+    except Exception as e:
       LO.l_err(e,logName)
   return False
 
@@ -73,7 +74,9 @@ def file_is_here(fname,logName="main"):
   :rtype: boolean
   '''
   if os.path.isfile(fname):
-    num_lines = sum(1 for line in open(fname))
+    with open(fname, 'r', errors='ignore') as myfile:
+      lines = myfile.readlines()
+    num_lines = len(lines)
     if num_lines > 1:
       #LO.l_info("\tThe file {} is here".format(fname))
       return True
@@ -101,7 +104,7 @@ def create_directory(d,logName="main"):
     try:
       os.makedirs(d)
       return True
-    except Exception, e:
+    except Exception as e:
       LO.l_err(e,logName)
       return False
   else:
@@ -115,7 +118,7 @@ def print_as_json(var):
   :param arg1: something (string, list, dictionnary)
   :type arg1: something
   '''
-  print json.dumps(var, indent=4, sort_keys=True)
+  print(json.dumps(var, indent=4, sort_keys=True))
 
 # save json object in a file according to a mode
 def save_in_json_file(fileName,data,logName="main",arg = "w"):
@@ -139,7 +142,7 @@ def save_in_json_file(fileName,data,logName="main",arg = "w"):
   :rtype: boolean
   '''
   try:
-      to_unicode = unicode
+      to_unicode = str
   except NameError:
       to_unicode = str
 
@@ -399,11 +402,12 @@ def get_directories(n,files):
   '''
   d = {}
   for f in files:
-    directory = get_parent_n_times(n,f)
-    if directory in d:
-      d[directory].append(f)
-    else:
-      d[directory] = [f]
+    if file_is_here(f):
+      directory = get_parent_n_times(n,f)
+      if directory in d:
+        d[directory].append(f)
+      else:
+        d[directory] = [f]
   return d
 
 # Get the parent directory of a path or a file n times
@@ -505,58 +509,14 @@ def write_in_csv(fname,my_list,logName="main",arg = "w"):
   :rtype: boolean
   '''
   try:
-    with open(fname, mode=arg) as csv_file:
-      p = UnicodeWriter(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    with open(fname, mode=arg, encoding="utf-8") as csv_file:
+      p = csv.writer(csv_file)
       p.writerows(my_list)
     return True
   except ValueError:
     LO.l_err(ValueError,logName)
     return False
 
-class UnicodeWriter:
-    """
-    Copyright: python.org
-    Copyright © 2001-2018 Python Software Foundation. All rights reserved.
-    Copyright © 2000 BeOpen.com. All rights reserved.
-    Copyright © 1995-2000 Corporation for National Research Initiatives. All rights reserved.
-    Copyright © 1991-1995 Stichting Mathematisch Centrum. All rights reserved.
-    Source: https://docs.python.org/2/library/csv.html
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    
-    Modified
-    """
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-      rr = []
-      for s in row:
-        v = ''
-        if isinstance(s, np.float64):
-          v = '{}'.format(s)
-        else:
-          v = s.encode('utf-8')
-        rr.append(v)
-      self.writer.writerow(rr)
-      # Fetch UTF-8 output from the queue ...
-      data = self.queue.getvalue()
-      data = data.decode("utf-8")
-      # ... and reencode it into the target encoding
-      data = self.encoder.encode(data)
-      # write to the target stream
-      self.stream.write(data)
-      # empty queue
-      self.queue.truncate(0)
-    
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
-      
 # From a panda serie to a panda dataframe
 def from_series_to_dataframe(se):
   ''' This function transforms a panda serie in a panda dataframe

@@ -9,7 +9,7 @@ import tools_fulcrum_api as TOFA
 import os
 
 def get_ProjectsPath():
-  projectsPath = PA.FulcrumPath+'Projects'
+  projectsPath = TO.get_fulcrum_path_and_basename('projects')
   TO.create_directory(projectsPath)
   return projectsPath
 
@@ -34,7 +34,7 @@ class Projects():
     
   def __str__(self):
     st = ''
-    print self.get_projects_size()
+    print(self.get_projects_size())
     for project in self.projects[:]:
       if project.id != "":
         st += '{}'.format(project)
@@ -52,7 +52,7 @@ class Project():
     self.file_name = ""
     self.name = name
     self.name_cleaned = ""
-    self.fulcrum_cleaned_name = ""
+    self.fulcrum_name_cleaned = ""
     self.updated_at = updated_at
   
   def set_NameCleaned(self):
@@ -60,10 +60,10 @@ class Project():
     self.fulcrum_name_cleaned = TO.fulcrum_clean_name(self.name)
   
   def set_file_name(self):
-    self.file_name = get_ProjectsPath()+'/'+self.name_cleaned+'.json'
+    self.file_name = get_ProjectsPath()+'/'+self.fulcrum_name_cleaned+'.json'
   
   def __str__(self):
-    return '{} {} {}'.format(self.id,self.file_name,self.name_cleaned)
+    return '{} {} {}'.format(self.id,self.file_name,self.fulcrum_name_cleaned)
 
 #
 # Project(s) From Json
@@ -85,13 +85,13 @@ def create_project_from_json(projectJson):
 # Backup Projects
 #
 def backup_projects_from_Fulcrum():
-  bName = TO.get_file_basename('Projects')
+  bName = TO.get_fulcrum_path_and_basename('projects')
   if not os.path.exists(bName):
     os.makedirs(bName)
   
   projectsJson = TOFA.get_projects()
   if projectsJson:
-    fname = PA.FulcrumPath+'all_projects.json'
+    fname = TO.get_fulcrum_path_and_basename('all_projects.json')
     TO.save_in_json_file(fname,projectsJson)
 
     ps = create_projects_from_json(projectsJson)
@@ -135,7 +135,7 @@ def load_projects():
 # Website Project(s) directories (with symbolic links)
 #
 def create_project_website_view_directories(projects):
-  for project in projects.idName.values():
+  for project in list(projects.idName.values()):
     create_project_directories(project)
     create_symbolic_links(project)
 

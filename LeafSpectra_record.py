@@ -20,7 +20,7 @@ import multiprocessing as mp
 import math
 import pandas as pd
 import numpy as np
-np.set_printoptions(threshold='nan')
+np.set_printoptions(threshold=sys.maxsize)
 
 ##############################################
 # Record
@@ -236,8 +236,23 @@ def add_Record_in_spectrum(spectroPanels,record_raw):
   :return: Valid LeafSpectra
   :rtype: LeafSpectra Object
   """
+
   record = LeafSpectra(record_raw)
+  # Comment this line to load only one record
   validate_leafspectra_record(spectroPanels,record)
+
+  # Uncomment these lines to load only one record
+  """
+  if ("ADD_RECORD_ID" in record.id):
+     record.isValid=True
+  else:
+     record.isValid=False
+
+  if record.isValid:
+    validate_leafspectra_record(spectroPanels,record)
+  
+  """
+  # End Uncomment
   if record.isValid:
     st = 'The record id {} is complete for processing'.format(record.id)
     LO.l_debug(st)
@@ -512,7 +527,7 @@ def process_leafspectra_record(record):
     LO.l_info(st)
     record.add_toLog(st)
     record = calculate_leafspectra_record(record)
-    if record.isProcessed == True:
+    if record.isValid:
       st = 'Start prepare csv files for record {}'.format(record.id)
       LO.l_info(st)
       record.add_toLog(st)
@@ -525,7 +540,6 @@ def calculate_leafspectra_record(record):
   # Check the Protocol choosed
   if record.fv_manufacturer_short_name_sphere == 'SVC':
     LO.l_debug("Start SVC spectrum data for record {}".format(record.id))
-    record.isProcessed = True
     if record.fv_leaf_larger_than_port == 'yes':
       LO.l_debug('large leaf')
       record = large_leaf_calculation(record)
@@ -533,7 +547,7 @@ def calculate_leafspectra_record(record):
       LO.l_debug('small leaf')
       record = small_leaf_calculation(record)
   else:
-    record.isProcessed = False
+    record.isValid = False
     st = "No known manufacturer short name sphere for record {}".format(record.id)
     LO.l_war(st)
     record.add_toLog(st)
@@ -612,8 +626,8 @@ def large_leaf_calculation(record):
       mseries = TO.get_monotonic_series(divisionTar)
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
-          mserie.set_value(ind,row*calib.at[ind])
+        for ind, row in mserie.items():
+          mserie.at[ind] = row*calib.at[ind]
         mseries[i] = mserie
         i+=1
       reflectance = pd.concat(mseries)
@@ -638,7 +652,7 @@ def large_leaf_calculation(record):
       distA0A1 = reflRefs[1].spectre.measurement.div(reflRefs[0].spectre.measurement)
       record.fv_reflecDiffRef = distA0A1
     else:
-      record.isProcessed = False
+      record.isValid = False
       st = "The record {} haven't the right number of reference measurments to process the reference of reflectance calculation. Number of A measurments = {} (need to be = 2)".format(record.id,len(reflRefs))
       LO.l_war(st)
       record.add_toLog(st)
@@ -648,12 +662,12 @@ def large_leaf_calculation(record):
       distB0A1 = reflStrays[0].spectre.measurement.div(reflRefs[0].spectre.measurement)
       record.fv_reflecRef = distB0A1
     else:
-      record.isProcessed = False
+      record.isValid = False
       st = "The record {} have just one reference measurments to process the stray light vs reference. Number of D measurments = {}. Number of B measurments = {} (need to be > 0) and Number of A measurments = {} (need to be > 0).".format(record.id,len(reflStrays),len(reflRefs))
       LO.l_war(st)
       record.add_toLog(st)
   else:
-    record.isProcessed = False
+    record.isValid = False
     st = "The record {} doesn't have all spectrum measurments to process the reflectance calculation. Number of B measurments = {} (need to be > 0) and Number of A measurments = {} (need to be > 0) and Number of C measurments = {} (need to be > 0).".format(record.id,len(reflStrays),len(reflRefs),len(reflTargets))
     LO.l_err(st)
     record.add_toLog(st)
@@ -686,12 +700,12 @@ def large_leaf_calculation(record):
       distD0D1 = transRefAll[1].spectre.measurement.div(transRefAll[0].spectre.measurement)
       record.fv_transDiffRef    = distD0D1
     else:
-      record.isProcessed = False
+      record.isValid = False
       st = "The record {} haven't the right number of reference measurments to process the reference of transmittance calculation. Number of D measurments = {} (need to be = 2).".format(record.id,len(transRefAll))
       LO.l_war(st)
       record.add_toLog(st)
   else:
-    record.isProcessed = False
+    record.isValid = False
     st = "The record {} doesn't have all spectrum measurments to process the transmittance calculation.  Number of E measurments = {} (need to be > 0) and  Number of D measurments = {} (need to be >0).".format(record.id,len(transTargets),len(transRefAll))
     LO.l_err(st)
     record.add_toLog(st)
@@ -806,9 +820,9 @@ def small_leaf_calculation(record):
       mseries = TO.get_monotonic_series(rightGri)
       for x in range(len(mseries)):
         mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
+        for ind, row in mserie.items():
           val = row * calib.at[ind] * dGri400
-          mserie.set_value(ind,val)
+          mserie.at[ind] = val
         mseries[x] = mserie
       pAi = pd.concat(mseries)
       RtarAPi[i].reflectance = pAi
@@ -832,7 +846,7 @@ def small_leaf_calculation(record):
       distA0A1 = RrefA[1].spectre.measurement.div(RrefA[0].spectre.measurement)
       record.fv_reflecDiffRef = distA0A1
     else:
-      record.isProcessed = False
+      record.isValid = False
       st = "The record {} have just one reference measurments to process the reference of refletance calculation. Number of A measurments = {} (need to be > 0).".format(record.id,len(RrefA))
       LO.l_war(st)
       record.add_toLog(st)
@@ -841,13 +855,13 @@ def small_leaf_calculation(record):
       distD0A0 = Rstr[0].spectre.measurement.div(RrefA[0].spectre.measurement)
       record.fv_reflecRef = distD0A0
     else:
-      record.isProcessed = False
+      record.isValid = False
       st = "The record {} have just one reference measurments to process the stray light vs reference. Number of A measurments = {} (need to be > 0) and Number of D measurments = {} (need to be > 0).".format(record.id,len(RrefA),len(Rstr))
       LO.l_war(st)
       record.add_toLog(st)
     
   else:
-    record.isProcessed = False
+    record.isValid = False
     st = "The record {} doesn't have all spectrum measurments to process the refletance calculation. Number of D measurments = {} (need to be > 2 and need to be equal to number of G). Number of G measurments = {} (need to be equal to number of D).".format(record.id,len(RtarAPi),len(RtarAi))
     LO.l_war(st)
     record.add_toLog(st)
@@ -868,9 +882,9 @@ def small_leaf_calculation(record):
       mseries = TO.get_monotonic_series(IH)
       for x in range(len(mseries)):
         mserie = mseries[x].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
+        for ind, row in mserie.items():
           val = (row - Gti) * dGti
-          mserie.set_value(ind,val)
+          mserie.at[ind] = val
         mseries[x] = mserie
       tAi = pd.concat(mseries)
       TtarAi[i].transmittance = tAi
@@ -895,12 +909,12 @@ def small_leaf_calculation(record):
       distH0H1 = TrefA[1].spectre.measurement.div(TrefA[0].spectre.measurement)
       record.fv_transDiffRef = distH0H1
     else:
-      record.isProcessed = False
+      record.isValid = False
       st = "The record {} have just one reference measurments to process  the reference of transmittance calculation. Number of H measurments = {} (need to be > 1)".format(record.id,len(TrefA))
       LO.l_war(st)
       record.add_toLog(st)
   else:
-    record.isProcessed = False
+    record.isValid = False
     st = "The record {} have doesn't all spectrum measurments to process the transmittance calculation. Number of I measurments = {} (need to be > 0). Number of H measurments = {} (need to be > 0).".format(record.id,len(TtarAi),len(TrefA))
     LO.l_war(st)
     record.add_toLog(st)
@@ -912,11 +926,20 @@ def small_leaf_calculation(record):
 def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
     c,l,r = leafspectra_record_to_csv_values(record)
-    spectra_db_process_all(c)
-    spectra_db_process_leaves(l)
-    TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
-    TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
-    TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
+    if len(c)>1:
+      spectra_db_process_all(c)
+      TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
+    else:
+      LO.l_war("c is too small for {}".format(record.id))
+    if len(l)>1:
+      spectra_db_process_leaves(l)
+      TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
+    else:
+      LO.l_war("l is too small for {}".format(record.id))
+    if len(r)>1:
+      TO.write_in_csv(record.fv_processedPath+'/ref.csv',r)
+    else:
+      LO.l_war("r is too small for {}".format(record.id))
 
 def leafspectra_record_to_csv_values(record):
   dfrra = TO.from_series_to_dataframe(record.fv_reflecAverage)
@@ -928,10 +951,10 @@ def leafspectra_record_to_csv_values(record):
   c.append(["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","R_T_Average","R_T_STD"])
   if not dfrra.empty:
     for index, row in dfrra.iterrows():
-      c.append(record.to_csv_all()+["reflectance",row[0],row[1],dfrrs.iloc[index][1]])
+      c.append(record.to_csv_all()+["reflectance","%.15f" % row[0],"%.15f" % row[1],"%.15f" % dfrrs.iloc[index][1]])
   if not dfrta.empty:
     for index, row in dfrta.iterrows():
-      c.append(record.to_csv_all()+["transmittance",row[0],row[1],dfrts.iloc[index][1]])
+      c.append(record.to_csv_all()+["transmittance","%.15f" % row[0],"%.15f" % row[1],"%.15f" % dfrts.iloc[index][1]])
     
   l = []
   l.append(["record_id","sample_id","file_name","leaf_number","leaf_side_measured","reflectance-transmittance","wavelength","raw_value","calculated_value"])
@@ -941,13 +964,13 @@ def leafspectra_record_to_csv_values(record):
       df = TO.from_series_to_dataframe(reflectance)
       for index, row in df.iterrows():
         dft = TO.from_series_to_dataframe(measurement.spectre.measurement)
-        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance",row[0],dft.iloc[index][1],row[1]])
+        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["reflectance","%.15f" % row[0],"%.15f" % dft.iloc[index][1],"%.15f" % row[1]])
     transmittance = measurement.transmittance
     if not transmittance.empty:
       df = TO.from_series_to_dataframe(transmittance)
       for index, row in df.iterrows():
         dft = TO.from_series_to_dataframe(measurement.spectre.measurement)
-        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance",row[0],dft.iloc[index][1],row[1]])
+        l.append([record.id,record.fv_sample_id]+measurement.to_csv_leaf()+["transmittance","%.15f" % row[0],"%.15f" % dft.iloc[index][1],"%.15f" % row[1]])
   r = []
   r.append(["record_id","sample_id","propertie","wavelength","relative_value"])
   if not record.fv_reflecRef.empty:
@@ -970,13 +993,13 @@ def leafspectra_record_to_csv_values(record):
 ##############################################
 def plots_leafspectra_records(rec):
   for record in rec.records[:]:
-    if record.isProcessed == True:
+    if record.isValid:
       LO.l_info('Start prepare plots data for record {}'.format(record.id))
       TOP.get_leafspectra_record_plot(record)
       if TOP.get_leafspectra_record_leaves_plot(record):
         record.leaves_plot = PA.CaboWebsite+''+record.project_name+'/spectra/processed/'+record.fv_working_folder+'/'+record.fv_sample_id+'/'+record.fv_sample_id+'_leaves.png'
       else:
-        record.isProcessed = False
+        record.isValid = False
         s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
         LO.l_war(s)
         record.add_toLog(s)
@@ -1015,7 +1038,7 @@ def update_leafspectra_record(record):
   """Update a leaf spectra record
   This function take a leafspectra record object and return a processed leafspectra record processed object
   """
-  if record.isProcessed:
+  if record.isValid:
     LO.l_info('Update record {}'.format(record.id))
     keyValues = FO.get_Keys_from_DataNames(record.form_id,['record_is_calculated', 'calculated_record_link'])
     if record.leaves_plot == '':
@@ -1050,21 +1073,22 @@ def extract_log_record(record):
 ##############################################
 
 def spectra_db_insert(conn, table, fields, values):
-  query = 'INSERT INTO %s (%s) VALUES %s'
-  TDB.query_to_db(conn, query, values)
+  query = "INSERT INTO %s (%s) VALUES %s"
+  val = (AsIs(table),AsIs(",".join(map(str, fields))),AsIs(values))
+  TDB.query_to_db(conn, query, val)
 
-def check_spectra_db_record(conn, table, record_id, sample_id, leaf=False):
+def check_spectra_db_record(conn, table, record_id, sample_id, leaf_number=""):
   query = "SELECT record_id FROM %s WHERE record_id = %s AND sample_id = %s"
-  if leaf:
+  if leaf_number:
     query += " AND leaf_number=%s"
     val = (AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number))
   else:
     val = (AsIs(table),record_id,AsIs(sample_id))
   return TDB.query_to_db(conn, query, val)
 
-def spectra_db_delete(conn, table, record_id, sample_id, leaf=False):
+def spectra_db_delete(conn, table, record_id, sample_id, leaf_number=""):
   query = "DELETE FROM %s WHERE record_id = %s AND sample_id = %s"
-  if leaf:
+  if leaf_number:
     query += " AND leaf_number=%s"
     val = (AsIs(table),record_id,AsIs(sample_id),AsIs(leaf_number))
   else:
@@ -1077,11 +1101,13 @@ def spectra_db_process_all(spectra_csv):
     spectra_processed_fields = ["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","r_t_average","r_t_std"]
     i = 0
     for row in spectra_csv:
-      if i == 0 and check_spectra_db_record(conn, 'spectra_processed',row[0],row[1]):
-        LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
-        spectra_db_delete(conn, 'spectra_processed', row[0], row[1])
-      spectra_db_insert(conn, 'spectra_processed', spectra_processed_fields, row)
-      i += 1
+      if row[0] is not "record_id":
+        if i == 0 and check_spectra_db_record(conn, 'spectra_processed',row[0],row[1]):
+          LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
+          spectra_db_delete(conn, 'spectra_processed', row[0], row[1])
+        myrow = tuple(row)
+        spectra_db_insert(conn, 'spectra_processed', spectra_processed_fields, myrow)
+        i += 1
     LO.l_debug('Spectra All - Inserted {} rows'.format(i))
   else:
     LO.l_war('Could not connect to database')
@@ -1092,11 +1118,13 @@ def spectra_db_process_leaves(spectra_csv):
     spectra_leaves_fields = ["record_id","sample_id","file_name","leaf_number","leaf_side_measured","reflectance_transmittance","wavelength","raw_value","calculated_value"]
     i = 0
     for row in spectra_csv:
-      if i == 0 and check_spectra_db_record(conn, 'spectra_leaves',row[0],row[1],row[3]):
-        LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
-        spectra_db_delete(conn, 'spectra_leaves',row[0],row[1],row[3])
-      spectra_db_insert(conn, 'spectra_leaves',spectra_leaves_fields,row)
-      i += 1
+      if row[0] is not "record_id":
+        if i == 0 and check_spectra_db_record(conn, 'spectra_leaves',row[0],row[1],row[3]):
+          LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
+          spectra_db_delete(conn, 'spectra_leaves',row[0],row[1],row[3])
+        myrow = tuple(row)
+        spectra_db_insert(conn, 'spectra_leaves', spectra_leaves_fields, myrow)
+        i += 1
     LO.l_debug('Spectra Leaves - Inserted {} rows'.format(i))
   else:
     LO.l_war('Could not connect to database')

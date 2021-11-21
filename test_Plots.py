@@ -23,13 +23,13 @@ def main():
   recordType= PA.PlotsLogFile+"_plots_test"
   LO.create_log(recordType)
   plots = PLOR.load_plots()
-  print len(plots)
+  print(len(plots))
   
   plot = PLOR.get_plot_with_plot_id('hello-world')
-  print plot
+  print(plot)
 
   plot = PLOR.get_plot_with_plot_id('9acf0b72-8b29-4372-97ac-91f950d6c00b')
-  print plot
+  print(plot)
 
 ##############################################
 # MAIN

@@ -17,8 +17,8 @@ def main():
   recordType= PA.PlantsLogFile+"_projects_test"
   LO.create_log(recordType)
   projects = PR.load_projects()
-  print projects
-  print PR.get_project_name_from_id('5139c2a4-0ccf-43b2-8067-aedee40d478a')
+  print(projects)
+  print(PR.get_project_name_from_id('5139c2a4-0ccf-43b2-8067-aedee40d478a'))
   
 
 ##############################################

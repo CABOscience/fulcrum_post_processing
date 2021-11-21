@@ -56,7 +56,7 @@ class Forms(object):
 
 
 class Form(object):
-  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', dictKeysTypes = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', fulcrum_name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
+  def __init__(self, assignment_enabled = '', auto_assign = '', bounding_box = '', created_at = '', description = '', dictKeysDataName = '', dictKeysTypes = '', elements = '', geometry_required = '', geometry_types = '', hidden_on_dashboard = '', ID = '', image = '', image_large = '', image_small = '', image_thumbnail = '', name = '', name_cleaned = '', projects_enabled = '', record_count = '', record_title_key = '', script = '', status_field = '', title_field_keys = '', updated_at = '', version = '', backup_file = ''):
     self.assignment_enabled = assignment_enabled
     self.auto_assign = auto_assign
     self.bounding_box = bounding_box
@@ -77,7 +77,7 @@ class Form(object):
     self.image_thumbnail = image_thumbnail
     self.name = name
     self.name_cleaned = name_cleaned
-    self.fulcrum_cleaned_name = fulcrum_name_cleaned
+    self.fulcrum_name_cleaned = ""
     self.projects_enabled = projects_enabled
     self.record_count = record_count
     self.record_title_key = record_title_key
@@ -99,7 +99,7 @@ class Form(object):
     return []
 
   def whoami(self):
-    print type(self).__name__
+    print(type(self).__name__)
     
   def is_form(self):
     if self.id and self.name:
@@ -120,15 +120,15 @@ class Form(object):
       search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,self.elements)
       self.dictKeysDataName = dictKeysDataName
       self.dictKeysTypes = dictKeysTypes
-      st = 'The form {} has now a dictKeysDataName'.format(self.name_cleaned)
-      st += 'The form {} has now a dictKeysTypes'.format(self.name_cleaned)
+      st = 'The form {} has now a dictKeysDataName'.format(self.fulcrum_name_cleaned)
+      st += 'The form {} has now a dictKeysTypes'.format(self.fulcrum_name_cleaned)
       LO.l_debug(st)
       self.add_toLog(st)
 
   def set_dictDataNameKeys(self):
     if len(self.dictKeysDataName)>0:
       self.dictDataNameKeys = from_DataName_to_Keys(self.dictKeysDataName)
-      st = 'The form {} has now a dictDataNameKeys'.format(self.name_cleaned)
+      st = 'The form {} has now a dictDataNameKeys'.format(self.fulcrum_name_cleaned)
       LO.l_debug(st)
       self.add_toLog(st)
 
@@ -138,7 +138,7 @@ class Form(object):
 
   # Extract Forms
   def backup_form(self):
-    formName = self.name_cleaned
+    formName = self.fulcrum_name_cleaned
     # Create directories for formName
     create_form_directories(formName)
     fname = TO.get_FormsPath()+formName+'/'+formName+'_form.json'
@@ -170,7 +170,7 @@ def search_for_keys_form_recu(dictKeysDataName,dictKeysTypes,info):
       dictKeysDataName[info['key']]=info['data_name']
     if 'key' in info and 'type' in info:
       dictKeysTypes[info['key']]=info['type']
-    for vs in info.values():
+    for vs in list(info.values()):
       if isinstance(vs, list):
         for v in vs:
           if v:
@@ -191,7 +191,7 @@ def create_form_uid_directories():
 
 def from_DataName_to_Keys(dictKeysDataName):
   dictDataNameKeys = {}
-  for k in dictKeysDataName.keys():
+  for k in list(dictKeysDataName.keys()):
     dictDataNameKeys[dictKeysDataName[k]] = k
   return dictDataNameKeys
 

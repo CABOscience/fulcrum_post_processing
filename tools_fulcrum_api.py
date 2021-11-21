@@ -5,13 +5,13 @@ import logs as LO
 # System
 import io, os, sys
 # files
-import csv, codecs, cStringIO, json
+import csv, codecs, io, json
 # Spectroscopy
 #import specdal
 # Data Science
 import pandas as pd
 import numpy as np
-np.set_printoptions(threshold='nan')
+np.set_printoptions(threshold=sys.maxsize)
 import urllib3
 import fulcrum
 from fulcrum import Fulcrum
@@ -99,7 +99,7 @@ def test_fulcrum_access():
           ):
     if not PA.FulcrumApiKey:
       print("A Fulcrum API is needed")
-      print parser.print_help()
+      print(parser.print_help())
     else:
       t = 'Connexion to Fulcrum has failed due to'
       endString = ''
@@ -109,13 +109,13 @@ def test_fulcrum_access():
         endString = 'invalid API version.'
       elif InternalServerErrorException:
         endString = 'internal server error.'
-      print(t+' '+endString)
+      print((t+' '+endString))
     sys.exit(1)
   except NotFoundException as n:
-    print('{} {}'.format(s,PA.NotFoundStr))
+    print(('{} {}'.format(s,PA.NotFoundStr)))
     sys.exit(1)
   except RateLimitExceededException as r:
-    print('{} {}'.format(s,PA.LimitExceededStr))
+    print(('{} {}'.format(s,PA.LimitExceededStr)))
     sys.exit(1)
 
 # get forms
@@ -248,8 +248,15 @@ def get_photo_file(photoID,logName="main"):
     s = 'Search photos has failed for photo id {}'.format(photoID)
     return exception_api(e,s,logName)
 
-
-
+def get_webhook_status(webhookID,logName="main"):
+  try:
+    fulcrumApp = get_fulcrum_access()
+    webhook = fulcrumApp.webhooks.find(webhookID)
+    increase_num_of_request_by(1)
+    return webhook
+  except (NotFoundException, RateLimitExceededException) as e:
+    s = 'Search Webhook has failed for Webhook id {}'.format(webhookID)
+    return exception_api(e,s,logName)
 
 ##############################################
 # Update record
@@ -260,28 +267,53 @@ def fulcrum_update_record(recordID, obj={}, logName="main"):
     fulcrumApp = get_fulcrum_access()
     update = fulcrumApp.records.update(recordID, obj)
     st = 'Record {} has been updated with the object:\n {}'.format(recordID, obj)
-    print st
+    print(st)
     LO.l_debug(st,logName)
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Update Record has failed for {}'.format(recordID)
     return exception_api(e,s,logName)
   except InvalidAPIVersionException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
   except UnauthorizedException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
   except InternalServerErrorException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
   except BadRequestException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print '{} {}'.format(s,e)
+    print('{} {}'.format(s,e))
     return exception_api(e,s,logName)
 
+##############################################
+# Update webhook
+##############################################
+
+def fulcrum_update_webhook(webhookID, obj={}, logName="main"):
+  try:
+    fulcrumApp = get_fulcrum_access()
+    update = fulcrumApp.webhooks.update(webhookID, obj)
+    st = 'Webhook {} has been updated with the object:\n {}'.format(webhookID, obj)
+    LO.l_debug(st,logName)
+  except (NotFoundException, RateLimitExceededException) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except InvalidAPIVersionException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except UnauthorizedException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except InternalServerErrorException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
+  except BadRequestException(Exception) as e:
+    s = 'Update Webhook has failed for {}'.format(webhookID)
+    return exception_api(e,s,logName)
 
   
 ##############################################

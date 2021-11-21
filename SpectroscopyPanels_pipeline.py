@@ -48,11 +48,11 @@ def main():
 
   spectroPanels = SPR.load_spectroscopypanels()
 
-  for panelID in spectroPanels.recordsDict.keys():
-    print('panelID: {}'.format(panelID))
+  for panelID in list(spectroPanels.recordsDict.keys()):
+    print(('panelID: {}'.format(panelID)))
     calibrations = spectroPanels.recordsDict[panelID].fv_calibrations.calibrations
     for calib in calibrations:
-      print('calibDate: {}'.format(calib.dDate))
+      print(('calibDate: {}'.format(calib.dDate)))
 
   
 

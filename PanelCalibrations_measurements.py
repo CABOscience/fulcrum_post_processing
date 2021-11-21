@@ -25,7 +25,7 @@ class CalibrationMeasurements(object):
     
   def __str__(self):
     for mt in self.measurements[:]:
-      print mt
+      print(mt)
 
   def add_record(self,CalibrationMeasurement):
     self.measurements.append(CalibrationMeasurement)

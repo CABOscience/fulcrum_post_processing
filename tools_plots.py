@@ -190,9 +190,9 @@ def get_leafspectra_record_leaves_plot(record):
   transLeaves = record.fv_transLeaves
   imgdir = record.fv_processedPath+'/leaves'
   TO.create_directory(imgdir)
-  leavesVal = reflecLeaves.keys()
+  leavesVal = list(reflecLeaves.keys())
   if len(leavesVal)<1:
-    leavesVal = transLeaves.keys()
+    leavesVal = list(transLeaves.keys())
   if len(leavesVal)>0:
     for leafNum in leavesVal:
       imgPath = imgdir+'/'+record.fv_sample_id+'_leaf_'+leafNum+'.png'
@@ -260,10 +260,10 @@ def img_reflect_and_transmi(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.Data
   indexV = []
   transmiV = []
   reflecV = []
-  if reflec.count>0:
+  if not reflec.empty:
     indexV = reflec.index.values.tolist()
     reflecV = reflec.values.tolist()
-  if transmi.count>0:
+  if not transmi.empty:
     transmiV = transmi.values.tolist()
     if len(indexV)<1:
       indexV = transmi.index.values.tolist()
@@ -333,7 +333,7 @@ def get_panel_calibrations_record_plot(record):
 def img_reflect_and_transmi_panel_calibrations(xmin , xmax, reflec =pd.DataFrame(),transmi =pd.DataFrame(), imgpath ="", title=''):
   indexV = []
   reflecV = []
-  if reflec.count>0:
+  if not reflec.empty:
     indexV = reflec.index.values.tolist()
     reflecV = reflec.values.tolist()
   fig = plt.figure()
@@ -363,7 +363,7 @@ def get_panel_calibrations_record_measurments_plot(record):
   
   imgdir = record.fv_processedPath+'/replicates'
   TO.create_directory(imgdir)
-  replicatesVal = reflecReplicates.keys()
+  replicatesVal = list(reflecReplicates.keys())
   if len(replicatesVal)>0:
     for replicateNum in replicatesVal:
       imgPath = imgdir+'/'+record.fv_serial_number+'_replicate_'+replicateNum+'.png'
@@ -394,6 +394,6 @@ def get_panel_calibrations_record_measurments_plot(record):
       plt.savefig(record.replicate_plot, dpi=150)
       plt.close('all')
   else:
-     record.isProcessed = False
+     record.isValid = False
   return record
 

@@ -18,7 +18,7 @@ import multiprocessing as mp
 import math
 import pandas as pd
 import numpy as np
-np.set_printoptions(threshold='nan')
+np.set_printoptions(threshold=sys.maxsize)
 
 ##############################################
 # Record
@@ -446,7 +446,7 @@ def process_record(record):
   if record.isValid:
     boo = panel_calibration_calculation(record)
     if boo:
-      record.isProcessed = True
+      record.isValid = True
   return record
 
 ## Panel Calibration Calculations
@@ -491,8 +491,8 @@ def panel_calibration_calculation(record):
       mseries = TO.get_monotonic_series(divisionTar)
       for i in range(len(mseries)):
         mserie = mseries[i].sort_index().loc[wvlMin:wvlMax]
-        for ind, row in mserie.iteritems():
-          mserie.set_value(ind,row)
+        for ind, row in mserie.items():
+          mserie.at[ind] = row
         mseries[i] = mserie
         i+=1
       reflectance = pd.concat(mseries)
@@ -538,12 +538,12 @@ def panel_calibration_calculation(record):
 def plots_panel_calibrations_records(recs):
   panelCalibrations = PanelCalibrations()  
   for record in recs.records[:]:
-    if record.isProcessed == True:
+    if record.isValid:
       LO.l_info('Start prepare plots data for record {}'.format(record.id))
       TOP.get_panel_calibrations_record_plot(record)
       TOP.get_panel_calibrations_record_measurments_plot(record)
       LO.l_info("{}".format(record.replicate_plot))
-    if not record.isProcessed:
+    if not record.isValid:
         s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
         LO.l_war(s)
         record.add_toLog(s)

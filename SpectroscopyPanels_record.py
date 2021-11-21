@@ -71,7 +71,7 @@ class SpectroscopyPanel(RE.Record):
       self.fv_calibrations = SPC.extract_SpectroscopyPanels_calibration_values(self.fv_serial_number,self.fv_calibrations)
       #self.fv_calibrations.toPrint()
     else:
-      print('No calibrations for {} and sn {}'.format(self.id,self.fv_serial_number))
+      print(('No calibrations for {} and sn {}'.format(self.id,self.fv_serial_number)))
       self.isValid = False
 
 def extract_spectroscopyPanel_record(self):

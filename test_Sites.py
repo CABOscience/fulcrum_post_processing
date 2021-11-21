@@ -23,13 +23,13 @@ def main():
   recordType= PA.SitesLogFile+"_sites_test"
   LO.create_log(recordType)
   sites = SIR.load_sites()
-  print len(sites)
+  print(len(sites))
   
   site = SIR.get_site_with_site_id('hello-world')
-  print site
+  print(site)
 
   site = SIR.get_site_with_site_id('da900226-f394-492f-89a5-a15890315d1b')
-  print site
+  print(site)
 
 ##############################################
 # MAIN

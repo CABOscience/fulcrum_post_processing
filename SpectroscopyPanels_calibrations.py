@@ -25,7 +25,7 @@ class SpectroscopyPanels_calibrations(object):
   
   def toPrint(self):
     s = '\n'+''.join(x.toPrint()+'\n' for x in self.calibrations)
-    print s
+    print(s)
 
 def make_SpectroscopyPanels_calibrations(calibsTab):
   calib = SpectroscopyPanels_calibrations()

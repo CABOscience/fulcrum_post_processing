@@ -78,6 +78,7 @@ SubplotsFormFile = DefaultPath
 SubplotsLogFile = DefaultPath
 SubplotsRecordsFile = DefaultPath
 WebsitePath = DefaultPath
+WebhookID = ''
 
 # Path to config
 ConfFile           = ScriptPath+'/config.ini'
@@ -105,7 +106,7 @@ def get_config(confFile):
   try:
     config.read(os.path.expanduser(confFile))
     return config
-  except Exception, e:
+  except Exception as e:
     print(e)
     sys.exit(1)
 
@@ -155,6 +156,7 @@ def set_global_from_config(c):
     global SubplotsLogFile
     global SubplotsRecordsFile
     global WebsitePath
+    global WebhookID
     global CaboWebsite
     
     if c.get('DEFAULT','BulkLeafSamplesLogFile'): BulkLeafSamplesLogFile = c.get('DEFAULT','BulkLeafSamplesLogFile')
@@ -202,15 +204,16 @@ def set_global_from_config(c):
     if c.get('DEFAULT','SubplotsLogFile'): SubplotsLogFile = c.get('DEFAULT','SubplotsLogFile')
     if c.get('DEFAULT','SubplotsRecordsFile'): SubplotsRecordsFile = c.get('DEFAULT','SubplotsRecordsFile')
     if c.get('DEFAULT','WebsitePath'): WebsitePath = c.get('DEFAULT','WebsitePath')
+    if c.get('DEFAULT','WebhookID'): WebhookID = c.get('DEFAULT','WebhookID')
     if c.get('DEFAULT','CaboWebsite'): CaboWebsite = c.get('DEFAULT','CaboWebsite')
     
     if Debug == 'True':
-      print 'Debug is enabled'
+      print('Debug is enabled')
     else:
-      print 'Debug is disable'
+      print('Debug is disable')
       
     if TOFA.test_fulcrum_access():
-      print 'Fulcrum is accessible'
+      print('Fulcrum is accessible')
 
 # Arguments
 ##############################################
@@ -286,5 +289,5 @@ def get_arguments():
       print('Pssst: FulcrumPath from config is override by an argument')
       FulcrumPath = argPath
     else:
-      print('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath))
+      print(('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath)))
 

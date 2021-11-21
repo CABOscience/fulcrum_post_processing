@@ -187,9 +187,9 @@ class Photo(object):
       return False
       
   def add_toLog(self, st):
-    if not isinstance(st, basestring):
-      print 'st'
-      print st
+    if not isinstance(st, str):
+      print('st')
+      print(st)
     else:
      self.logInfo += "\n"+st
 
@@ -270,7 +270,7 @@ def search_for_photo_id_recu(photos,info):
       if v:
         photos = search_for_photo_id_recu(photos,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       v = info[k]
       if 'photo_id' in k:
         #print 'photo_id value >'+v+'<<'
@@ -288,7 +288,7 @@ def get_photo_meta_file_name(bName,photoID):
   return bName+'/images/'+photoID+'.json'
 
 def backup_photos_from_records(form,recs):
-  formName = form.name_cleaned
+  formName = form.fulcrum_name_cleaned
   bName = TO.get_FormsPath()+""+formName
   photosID = []
   LO.l_info('Start searching photos for the form "{}" with {} records'.format(formName,len(recs)))
@@ -349,9 +349,9 @@ def search_datanames_keys_recu(dictKeysDataname,info):
       if v:
         search_for_keys_recu(dictKeysDataname,v)
   elif isinstance(info, dict):
-    for k in info.keys():
+    for k in list(info.keys()):
       if k in dictKeysDataname:
         info[dictKeysDataname[k]] = info.pop(k)
-    for v in info.values():
+    for v in list(info.values()):
       search_for_keys_recu(dictKeysDataname,v)
 

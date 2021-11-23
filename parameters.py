@@ -35,8 +35,8 @@ RecordStatus      = "verified" #choices={pending, rejected, verified, submitted,
 # From config
 DefaultPath       = os.path.expanduser('~/')
 BulkLeafSamplesLogFile = DefaultPath
-BulkLeafSamplessFormFile = DefaultPath
-BulkLeafSamplessRecordsFile = DefaultPath
+BulkLeafSamplesFormFile = DefaultPath
+BulkLeafSamplesRecordsFile = DefaultPath
 DatabaseName = ''
 DatabaseUser = ''
 DatabaseHostName = ''
@@ -112,8 +112,8 @@ def get_config(confFile):
 
 def set_global_from_config(c):
     global BulkLeafSamplesLogFile
-    global BulkLeafSamplessFormFile
-    global BulkLeafSamplessRecordsFile
+    global BulkLeafSamplesFormFile
+    global BulkLeafSamplesRecordsFile
     global CampaignsPath
     global Debug
     global DefaultPath
@@ -160,8 +160,8 @@ def set_global_from_config(c):
     global CaboWebsite
     
     if c.get('DEFAULT','BulkLeafSamplesLogFile'): BulkLeafSamplesLogFile = c.get('DEFAULT','BulkLeafSamplesLogFile')
-    if c.get('DEFAULT','BulkLeafSamplessFormFile'): BulkLeafSamplessFormFile = c.get('DEFAULT','BulkLeafSamplessFormFile')
-    if c.get('DEFAULT','BulkLeafSamplessRecordsFile'): BulkLeafSamplessRecordsFile = c.get('DEFAULT','BulkLeafSamplessRecordsFile')
+    if c.get('DEFAULT','BulkLeafSamplesFormFile'): BulkLeafSamplesFormFile = c.get('DEFAULT','BulkLeafSamplesFormFile')
+    if c.get('DEFAULT','BulkLeafSamplesRecordsFile'): BulkLeafSamplesRecordsFile = c.get('DEFAULT','BulkLeafSamplesRecordsFile')
     if c.get('DEFAULT','CampaignsPath'): CampaignsPath = c.get('DEFAULT','CampaignsPath')
     if c.get('DEFAULT','Debug'): Debug = c.get('DEFAULT','Debug')
     if c.get('DEFAULT','DefaultPath'): DefaultPath = c.get('DEFAULT','DefaultPath')

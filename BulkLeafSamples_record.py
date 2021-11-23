@@ -95,77 +95,63 @@ class BulkLeaveSample(RE.Record):
 ##############################################
 # LOAD Record
 ##############################################
-def load_bulkleafsample_webhook_Records(calibrations,projects):
-  """ This will load Leaf spectra object from webhook
+def load_bulkleafsample_webhook_Records(projects):
+  """ This will load Bulk Leaf Sample object from webhook
   
-  :param arg1: calibrations
-  :type arg1: Calibrations object
+  :param arg1: projects dictionnary
+  :type arg1: projects[projectID] = projectName
 
-  :param arg2: projects dictionnary
-  :type arg2: projects[projectID] = projectName
-
-  :return: LeafSpectrum object full of LeafSpectra processible
-  :rtype: LeafSpectrum
+  :return: BulkLeafSamples object full of LeafSpectra processible
+  :rtype: BulkLeafSamples
   """
-  leafSpectraForm = TO.load_json_file(PA.LeafSpectraFormFile)
-  leafSpectraFormID = leafSpectraForm['id']
+  bulks = BulkLeaveSamples()
+  form = TO.load_json_file(PA.BulkLeafSamplesFormFile)
+  formID = form['id']
   webhookRecords = RE.load_webhook_records(projects)
-  spectrum = LeafSpectrum()
   for record_raw in webhookRecords.records[:]:
-    if leafSpectraFormID not in record.form_id:
-      LO.l_info('The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id))
+    if formID not in record.form_id:
+      LO.l_info('The record {} will not be used because it is not a bulk leaf sample record'.format(record_raw.id))
     else:
-      record = LeafSpectra(record_raw)
-      LO.l_info('Start update record {} with measurments'.format(record.id))
-      if extract_leafspectra_record(record):
-        LO.l_info('Start update record {} with calibration and date {}'.format(record.id,record.fv_date_measured))
-        if link_leafspectra_record_and_calibration(calibrations,record):
-          LO.l_war('The record {} is complete for processing'.format(record.id))
-          spectrum.add_record(record)
-        else:
-          LO.l_war('The record {} will not be used'.format(record.id))
+      record = BulkLeaveSample(record_raw)
+      if extract_bulkLeafSamples_record(record):
+        LO.l_war('The record {} is complete'.format(record.id))
+        bulks.add_record(record)
       else:
         LO.l_war('The record {} will not be used'.format(record.id))
-  return spectrum
+  return bulks
 
-def load_bulkleafsample_Records(calibrations,projects):
-  """ This will load Leaf spectra object from the Leaf Spectra Backup
+def load_bulkleafsample_Records(projects):
+  """ This will load Bulk Leaf Sample object from the Leaf Spectra Backup
   
-  :param arg1: calibrations
-  :type arg1: Calibrations object
+  :param arg1: projects dictionnary
+  :type arg1: projects[projectID] = projectName
 
-  :param arg2: projects dictionnary
-  :type arg2: projects[projectID] = projectName
-
-  :return: LeafSpectrum object full of LeafSpectra processible
-  :rtype: LeafSpectrum
+  :return: BulkLeafSamples object full of LeafSpectra processible
+  :rtype: BulkLeafSamples
   """
-  spectrum = LeafSpectrum()
-  fileName = PA.LeafSpectraRecordsFile
+  bulks = BulkLeaveSamples()
+  fileName = PA.BulkLeafSamplesRecordsFile
   rec = RE.load_records_from_json(fileName,projects)
-  my_list = add_Records_in_spectrum(calibrations,rec)
+  my_list = add_Records_in_BulkLeafSamples(rec)
   
   my_list2 = []
-  if len(my_list)>0:
-    my_list2 = update_leafspectra_records_measurements(my_list)
-
   if len(my_list2)>0:
     for wrap in my_list2[:]:
-      spectrum.add_record(wrap)
+      bulks.add_record(wrap)
   
-  return spectrum
+  return bulks
 
 #########################
 # Add
 #########################
-def add_Records_in_bulkLeafSamples(calibrations,rec):
+def add_Records_in_BulkLeafSamples(rec):
   """
-  This parallelisation of add_Record_in_spectrum
+  This parallelisation of add_Record_in_bulleafsample
   """
   output = mp.Queue()
   my_list = []
   pool = mp.Pool(processes=3)
-  results = [pool.apply_async(add_Record_in_spectrum, args=(calibrations,record_raw)) for record_raw in rec.records[:]]
+  results = [pool.apply_async(add_Record_in_BulkLeafSamples, args=(record_raw)) for record_raw in rec.records[:]]
   pool.close()
   pool.join()
   for r in results:
@@ -174,54 +160,48 @@ def add_Records_in_bulkLeafSamples(calibrations,rec):
       my_list.append(b)
   return my_list
   
-def add_Record_in_BulkLeafSamples(calibrations,record_raw):
-  """ This will add a valid leaf spectra record
+def add_Record_in_BulkLeafSamples(record_raw):
+  """ This will add a validi bulk leaf spectra record
   
-  :param arg1: calibrations
-  :type arg1: Calibrations object
-
-  :param arg2: a record
-  :type arg2: Record Object
+  :param arg1: a record
+  :type arg1: Record Object
 
   :return: Valid LeafSpectra
   :rtype: LeafSpectra Object
   """
-  record = LeafSpectra(record_raw)
-  validate_leafspectra_record(calibrations,record)
+  record = BulkLeaveSample(record_raw) 
+  validate_bulkleafsamples_record(record)
   if record.isValid:
-    LO.l_info('The record id {} is complete for processing'.format(record.id))
-    record.add_toLog('The record id {} is complete for processing'.format(record.id))
+    s = 'The record id {} is complete.'.format(record.id)
+    LO.l_info(s)
+    record.add_toLog(s)
   else:
-    LO.l_war('The record id {} is incomplete and will not be used'.format(record.id))
-    record.add_toLog('The record id {} is incomplete and will not be used'.format(record.id))
+    s = 'The record id {} is incomplete and will not be used'.format(record.id)
+    LO.l_war(s)
+    record.add_toLog(s)
   return record
 
 ##
-def validate_bulkLeafSamples_record(calibrations,record):
+def validate_bulkLeafSamples_record(record):
   """ This will validate a record a leaf spectra record
   
-  :param arg1: calibrations
-  :type arg1: Calibrations object
+  :param arg1: a record
+  :type arg1: Record Object
 
-  :param arg2: a record
-  :type arg2: Record Object
-
-  :return: True if is a valid record False if it's not a LeafSpectra record
+  :return: True if is a valid record False if it's not a BulkLeafSample record
   :rtype: boolean (True,False)
   """
-  extract_leafspectra_record(record)
-  link_leafspectra_record_and_calibration(calibrations,record)
-  validate_leafspectra_record_measurements(record)
+  extract_bulkLeafSamples_record(record)
   return record.isValid
 
 ###
 def extract_bulkLeafSamples_record(record):
   """ This will append a leaf spectra record data from a record "form values" if it's a valid leaf spectra record
   
-  :param arg1: a LeafSpectra to be tested
-  :type arg1: LeafSpectra
+  :param arg1: a record be tested
+  :type arg1: BulkLeafSample
 
-  :return: True if is a valid record False if it's not a LeafSpectra record
+  :return: True if is a valid record False if it's not a BulkLeafSample record
   :rtype: boolean (True,False)
   """
   LO.l_info('Start extract leaf spectra recordid {}'.format(record.id))

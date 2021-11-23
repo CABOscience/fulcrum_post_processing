@@ -927,12 +927,14 @@ def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
     c,l,r = leafspectra_record_to_csv_values(record)
     if len(c)>1:
-      spectra_db_process_all(c)
+      if not PA.FormsProcess:
+        spectra_db_process_all(c)
       TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
     else:
       LO.l_war("c is too small for {}".format(record.id))
     if len(l)>1:
-      spectra_db_process_leaves(l)
+      if not PA.FormsProcess:
+        spectra_db_process_leaves(l)
       TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
     else:
       LO.l_war("l is too small for {}".format(record.id))

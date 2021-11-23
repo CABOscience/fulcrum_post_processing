@@ -29,10 +29,11 @@ optional arguments:
 def main():
   PA.set_parameters()
   start_time = datetime.now()
-  LO.create_log("forms")
   if PA.FormsProcess:
+    LO.create_log("backup_fulcrum")
     RE.backup_records_from_fulcrumforms()
   else:
+    LO.create_log("backup_fulcrum_webhook")
     RE.backup_records_from_webhookforms()
 
 ##############################################

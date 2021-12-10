@@ -320,6 +320,17 @@ def mp_backup_records_from_form(form = FO.Form()):
     LO.l_info('Start backup for the form "{}" with {} records'.format(formName,form.record_count))
     records = load_records_from_fulcrum(form)
     
+    # Save files in DB
+    for record_raw in records.records[:]:
+      insert_record(prepare_record_values(record_raw))
+    # Delete files from webhook because they have been already added
+    leafSpectraForm = FO.load_form_from_json_file(PA.LeafSpectraFormFile)
+    leafSpectraFormID = leafSpectraForm.id
+    if leafSpectraFormID not in formID:
+      for rec in records.records[:]:
+        fname = TO.get_WebhookRecordsPath()+'/'+rec.id+''
+        TO.delete_a_file(fname)
+
     fbase = TO.get_FormsPath()+formName+'/'+formName
     # Backup raw records 
     fname = fbase+'_records.json'
@@ -340,6 +351,7 @@ def mp_backup_records_from_form(form = FO.Form()):
 
     endtime = time.time()
     print(('########################\nTime to backup form {} ({}) IS {}\n########################\n'.format(formName,formID,endtime-start)))
+
     return formID
 
 ##############################################
@@ -706,5 +718,6 @@ def insert_record(values):
 def record_webhook_to_db():
   webhookRecords = load_webhook_records()
   for record_raw in webhookRecords.records[:]:
-    if(record_raw.form_name  != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
-      insert_record(prepare_record_values(record_raw))
+    #if(record_raw.form_name  != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
+    insert_record(prepare_record_values(record_raw))
+  return webhookRecords

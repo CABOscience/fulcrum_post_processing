@@ -70,7 +70,10 @@ def main():
     time_llr = TO.print_time(start_time,time_spr,'load_leafspectra_webhook_Records')
     LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  if len(records)>0:
+  if len(records)>0
+    if not PA.FormsProcess:
+      LSR.clean_webhook_records(records)
+
     LO.l_info('\n\n## Process records\nNumber of Records {}\n######\n'.format(len(records)))
     records = LSR.process_leafspectra_records(records)
     time_plr = TO.print_time(start_time,time_llr,'process_leafspectra_records')
@@ -98,8 +101,6 @@ def main():
       LSCF.concat_files(records, projects)
       time_clr = TO.print_time(start_time,time_plor,'concat_files')
       LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
-    else:
-      LSR.clean_webhook_records(records)
 
 ##############################################
 # MAIN

@@ -309,17 +309,11 @@ def mp_backup_records_from_form(form = FO.Form()):
   formID   = form.id
   start = time.time()
   if formID:
-  # Leaf_are_water_samples
-  #if formID == 'fee4d9d4-a8f5-4310-99f3-a7be668abd2c': # Leaf_are_water_samples
-  # Plants
-  #if formID == '7a98cdf1-a37c-4f83-9a21-f7ea215ee0f6':
-  # Pressed_Specimens
-  #if formID == 'f6405c31-9030-459b-9ed3-49f170dd3b89':
-
     # Backup records
     LO.l_info('Start backup for the form "{}" with {} records'.format(formName,form.record_count))
     records = load_records_from_fulcrum(form)
     
+    # For any record of the update/modified/new form
     # Save files in DB
     for record_raw in records.records[:]:
       insert_record(prepare_record_values(record_raw))

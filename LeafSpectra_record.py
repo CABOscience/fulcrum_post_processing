@@ -1044,7 +1044,7 @@ def update_leafspectra_record(record):
     LO.l_info('Update record {}'.format(record.id))
     keyValues = FO.get_Keys_from_DataNames(record.form_id,['record_is_calculated', 'calculated_record_link'])
     if record.leaves_plot == '':
-      record.leaves_plot = 'http://data.caboscience.org/field-data/projects/2018-Girard-MSc-UdeM/spectra/processed/'
+      record.leaves_plot = 'no plots'
     obj = TOFA.get_record(record.id)
     obj['record']['form_values'][keyValues['record_is_calculated']]= 'yes'
     obj['record']['form_values'][keyValues['calculated_record_link']]= record.leaves_plot

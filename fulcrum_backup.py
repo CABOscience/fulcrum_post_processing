@@ -34,7 +34,7 @@ def main():
     RE.backup_records_from_fulcrumforms()
   else:
     LO.create_log("backup_fulcrum_webhook")
-    RE.backup_records_from_webhookforms()
+    RE.record_webhook_to_db()
 
 ##############################################
 # MAIN

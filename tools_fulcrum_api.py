@@ -192,7 +192,7 @@ def get_record(recordID,logName="main"):
     fulcrumApp = get_fulcrum_access()
     record = fulcrumApp.records.find(recordID)
     increase_num_of_request_by(1)
-    return record
+    return record["record"]
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search records has failed for form {}'.format(formName)
     return exception_api(e,s,logName)

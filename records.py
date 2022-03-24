@@ -167,7 +167,7 @@ class Record(object):
 ##############################################
 # Records Functions
 ##############################################
-def create_record_from_json(record_raw,forms=[],projects=[]):
+def create_record(record_raw,forms=[],projects=[]):
   Raltitude, RassignedTo, RassignedToId, RclientCreatedAt, RclientUpdatedAt, Rcourse, RcreatedAt, RcreatedBy, RcreatedById, RcreatedDuration, RcreatedLocation, ReditedDuration, RformId, RformName, RhorizontalAccuracy, RID, Rlatitude, Rlongitude, RprojectId, Rspeed, Rstatus, RupdatedAt, RupdatedBy, RupdatedById, RupdatedDuration, RupdatedLocation, Rversion, RverticalAccuracy, RformValues, RprojectName = ("",)*30
   if 'altitude'           in record_raw:  Raltitude = record_raw['altitude']
   if 'assigned_to'        in record_raw:  RassignedTo = record_raw['assigned_to']
@@ -241,10 +241,17 @@ def get_records_from_files_list(listFileRecords):
 
 def record_from_fileName(fileName):
   record_raw = TO.load_json_file(fileName)
-  return create_record_from_json(record_raw)
+  return create_record(record_raw)
 
 def get_list_records_from_file(fileName):
   return TO.load_json_file(fileName)
+
+def get_record_from_raw_record(record_raw,forms=[],projects=[]):
+  if len(projects)<1:
+    projects = PR.load_projects()
+  if len(forms)<1:
+    forms = FO.load_forms()
+  return create_record(record_raw,forms,projects)
 
 def get_records_from_list(listRecords,forms=[],projects=[]):
   # preload projects and forms if they are empty
@@ -254,7 +261,7 @@ def get_records_from_list(listRecords,forms=[],projects=[]):
     forms = FO.load_forms()
   records = Records()
   for record_raw in listRecords[:]:
-    record = create_record_from_json(record_raw,forms,projects)
+    record = create_record(record_raw,forms,projects)
     if (PR.test_if_project_id(record.project_id,projects)) or (not record.project_id):
       records.add_record(record)
   return records
@@ -312,29 +319,24 @@ def mp_backup_records_from_form(form = FO.Form()):
     # Backup records
     LO.l_info('Start backup for the form "{}" with {} records'.format(formName,form.record_count))
     records = load_records_from_fulcrum(form)
-    
-    # For any record of the update/modified/new form
-    # Save files in DB
-    for record_raw in records.records[:]:
-      insert_record(prepare_record_values(record_raw))
-    # Delete files from webhook because they have been already added
-    leafSpectraForm = FO.load_form_from_json_file(PA.LeafSpectraFormFile)
-    leafSpectraFormID = leafSpectraForm.id
-    if leafSpectraFormID not in formID:
-      for rec in records.records[:]:
-        fname = TO.get_WebhookRecordsPath()+'/'+rec.id+''
-        TO.delete_a_file(fname)
-
-    fbase = TO.get_FormsPath()+formName+'/'+formName
+    fbase = TO.get_FormsPath()+formName+'/'
     # Backup raw records 
-    fname = fbase+'_records.json'
-    numRecords  = len(records)
+    fname = fbase+formName+'_records.json'
+    dirRecs = fbase+'records/'
+    TO.create_directory(dirRecs)
+    
     TO.save_in_json_file(fname,records.to_json())
+    for rec in records.records[:]:
+      recName = dirRecs+rec.ID+'.json'
+      TO.save_in_json_file(recName,rec.to_json())
     
     # Backup records with datanames
     update_records_with_dataname(form.dictKeysDataName,records.records)
     fname = fbase+'_records_with_dataname.json'
     TO.save_in_json_file(fname,records.to_json())
+    for rec in records.records[:]:
+      recName = dirRecs+rec.ID+'_with_dataname.json'
+      TO.save_in_json_file(recName,rec.to_json())
     
     LO.l_info('End backup for the form "{}", there are {} records available'.format(formName,len(records)))
 
@@ -349,7 +351,7 @@ def mp_backup_records_from_form(form = FO.Form()):
     return formID
 
 ##############################################
-# Backup Records Versions From Forms
+# Clean Webhook Records
 ##############################################
 def clean_webhook_records(records):
   for rec in records[:]:
@@ -389,12 +391,6 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
   formID   = form.id
   start = time.time()
   if formID:
-  # Leaf_are_water_samples
-  #if formID == 'fee4d9d4-a8f5-4310-99f3-a7be668abd2c': # Leaf_are_water_samples
-  # Plants
-  #if formID == '7a98cdf1-a37c-4f83-9a21-f7ea215ee0f6':
-  # Pressed_Specimens
-  #if formID == 'f6405c31-9030-459b-9ed3-49f170dd3b89':
     # Backup records versions
     fbase = TO.get_FormsPath()+formName+'/'+formName
     # Backup raw records 
@@ -435,7 +431,7 @@ def mp_backup_records_versions_from_form(form = FO.Form()):
         if recordsHistory:
           TO.save_in_json_file(fname,recordsHistory)
           for recordHistoryTemp in recordsHistory[:]:
-            recHT = create_record_from_json(recordHistoryTemp,forms,projects)
+            recHT = create_record(recordHistoryTemp,forms,projects)
             if recHT.version != currentVersion:
               LO.l_debug('add_record {} version {}'.format(recHT.id,recHT.version))
               recordsV.append_record(recHT)
@@ -710,8 +706,20 @@ def insert_record(values):
 
 
 def record_webhook_to_db():
-  webhookRecords = load_webhook_records()
-  for record_raw in webhookRecords.records[:]:
+  recsTmp = load_webhook_records()
+  leafSpectraForm = FO.load_form_from_json_file(PA.LeafSpectraFormFile)
+  leafSpectraFormID = leafSpectraForm.id
+  projects = PR.load_projects()
+  forms = FO.load_forms()
+
+  for recTmp in recsTmp.records[:]:
+    print(TOFA.get_record(recTmp.id))
+    record = get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
+    search_for_keys_recu(forms.formsDictID[record.form_id].dictKeysDataName,record.form_values)
+    print(record)
     #if(record_raw.form_name  != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
-    insert_record(prepare_record_values(record_raw))
-  return webhookRecords
+    insert_record(prepare_record_values(record))
+    if record.form_id not in leafSpectraFormID:
+      fname = TO.get_WebhookRecordsPath()+'/'+record.id+''
+      LO.l_info("Files to be deleted {}".format(fname))
+      #TO.delete_a_file(fname)

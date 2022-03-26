@@ -684,6 +684,7 @@ def check_record(conn, table, id):
 
 def insert_record(values):
   conn = TDB.get_access_to_db()
+  res = False
   if conn != None:
     for table in values:
       for r in values[table]:
@@ -703,7 +704,7 @@ def insert_record(values):
   else:
     LO.l_war('Could not connect to database')
   conn.close()
-
+  return res
 
 def record_webhook_to_db():
   recsTmp = load_webhook_records()
@@ -714,8 +715,14 @@ def record_webhook_to_db():
 
   for recTmp in recsTmp.records[:]:
     record = get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
-    insert_record(prepare_record_values(record))
-    if record.form_id not in leafSpectraFormID:
-      fname = TO.get_WebhookRecordsPath()+'/'+record.id+''
+    res = insert_record(prepare_record_values(record))
+    fname = TO.get_WebhookRecordsPath()+'/'+record.id+''
+    if not res:
+      LO.l_info("Failed to update DB, File not deleted {}".format(fname))
+    elif record.form_id in leafSpectraFormID:
+      LO.l_info("File will be processed in leafspectra {}".format(fname))
+    elif record.form_id not in leafSpectraFormID:
       LO.l_info("Files to be deleted {}".format(fname))
-      #TO.delete_a_file(fname)
+      TO.delete_a_file(fname)
+    else:
+      LO.l_info("Unknow Error File will not be deleted {}".format(fname))

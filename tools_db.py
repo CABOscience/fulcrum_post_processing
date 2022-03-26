@@ -15,12 +15,12 @@ def get_access_to_db():
     LO.l_war("Connexion TYPE dbname={} user={} host={} Error_Type: {}".format(PA.DatabaseName,PA.DatabaseUser,PA.DatabaseHostName,type(err)))
 
 def query_to_db(conn, query, val):
-  touched = True
+  touched = False
   with conn.cursor() as cur:
     try:
       cur.execute(query, val)
-      if cur.rowcount == 0:
-        touched = False
+      if cur.rowcount > 0:
+        touched = True
     except psycopg2.OperationalError as e:
       LO.l_err('DB ERROR\nUnable to connect! : {}'.format(e))
       show_query(query,val)

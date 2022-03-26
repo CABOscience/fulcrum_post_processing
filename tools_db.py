@@ -22,35 +22,35 @@ def query_to_db(conn, query, val):
       if cur.rowcount == 0:
         touched = False
     except psycopg2.OperationalError as e:
-      LO.l_err('Unable to connect! : {}'.format(e))
+      LO.l_err('DB ERROR\nUnable to connect! : {}'.format(e))
       show_query(query,val)
 
     except psycopg2.InternalError as e:
-      LO.l_err('Internal Error! : {}'.format(e))
+      LO.l_err('DB ERROR\nInternal Error! : {}'.format(e))
       show_query(query,val)
 
     except psycopg2.DataError as e:
-      LO.l_err('DataError! : {}'.format(e))
+      LO.l_err('DB ERROR\nDataError! : {}'.format(e))
       show_query(query,val)
 
     except psycopg2.ProgrammingError as e:
-      LO.l_err('ProgrammingError! : {}'.format(e))
+      LO.l_err('DB ERROR\nProgrammingError! : {}'.format(e))
       show_query(query,val)
 
     except psycopg2.DatabaseError as e:
-      LO.l_err('DatabaseError! : {}'.format(e))
+      LO.l_err('DB ERROR\nDatabaseError! : {}'.format(e))
       show_query(query,val)
 
     except psycopg2.NotSupportedError as e:
-      LO.l_err('NotSupportedError! : {}'.format(e))
+      LO.l_err('DB ERROR\nNotSupportedError! : {}'.format(e))
       show_query(query,val)
 
     except psycopg2.IntegrityError as e:
-      LO.l_err('IntegrityError! : {}'.format(e))
+      LO.l_err('DB ERROR\nIntegrityError! : {}'.format(e))
       show_query(query,val)
 
   return touched
   
 def show_query(query,val):
-  LO.l_err('query >{}'.format(query))
-  LO.l_err('val >{}'.format(val))
+  LO.l_err('## DB ERROR => query >{}'.format(query))
+  LO.l_err('## DB ERROR => val >{}'.format(val))

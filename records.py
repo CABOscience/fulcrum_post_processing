@@ -130,7 +130,7 @@ class Record(object):
     self.logInfo = ""
 
   def __str__(self):
-    return '>{}'.format([self.altitude, self.assigned_to, self.assigned_to_id, self.client_created_at, self.client_updated_at, self.course, self.created_at, self.created_by, self.created_by_id, self.created_duration, self.created_location, self.edited_duration, self.form_id, self.horizontal_accuracy, self.id, self.latitude, self.longitude, self.project_id, self.speed, self.status, self.updated_at, self.updated_by, self.updated_by_id, self.updated_duration, self.updated_location, self.version, self.vertical_accuracy, self.form_values])
+    return '>{}'.format(["altitude:",self.altitude,"gps_altitude:",self.gps_altitude,"assigned_to:",self.assigned_to,"assigned_to_id:",self.assigned_to_id,"client_created_at:",self.client_created_at,"client_updated_at:",self.client_updated_at,"course:",self.course,"gps_course:",self.gps_course,"created_at:",self.created_at,"created_by:",self.created_by,"created_by_id:",self.created_by_id,"created_duration:",self.created_duration,"created_location:",self.created_location,"edited_duration:",self.edited_duration,"form_id:",self.form_id,"form_name:",self.form_name,"form_values:",self.form_values,"horizontal_accuracy:",self.horizontal_accuracy,"gps_horizontal_accuracy:",self.gps_horizontal_accuracy,"id:",self.id,"fulcrum_id:",self.fulcrum_id,"latitude:",self.latitude,"longitude:",self.longitude,"project_id:",self.project_id,"speed:",self.speed,"gps_speed:",self.gps_speed,"status:",self.status,"updated_at:",self.updated_at,"updated_by:",self.updated_by,"updated_by_id:",self.updated_by_id,"updated_duration:",self.updated_duration,"updated_location:",self.updated_location,"version:",self.version,"vertical_accuracy:",self.vertical_accuracy,"gps_vertical_accuracy:",self.gps_vertical_accuracy,"project_name:",self.project_name,"isValid:",self.isValid,"logInfo:",self.logInfo])
 
   def to_csv(self):
     return [self.altitude, self.assigned_to, self.assigned_to_id, self.client_created_at, self.client_updated_at, self.course, self.created_at, self.created_by, self.created_by_id, self.created_duration, self.created_location, self.edited_duration, self.form_id, self.horizontal_accuracy, self.id, self.latitude, self.longitude, self.project_id, self.speed, self.status, self.updated_at, self.updated_by, self.updated_by_id, self.updated_duration, self.updated_location, self.version, self.vertical_accuracy]
@@ -619,14 +619,14 @@ def prepare_record_values(record):
 
   common_fields_main = common_fields_sub + [
     "fulcrum_id",
-    "assigned_to", 
-    "latitude", 
-    "longitude", 
-    "status", 
+    "assigned_to",
+    "latitude",
+    "longitude",
+    "status",
     "gps_horizontal_accuracy",
-    "gps_vertical_accuracy", 
-    "gps_speed", 
-    "gps_course", 
+    "gps_vertical_accuracy",
+    "gps_speed",
+    "gps_course",
     "gps_altitude"
   ]
 
@@ -713,11 +713,7 @@ def record_webhook_to_db():
   forms = FO.load_forms()
 
   for recTmp in recsTmp.records[:]:
-    print(TOFA.get_record(recTmp.id))
     record = get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
-    search_for_keys_recu(forms.formsDictID[record.form_id].dictKeysDataName,record.form_values)
-    print(record)
-    #if(record_raw.form_name  != 'Pigments'):  ## TO UPDATE WHEN NEW SQL IS TRANSFERRED!!!!
     insert_record(prepare_record_values(record))
     if record.form_id not in leafSpectraFormID:
       fname = TO.get_WebhookRecordsPath()+'/'+record.id+''

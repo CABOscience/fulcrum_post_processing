@@ -10,19 +10,47 @@ def get_access_to_db():
     return conn
   except Exception as err:
     LO.l_war('Unable to connect to the db')
-    LO.l_war("Exception TYPE:", type(err))
-    LO.l_war("Error:", err)
-    LO.l_war("Connexion TYPE dbname="+PA.DatabaseName+" user="+PA.DatabaseUser+" host="+PA.DatabaseHostName, type(err))
+    LO.l_war("Exception TYPE: {}".format(type(err)))
+    LO.l_war("Error: {}".format(err))
+    LO.l_war("Connexion TYPE dbname={} user={} host={} Error_Type: {}".format(PA.DatabaseName,PA.DatabaseUser,PA.DatabaseHostName,type(err)))
 
 def query_to_db(conn, query, val):
-	touched = True
-	with conn.cursor() as cur:
-		try:
-			cur.execute(query, val)
-			if cur.rowcount == 0:
-				touched = False
-		except psycopg2.OperationalError as e:
-			LO.l_err('Unable to connect! : ', e)
-			LO.l_err('query >'+query)
-			LO.l_err('val >'+val)
-	return touched
+  touched = True
+  with conn.cursor() as cur:
+    try:
+      cur.execute(query, val)
+      if cur.rowcount == 0:
+        touched = False
+    except psycopg2.OperationalError as e:
+      LO.l_err('Unable to connect! : {}'.format(e))
+      show_query(query,val)
+
+    except psycopg2.InternalError as e:
+      LO.l_err('Internal Error! : {}'.format(e))
+      show_query(query,val)
+
+    except psycopg2.DataError as e:
+      LO.l_err('DataError! : {}'.format(e))
+      show_query(query,val)
+
+    except psycopg2.ProgrammingError as e:
+      LO.l_err('ProgrammingError! : {}'.format(e))
+      show_query(query,val)
+
+    except psycopg2.DatabaseError as e:
+      LO.l_err('DatabaseError! : {}'.format(e))
+      show_query(query,val)
+
+    except psycopg2.NotSupportedError as e:
+      LO.l_err('NotSupportedError! : {}'.format(e))
+      show_query(query,val)
+
+    except psycopg2.IntegrityError as e:
+      LO.l_err('IntegrityError! : {}'.format(e))
+      show_query(query,val)
+
+  return touched
+  
+def show_query(query,val):
+  LO.l_err('query >{}'.format(query))
+  LO.l_err('val >{}'.format(val))

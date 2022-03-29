@@ -161,7 +161,8 @@ class Record(object):
     return True
   
   def to_json(self):
-    return json.dumps(self.__dict__)
+    #return json.dumps(self.__dict__)
+    return self.__dict__
 
 
 ##############################################
@@ -327,7 +328,7 @@ def mp_backup_records_from_form(form = FO.Form()):
     
     TO.save_in_json_file(fname,records.to_json())
     for rec in records.records[:]:
-      recName = dirRecs+rec.ID+'.json'
+      recName = dirRecs+rec.id+'.json'
       TO.save_in_json_file(recName,rec.to_json())
     
     # Backup records with datanames
@@ -335,7 +336,7 @@ def mp_backup_records_from_form(form = FO.Form()):
     fname = fbase+'_records_with_dataname.json'
     TO.save_in_json_file(fname,records.to_json())
     for rec in records.records[:]:
-      recName = dirRecs+rec.ID+'_with_dataname.json'
+      recName = dirRecs+rec.id+'_with_dataname.json'
       TO.save_in_json_file(recName,rec.to_json())
     
     LO.l_info('End backup for the form "{}", there are {} records available'.format(formName,len(records)))

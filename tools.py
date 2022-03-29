@@ -214,7 +214,9 @@ def fulcrum_clean_name(s):
   s = s.lower()
   s = space_to_underscore(s)
   pat = re.compile('[^a-z0-9_]+')
-  s = pat.sub('', s)
+  s = pat.sub('_', s)
+  pat = re.compile('_{2,}')
+  s = pat.sub('_', s)
   return s
 
 # Change string colon or space by underscore

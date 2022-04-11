@@ -1103,7 +1103,7 @@ def spectra_db_process_all(spectra_csv):
     spectra_processed_fields = ["record_id","sample_id","scientific_name","date_measured","measured_by","spectroradiometer_start_time","spectroradiometer_id","instrumentation_id","leaf_side_measured","reflectance_transmittance","wavelength","r_t_average","r_t_std"]
     i = 0
     for row in spectra_csv:
-      if row[0] is not "record_id":
+      if "record_id" not in row[0]:
         if i == 0 and check_spectra_db_record(conn, 'spectra_processed',row[0],row[1]):
           LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
           spectra_db_delete(conn, 'spectra_processed', row[0], row[1])
@@ -1120,7 +1120,7 @@ def spectra_db_process_leaves(spectra_csv):
     spectra_leaves_fields = ["record_id","sample_id","file_name","leaf_number","leaf_side_measured","reflectance_transmittance","wavelength","raw_value","calculated_value"]
     i = 0
     for row in spectra_csv:
-      if row[0] is not "record_id":
+      if "record_id" not in row[0]:
         if i == 0 and check_spectra_db_record(conn, 'spectra_leaves',row[0],row[1],row[3]):
           LO.l_debug('Spectra {} already in DB - Updating'.format(row[0]))
           spectra_db_delete(conn, 'spectra_leaves',row[0],row[1],row[3])

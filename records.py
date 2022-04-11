@@ -25,6 +25,7 @@ import multiprocessing as mp
 class Records(object):
   def __init__(self):
     self.records=[]
+    self.recordsInvalid=[]
     self.recordsDict={}
     self.cleanAfter=3000
     self.numCleaned=0
@@ -68,10 +69,14 @@ class Records(object):
       else:
         self.records.append(record_raw)
         self.recordsDict[record_raw.id]=record_raw
+    else:
+      self.recordsInvalid.append(record_raw)
 
   def append_record(self,record_raw):
     if record_raw.isValid:
       self.records.append(record_raw)
+    else:
+      self.recordsInvalid.append(record_raw)
   
   def number_of_valid(self):
     number_of_valid = 0
@@ -727,3 +732,9 @@ def record_webhook_to_db():
       TO.delete_a_file(fname)
     else:
       LO.l_info("Unknown Error File will not be deleted {}".format(fname))
+
+  for recTmp in recsTmp.recordsInvalid[:]:
+    fname = TO.get_WebhookRecordsPath()+recTmp.id+''
+    LO.l_info("File (without a valid record) to be deleted {}".format(fname))
+    TO.delete_a_file(fname)
+

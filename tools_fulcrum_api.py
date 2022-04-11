@@ -184,7 +184,10 @@ def get_record_history(recordID,logName="main"):
     increase_num_of_request_by(1)
     return record_history
   except (NotFoundException, RateLimitExceededException) as e:
-    s = 'Search records has failed for form {}'.format(formName)
+    s = 'Search record history has failed for record ID {}'.format(recordID)
+    return exception_api(e,s,logName)
+  except Exception as e:
+    s = 'Record history has failed for record ID {}'.format(recordID)
     return exception_api(e,s,logName)
 
 def get_record(recordID,logName="main"):
@@ -194,7 +197,10 @@ def get_record(recordID,logName="main"):
     increase_num_of_request_by(1)
     return record["record"]
   except (NotFoundException, RateLimitExceededException) as e:
-    s = 'Search records has failed for form {}'.format(formName)
+    s = 'Find record has failed for record ID {}'.format(recordID)
+    return exception_api(e,s,logName)
+  except Exception as e:
+    s = 'Get Record has failed for record ID {}'.format(recordID)
     return exception_api(e,s,logName)
 
 def find_project_from_project_ID(projectID,logName="main"):

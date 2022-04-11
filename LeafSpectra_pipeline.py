@@ -70,7 +70,7 @@ def main():
     time_llr = TO.print_time(start_time,time_spr,'load_leafspectra_webhook_Records')
     LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
-  if len(records)>0
+  if len(records)>0:
     if not PA.FormsProcess:
       LSR.clean_webhook_records(records)
 

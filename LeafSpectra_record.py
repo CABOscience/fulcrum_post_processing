@@ -704,7 +704,7 @@ def large_leaf_calculation(record):
       st = "The record {} haven't the right number of reference measurments to process the reference of transmittance calculation. Number of D measurments = {} (need to be = 2).".format(record.id,len(transRefAll))
       LO.l_war(st)
       record.add_toLog(st)
-  else:
+  if pmT and len(transTargets)==0 and len(transRefAll)==0:
     record.isValid = False
     st = "The record {} doesn't have all spectrum measurments to process the transmittance calculation.  Number of E measurments = {} (need to be > 0) and  Number of D measurments = {} (need to be >0).".format(record.id,len(transTargets),len(transRefAll))
     LO.l_err(st)
@@ -859,8 +859,9 @@ def small_leaf_calculation(record):
       st = "The record {} have just one reference measurments to process the stray light vs reference. Number of A measurments = {} (need to be > 0) and Number of D measurments = {} (need to be > 0).".format(record.id,len(RrefA),len(Rstr))
       LO.l_war(st)
       record.add_toLog(st)
-    
-  else:
+      
+  # Reflectance issue
+  if pmR and (len(RtarAPi) != len(RtarAi) or len(RtarAPi)<2):
     record.isValid = False
     st = "The record {} doesn't have all spectrum measurments to process the refletance calculation. Number of D measurments = {} (need to be > 2 and need to be equal to number of G). Number of G measurments = {} (need to be equal to number of D).".format(record.id,len(RtarAPi),len(RtarAi))
     LO.l_war(st)
@@ -913,7 +914,9 @@ def small_leaf_calculation(record):
       st = "The record {} have just one reference measurments to process  the reference of transmittance calculation. Number of H measurments = {} (need to be > 1)".format(record.id,len(TrefA))
       LO.l_war(st)
       record.add_toLog(st)
-  else:
+  
+  #Transmittance issue
+  if pmT and (len(transTargets)==0 or len(transRefAll)==0):
     record.isValid = False
     st = "The record {} have doesn't all spectrum measurments to process the transmittance calculation. Number of I measurments = {} (need to be > 0). Number of H measurments = {} (need to be > 0).".format(record.id,len(TtarAi),len(TrefA))
     LO.l_war(st)
@@ -1005,6 +1008,8 @@ def plots_leafspectra_records(rec):
         s = 'The record id {} is incomplete all leaves are not available'.format(record.id)
         LO.l_war(s)
         record.add_toLog(s)
+    else:
+      LO.l_war('No plots for the record id {}. It is invalide'.format(record.id))
   return rec
   
 ##############################################
@@ -1061,9 +1066,12 @@ def print_log_records(rec):
     status_value = TO.get_record_status_value(record.status)
     if status_value>1:
       extract_log_record(record)
+    else:
+      LO.l_war('# Print log # The record {} does not have the right status ({}) with status value ({})'.format(record.id,record.status,status_value))
     
 def extract_log_record(record):
   if record.fv_processedPath != '':
+    LO.l_info('Add log record {}'.format(record.id))
     TO.create_directory(record.fv_processedPath+'')
     TO.string_to_file(record.fv_processedPath+'/'+record.fv_sample_id+'_log.txt','{}'.format(record.logInfo))
   else:

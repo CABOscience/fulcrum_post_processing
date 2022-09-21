@@ -22,8 +22,8 @@ def query_to_db(conn, query, val):
       if cur.rowcount > 0:
         touched = True
       else:
-        LO.l_war('DB warning\nNo row Touched: {}'.format(cur.rowcount))
-        show_query(query,val)
+        LO.l_war('DB warning\tNo row Touched: {}'.format(cur.rowcount))
+        show_query_war(query,val)
     except psycopg2.OperationalError as e:
       LO.l_err('DB ERROR\nUnable to connect! : {}'.format(e))
       show_query(query,val)
@@ -57,3 +57,7 @@ def query_to_db(conn, query, val):
 def show_query(query,val):
   LO.l_err('## DB ERROR => query >{}'.format(query))
   LO.l_err('## DB ERROR => val >{}'.format(val))
+
+def show_query_war(query,val):
+  LO.l_war('# DB Warning => query >{}'.format(query))
+  LO.l_war('# DB Warning => val >{}'.format(val))

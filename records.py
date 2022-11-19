@@ -362,7 +362,11 @@ def mp_backup_records_from_form(form = FO.Form()):
 def clean_webhook_records(records):
   for rec in records[:]:
     fname = TO.get_WebhookRecordsPath()+'/'+rec.id+''
-    TO.delete_a_file(fname)
+    boo = TO.delete_a_file(fname)
+    if boo:
+      LO.l_info('The file {} has been deleted'.format(fname))
+    else:
+      LO.l_err('The file {} has NOT been deleted'.format(fname))
 
 ##############################################
 # Backup Records Versions From Forms
@@ -583,12 +587,13 @@ def load_webhook_records():
 def load_webhook_records_with_formID_from_formFile(formFile):
   recsTmp = load_webhook_records()
   recs = Records()
-  formJson = TO.load_json_file(formFile)
-  if 'id' in formJson:
-    formId = formJson['id']
-    for record in recsTmp.records[:]:
-      if record.form_id == formId:
-        recs.add_record(record)
+  if len(recsTmp)>0:
+    formJson = TO.load_json_file(formFile)
+    if 'id' in formJson:
+      formId = formJson['id']
+      for record in recsTmp.records[:]:
+        if record.form_id == formId:
+          recs.add_record(record)
   return recs
 
 # Load records from File Name
@@ -714,27 +719,29 @@ def insert_record(values):
 
 def record_webhook_to_db():
   recsTmp = load_webhook_records()
-  leafSpectraForm = FO.load_form_from_json_file(PA.LeafSpectraFormFile)
-  leafSpectraFormID = leafSpectraForm.id
-  projects = PR.load_projects()
-  forms = FO.load_forms()
+  if len(recsTmp)>0:
+    leafSpectraForm = FO.load_form_from_json_file(PA.LeafSpectraFormFile)
+    leafSpectraFormID = leafSpectraForm.id
+    projects = PR.load_projects()
+    forms = FO.load_forms()
 
-  for recTmp in recsTmp.records[:]:
-    record = get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
-    res = insert_record(prepare_record_values(record))
-    fname = TO.get_WebhookRecordsPath()+record.id+''
-    if not res:
-      LO.l_info("Failed to update DB, File not deleted {}".format(fname))
-    elif record.form_id in leafSpectraFormID:
-      LO.l_info("File will be processed in leafspectra {}".format(fname))
-    elif record.form_id not in leafSpectraFormID:
-      LO.l_info("File to be deleted {}".format(fname))
+    for recTmp in recsTmp.records[:]:
+      record = get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
+      res = insert_record(prepare_record_values(record))
+      fname = TO.get_WebhookRecordsPath()+record.id+''
+      if not res:
+        LO.l_info("Failed to update DB, File not deleted {}".format(fname))
+      elif record.form_id in leafSpectraFormID:
+        LO.l_info("File will be processed in leafspectra {}".format(fname))
+      elif record.form_id not in leafSpectraFormID:
+        LO.l_info("File to be deleted {}".format(fname))
+        TO.delete_a_file(fname)
+      else:
+        LO.l_info("Unknown Error File will not be deleted {}".format(fname))
+
+    for recTmp in recsTmp.recordsInvalid[:]:
+      fname = TO.get_WebhookRecordsPath()+recTmp.id+''
+      LO.l_info("File (without a valid record) to be deleted {}".format(fname))
       TO.delete_a_file(fname)
-    else:
-      LO.l_info("Unknown Error File will not be deleted {}".format(fname))
-
-  for recTmp in recsTmp.recordsInvalid[:]:
-    fname = TO.get_WebhookRecordsPath()+recTmp.id+''
-    LO.l_info("File (without a valid record) to be deleted {}".format(fname))
-    TO.delete_a_file(fname)
-
+  else:
+    LO.l_info("No webhook record")

@@ -144,18 +144,22 @@ def load_leafspectra_webhook_Records(spectroPanels):
   leafSpectraFormID = leafSpectraForm.id
   webhookRecords = RE.load_webhook_records()
   rec = RE.Records()
-  for record_raw in webhookRecords.records[:]:
-    if leafSpectraFormID not in record_raw.form_id:
-      st = 'The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id)
-      LO.l_debug(st)
-      record_raw.add_toLog(st)
-    else:
-      RE.update_record_with_dataname(leafSpectraForm.dictKeysDataName,record_raw)
-      rec.add_record(record_raw)
+  if len(webhookRecords)>0:
+    for record_raw in webhookRecords.records[:]:
+      if leafSpectraFormID not in record_raw.form_id:
+        st = 'The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id)
+        LO.l_debug(st)
+        record_raw.add_toLog(st)
+      else:
+        RE.update_record_with_dataname(leafSpectraForm.dictKeysDataName,record_raw)
+        rec.add_record(record_raw)
   return get_spectrum(spectroPanels,rec)
 
 def clean_webhook_records(rec):
-  RE.clean_webhook_records(rec.records)
+  if len(rec)>0:
+    RE.clean_webhook_records(rec.records)
+  if len(rec.recordsInvalid)>0:
+    RE.clean_webhook_records(rec.recordsInvalid)
 
 
 def load_leafspectra_Records(spectroPanels):
@@ -254,11 +258,11 @@ def add_Record_in_spectrum(spectroPanels,record_raw):
   """
   # End Uncomment
   if record.isValid:
-    st = 'The record id {} is complete for processing'.format(record.id)
+    st = 'The record id {} is complete for processing.'.format(record.id)
     LO.l_debug(st)
     record.add_toLog(st)
   else:
-    st = 'The record id {} is incomplete and will not be used'.format(record.id)
+    st = 'The record id {} is incomplete and will not be used.'.format(record.id)
     LO.l_war(st)
     record.add_toLog(st)
   return record
@@ -1062,12 +1066,13 @@ def update_leafspectra_record(record):
 # Spectrum Data Logs
 ##############################################
 def print_log_records(rec):
-  for record in rec.records[:]:
+  allRecords = rec.records + rec.recordsInvalid
+  for record in allRecords[:]:
     status_value = TO.get_record_status_value(record.status)
-    if status_value>1:
-      extract_log_record(record)
-    else:
-      LO.l_war('# Print log # The record {} does not have the right status ({}) with status value ({})'.format(record.id,record.status,status_value))
+    #if status_value>1:
+    extract_log_record(record)
+    #else:
+    #  LO.l_war('# Print log # The record {} does not have the right status ({}) with status value ({})'.format(record.id,record.status,status_value))
     
 def extract_log_record(record):
   if record.fv_processedPath != '':

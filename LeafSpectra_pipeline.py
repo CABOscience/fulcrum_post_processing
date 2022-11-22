@@ -5,6 +5,7 @@ import projects as PR
 import parameters as PA
 import tools as TO
 import logs as LO
+import forms as FO
 import sys, time
 from datetime import datetime 
 import LeafSpectra_concat_files as LSCF
@@ -48,6 +49,7 @@ def main():
   recordType= PA.LeafSpectraLogFile+"_from_form_file"
   LO.create_log(recordType)
   projects = PR.load_projects()
+  forms = FO.load_forms()
   PR.create_project_website_view_directories(projects)
   previousTime = TO.print_time(start_time,time_pa,'Project')
   LO.l_info('\n\n## Start load records from Spectroscopy panels')
@@ -64,7 +66,7 @@ def main():
     previousTime = TO.print_time(start_time,previousTime,'load_leafspectra_Records')
   else:
     LO.l_info('\n\n## Start load records from webhook')
-    records = LSR.load_leafspectra_webhook_Records(spectroPanels)
+    records = LSR.load_leafspectra_webhook_Records(spectroPanels,forms,projects)
     LO.l_info('\n\n## End load records from webhook')
     previousTime = TO.print_time(start_time,previousTime,'load_leafspectra_webhook_Records')
   LO.l_info('Number of Valid Records {}\n######'.format(records.number_of_valid()))

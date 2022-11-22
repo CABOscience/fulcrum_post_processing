@@ -130,7 +130,7 @@ class LeafSpectra(RE.Record):
 ##############################################
 # LOAD Record
 ##############################################
-def load_leafspectra_webhook_Records(spectroPanels):
+def load_leafspectra_webhook_Records(spectroPanels,forms,projects):
   """ This will load Leaf spectra object from webhook
   
   :param arg1: calibrations
@@ -145,7 +145,8 @@ def load_leafspectra_webhook_Records(spectroPanels):
   webhookRecords = RE.load_webhook_records()
   rec = RE.Records()
   if len(webhookRecords)>0:
-    for record_raw in webhookRecords.records[:]:
+    for recTmp in webhookRecords.records[:]:
+      record_raw = RE.get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
       if leafSpectraFormID not in record_raw.form_id:
         st = 'The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id)
         LO.l_debug(st)

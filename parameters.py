@@ -40,11 +40,13 @@ BulkLeafSamplesRecordsFile = DefaultPath
 DatabaseName = ''
 DatabaseUser = ''
 DatabaseHostName = ''
-CampaignsPath = DefaultPath = DefaultPath
+CampaignsPath = DefaultPath
 Debug = False
 FulcrumApiKey   = ""
 FulcrumApiURL   = 'https://api.fulcrumapp.com/api/v2/'
 FulcrumBackupScript = DefaultPath
+FulcrumBulkFile = DefaultPath
+FulcrumBulkFormId = ""
 FulcrumPath = DefaultPath
 FulcrumVersion  = '1.11.0'
 FulcrumWebhook = DefaultPath
@@ -123,6 +125,7 @@ def set_global_from_config(c):
     global FulcrumApiKey
     global FulcrumApiURL
     global FulcrumBackupScript
+    global FulcrumBulkFormId
     global FulcrumPath
     global FulcrumVersion
     global FulcrumWebhook
@@ -171,6 +174,7 @@ def set_global_from_config(c):
     if c.get('DEFAULT','FulcrumApiKey'): FulcrumApiKey = c.get('DEFAULT','FulcrumApiKey')
     if c.get('DEFAULT','FulcrumApiURL'): FulcrumApiURL = c.get('DEFAULT','FulcrumApiURL')
     if c.get('DEFAULT','FulcrumBackupScript'): FulcrumBackupScript = c.get('DEFAULT','FulcrumBackupScript')
+    if c.get('DEFAULT','FulcrumBulkFormId'): FulcrumBulkFormId = c.get('DEFAULT','FulcrumBulkFormId')
     if c.get('DEFAULT','FulcrumPath'): FulcrumPath = c.get('DEFAULT','FulcrumPath')
     if c.get('DEFAULT','FulcrumVersion'): FulcrumVersion = c.get('DEFAULT','FulcrumVersion')
     if c.get('DEFAULT','FulcrumWebhook'): FulcrumWebhook = c.get('DEFAULT','FulcrumWebhook')
@@ -233,6 +237,8 @@ def get_arguments():
     dest="recordStatus", help="Select a status of record")
   optional.add_argument('-p', '--path', type=str,
     dest="path", help="Choose a directory where fulcrum is backuped")
+  optional.add_argument('-fi', '--file', type=str,
+    dest="file", help="Choose a file for bulk import")
   exclusive = parser.add_mutually_exclusive_group()
   exclusive.add_argument('-f', '--form', nargs='+',
     dest="form", help="Fulcrum Backup: Load all records from Selected Leaf Spectra form(s) and process them")
@@ -289,5 +295,13 @@ def get_arguments():
       print('Pssst: FulcrumPath from config is override by an argument')
       FulcrumPath = argPath
     else:
-      print(('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath)))
+      print('The current path is not a directory. The program will used the default path: >> {}'.format(fulcrumPath))
 
+  if args.file:
+    if (os.path.isfile(args.file)):
+      global FulcrumBulkFile
+      print('Pssst: Fulcrum Bulk File is {}'.format(args.file))
+      FulcrumBulkFile = args.file
+    else:
+      print('ERROR: Fulcrum Bulk File is not a file {}'.format(args.file))
+      wrong_parameters()

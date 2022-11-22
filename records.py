@@ -579,8 +579,7 @@ def error_load(st):
   return Records()
 
 # Load records from Webhooks
-##############################################
-def load_webhook_records():
+
   records_files = TO.get_files_from_path(PA.FulcrumWebhook+"records/")
   return get_records_from_files_list(records_files)
 

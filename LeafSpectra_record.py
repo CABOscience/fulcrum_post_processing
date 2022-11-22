@@ -1070,10 +1070,10 @@ def print_log_records(rec):
   allRecords = rec.records + rec.recordsInvalid
   for record in allRecords[:]:
     status_value = TO.get_record_status_value(record.status)
-    #if status_value>1:
-    extract_log_record(record)
-    #else:
-    #  LO.l_war('# Print log # The record {} does not have the right status ({}) with status value ({})'.format(record.id,record.status,status_value))
+    if status_value>=1:
+      extract_log_record(record)
+    else:
+      LO.l_war('# Print log # The record {} does not have the right status ({}) with status value ({})'.format(record.id,record.status,status_value))
     
 def extract_log_record(record):
   if record.fv_processedPath != '':

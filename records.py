@@ -361,7 +361,7 @@ def mp_backup_records_from_form(form = FO.Form()):
 ##############################################
 def clean_webhook_records(records):
   for rec in records[:]:
-    fname = TO.get_WebhookRecordsPath()+'/'+rec.id+''
+    fname = TO.get_WebhookRecordsPath()+''+rec.id+''
     boo = TO.delete_a_file(fname)
     if boo:
       LO.l_info('The file {} has been deleted'.format(fname))

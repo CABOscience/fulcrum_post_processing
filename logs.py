@@ -56,5 +56,5 @@ def l_debug(v,logName=""):
   if PA.LogTitle != "":
     logName=PA.LogTitle
   if PA.Debug == 'True':
-    l_info(v,logName)
+    l_info('## DEBUG ==> {}'.format(v),logName)
 

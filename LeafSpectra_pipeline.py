@@ -43,6 +43,7 @@ $ sudo apt install python-configparser python-pandas python-scipy python-setupto
 #
 ##############################################
 def main():
+  LO.l_debug('\n\n## Start load Parameters')
   start_time = datetime.now() 
   PA.set_parameters()
   time_pa = TO.print_time(start_time,start_time,'Parameters')

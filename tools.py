@@ -599,9 +599,9 @@ def print_time(start_time,time_previous_task,task_type,logName="main"):
   time_now = datetime.now()
   time_elapsed = time_now - start_time
   st = '{} Time elapsed since started (hh:mm:ss.ms) {}'.format(task_type,time_elapsed)
-  LO.l_info(st,logName)
+  LO.l_debug(st,logName)
   if time_previous_task != start_time:
     time_temp = time_now - time_previous_task
     stt = '{} Time elapsed since previous task (hh:mm:ss.ms) {}'.format(task_type,time_temp)
-    LO.l_info(stt,logName)
+    LO.l_debug(stt,logName)
   return time_now

@@ -51,6 +51,7 @@ FulcrumPath = DefaultPath
 FulcrumVersion  = '1.11.0'
 FulcrumWebhook = DefaultPath
 GoogleDrivePath = DefaultPath
+IsParallel = True
 LeafSpectraFormFile = DefaultPath
 LeafSpectraLogFile = DefaultPath
 LeafSpectraRecordsFile = DefaultPath
@@ -130,6 +131,7 @@ def set_global_from_config(c):
     global FulcrumVersion
     global FulcrumWebhook
     global GoogleDrivePath
+    global IsParallel
     global LeafSpectraFormFile
     global LeafSpectraLogFile
     global LeafSpectraRecordsFile
@@ -179,6 +181,7 @@ def set_global_from_config(c):
     if c.get('DEFAULT','FulcrumVersion'): FulcrumVersion = c.get('DEFAULT','FulcrumVersion')
     if c.get('DEFAULT','FulcrumWebhook'): FulcrumWebhook = c.get('DEFAULT','FulcrumWebhook')
     if c.get('DEFAULT','GoogleDrivePath'): GoogleDrivePath = c.get('DEFAULT','GoogleDrivePath')
+    if c.get('DEFAULT','IsParallel'): IsParallel = c.get('DEFAULT','IsParallel')
     if c.get('DEFAULT','LeafSpectraFormFile'): LeafSpectraFormFile = c.get('DEFAULT','LeafSpectraFormFile')
     if c.get('DEFAULT','LeafSpectraLogFile'): LeafSpectraLogFile = c.get('DEFAULT','LeafSpectraLogFile')
     if c.get('DEFAULT','LeafSpectraRecordsFile'): LeafSpectraRecordsFile = c.get('DEFAULT','LeafSpectraRecordsFile')
@@ -215,7 +218,12 @@ def set_global_from_config(c):
       print('Debug is enabled')
     else:
       print('Debug is disable')
-      
+
+    if IsParallel == 'True':
+      print('Parallelisation is enabled')
+    else:
+      print('Parallelisation is disable')
+
     if TOFA.test_fulcrum_access():
       print('Fulcrum is accessible')
 

@@ -209,25 +209,26 @@ def add_Records_in_spectrum(calibrations,rec):
   """
   This parallelisation of add_Record_in_spectrum
   """
-  output = mp.Queue()
   my_list = []
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(add_Record_in_spectrum, args=(calibrations,record_raw)) for record_raw in rec.records[:]]
-  #results = []
-  #for record_raw in rec.records[:]:
-  #  results.append(add_Record_in_spectrum(calibrations,record_raw))
-  pool.close()
-  pool.join()
-  for r in results:
-    b = r.get()
-    if b:
-      my_list.append(b)
+  if PA.IsParallel:
+    LO.l_debug("add_Record_in_spectrum parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(add_Record_in_spectrum, args=(calibrations,record_raw)) for record_raw in rec.records[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        my_list.append(record)
+  else:
+    LO.l_debug("add_Record_in_spectrum linear")
+    for record_raw in rec.records[:]:
+      record = add_Record_in_spectrum(calibrations,record_raw)
+      if record:
+        my_list.append(record)
   return my_list
-  '''
-  for record_raw in rec.records[:]:
-    add_Record_in_spectrum(calibrations,record_raw)
-  sys.exit(1)
-  '''
+
   
 def add_Record_in_spectrum(spectroPanels,record_raw):
   """ This will add a valid leaf spectra record
@@ -436,14 +437,23 @@ def update_leafspectra_records_measurements(records_raw):
   This parallelisation of update_leafspectra_record_measurements
   """
   my_list = []
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(update_leafspectra_record_measurements, args=(record_raw,)) for record_raw in records_raw[:]]
-  pool.close()
-  pool.join()
-  for r in results:
-    b = r.get()
-    if b:
-      my_list.append(b)
+  if PA.IsParallel:
+    LO.l_debug("update_leafspectra_records_measurements parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(update_leafspectra_record_measurements, args=(record_raw,)) for record_raw in records_raw[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        my_list.append(record)
+  else:
+    LO.l_debug("update_leafspectra_records_measurements linear")
+    for record_raw in records_raw[:]:
+      record = update_leafspectra_record_measurements(record_raw)
+      if record:
+        my_list.append(record)
   return my_list
 
 def update_leafspectra_record_measurements(record):
@@ -500,28 +510,25 @@ def process_leafspectra_records(rec):
   """
   This parallelisation of process_record
   """
-  """
   spectrum = LeafSpectrum()
-  for record in rec.records[:]:
-    rec = process_leafspectra_record(record)
-    if rec:
-      spectrum.add_record(rec)
+  if PA.IsParallel:
+    LO.l_debug("process_leafspectra_records parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(process_leafspectra_record, args=(record_raw,)) for record_raw in rec.records[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        spectrum.add_record(record)
+  else:
+    LO.l_debug("process_leafspectra_records linear")
+    for record_raw in rec.records[:]:
+      record = process_leafspectra_record(record_raw)
+      if record:
+        spectrum.add_record(record)
   return spectrum
-      
-  """
-  # parallelisation here
-  output = mp.Queue()
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(process_leafspectra_record, args=(record,)) for record in rec.records[:]]
-  pool.close()
-  pool.join()
-  spectrum = LeafSpectrum()
-  for r in results:
-    record = r.get()
-    if record:
-      spectrum.add_record(record)
-  return spectrum
-
  
 def process_leafspectra_record(record):
   """Process a leaf spectra record
@@ -921,7 +928,7 @@ def small_leaf_calculation(record):
       record.add_toLog(st)
   
   #Transmittance issue
-  if pmT and (len(transTargets)==0 or len(transRefAll)==0):
+  if pmT and (len(TtarAi)==0 or len(TrefA)==0):
     record.isValid = False
     st = "The record {} have doesn't all spectrum measurments to process the transmittance calculation. Number of I measurments = {} (need to be > 0). Number of H measurments = {} (need to be > 0).".format(record.id,len(TtarAi),len(TrefA))
     LO.l_war(st)
@@ -1024,41 +1031,42 @@ def update_leafspectra_records(rec):
   """
   This parallelisation of process_record
   """
-  """
-  wraps = []
-  for record in rec.records:
-    b = update_leafspectra_record(record)
-    if b:
-      wraps.append(b)
-  return wraps
-      
-  """
-  # parallelisation here
-  output = mp.Queue()
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(update_leafspectra_record, args=(record,)) for record in rec.records[:]]
-  pool.close()
-  pool.join()
   spectrum = LeafSpectrum()
-  for r in results:
-    record = r.get()
-    if record:
-      spectrum.add_record(record)
+  if PA.IsParallel:
+    LO.l_debug("update_leafspectra_records parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(update_leafspectra_record, args=(record_raw,)) for record_raw in rec.records[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        spectrum.add_record(record)
+  else:
+    LO.l_debug("update_leafspectra_records linear")
+    for record_raw in rec.records[:]:
+      record = update_leafspectra_record(record_raw)
+      if record:
+        spectrum.add_record(record)
   return spectrum
-  
+
 def update_leafspectra_record(record):
-  """Update a leaf spectra record
+  """
+  Update a leaf spectra record
   This function take a leafspectra record object and return a processed leafspectra record processed object
   """
   if record.isValid:
     LO.l_info('Update record {}'.format(record.id))
     keyValues = FO.get_Keys_from_DataNames(record.form_id,['record_is_calculated', 'calculated_record_link'])
     if record.leaves_plot == '':
+      LO.l_debug('Update record {} => No Plots'.format(record.id))
       record.leaves_plot = 'no plots'
     obj = TOFA.get_record(record.id)
     obj['record']['form_values'][keyValues['record_is_calculated']]= 'yes'
     obj['record']['form_values'][keyValues['calculated_record_link']]= record.leaves_plot
     TOFA.fulcrum_update_record(""+record.id+"",obj)
+    LO.l_debug('Update record {} => Done'.format(record.id))
   return record
 
 

@@ -66,12 +66,12 @@ def concat_files(recs= RE.Records() , projects=PR.Projects()):
 
   LO.l_info('\nNumber of allCSV after {}\n\n'.format(len(allCSV)))
   for al in allCSV[:]:
-    LO.l_info('{}'.format(al))
+    LO.l_debug('{}'.format(al))
   LO.l_info('\n\n')
   c_list = []
   c_list.append([allCSV,3,'project_all_combined'])
   c_list.append([allCSV,2,'all_combined'])
-  c_list.append([leavesCSV,3,'project_leaves_combined'])
+  #c_list.append([leavesCSV,3,'project_leaves_combined'])
   c_list.append([leavesCSV,2,'leaves_combined'])
   c_list.append([refCSV,3,'project_ref_combined'])
   c_list.append([refCSV,2,'ref_combined'])
@@ -94,6 +94,9 @@ def projectinroot(root,projects=[]):
 ##############################################
 
 def create_files(c_list):
+  """
+  I think this one should not be // because is consume all memories
+
   # parallelisation here
   output = mp.Queue()
   wraps = []
@@ -106,22 +109,32 @@ def create_files(c_list):
     if b:
       wraps.append(b)
   return wraps
-  '''
+  """
   for l in c_list[:]:
+    LO.l_debug('\nCurrent list is {}\n\n'.format(l))
     create_files_from_l(l)
-  '''
 
 def create_files_from_l(l):
   dic = TO.get_directories(l[1],l[0])
   for k in list(dic.keys()):
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in dic[k] ] )
+    LO.l_debug('\nCurrent csv key {}'.format(dic[k]))
+    df_from_each_file = []
+    for f in dic[k]:
+      v = pd.read_csv(f, error_bad_lines=False)
+      df_from_each_file.append(v)
+    combined_csv = pd.concat(df_from_each_file)
+    #combined_csv = pd.concat( [ pd.read_csv(f) for f in dic[k] ] )
     combined_csv.to_csv( k+"/"+l[2]+".csv", index=False )
+    del combined_csv
+    del df_from_each_file
+  LO.l_debug('\n')
   return True
 
 # Zip files functions
 ##############################################
 
 def create_zip(z_list):
+  '''
   # parallelisation here
   output = mp.Queue()
   wraps = []
@@ -134,12 +147,18 @@ def create_zip(z_list):
     if b:
       wraps.append(b)
   return wraps
+  '''
+  for l in z_list[:]:
+    LO.l_debug('\nCurrent zlist is {}'.format(l))
+    create_zip_from_l(l)
 
 def create_zip_from_l(l):
   dic = TO.get_directories(l[1],l[0])
   for k in list(dic.keys()): 
+    LO.l_debug('\nCurrent zip key {}\n'.format(dic[k]))
     zipf = zipfile.ZipFile(k+'/'+l[2]+'.zip', 'w', zipfile.ZIP_DEFLATED)
     for f in dic[k]:
       zipf.write(f)
     zipf.close()
+  LO.l_debug('\n')
   return True

@@ -1063,8 +1063,9 @@ def update_leafspectra_record(record):
       LO.l_debug('Update record {} => No Plots'.format(record.id))
       record.leaves_plot = 'no plots'
     obj = TOFA.get_record(record.id)
-    obj['record']['form_values'][keyValues['record_is_calculated']]= 'yes'
-    obj['record']['form_values'][keyValues['calculated_record_link']]= record.leaves_plot
+    LO.l_debug('Record {}'.format(obj))
+    obj['form_values'][keyValues['record_is_calculated']]= 'yes'
+    obj['form_values'][keyValues['calculated_record_link']]= record.leaves_plot
     TOFA.fulcrum_update_record(""+record.id+"",obj)
     LO.l_debug('Update record {} => Done'.format(record.id))
   return record

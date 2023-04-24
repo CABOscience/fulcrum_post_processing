@@ -273,26 +273,26 @@ def fulcrum_update_record(recordID, obj={}, logName="main"):
     fulcrumApp = get_fulcrum_access()
     update = fulcrumApp.records.update(recordID, obj)
     st = 'Record {} has been updated with the object:\n {}'.format(recordID, obj)
-    print(st)
-    LO.l_debug(st,logName)
+    LO.l_debug('{}'.format(st),logName)
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Update Record has failed for {}'.format(recordID)
+    LO.l_debug('{} {}'.format(s,e),logName)
     return exception_api(e,s,logName)
   except InvalidAPIVersionException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print('{} {}'.format(s,e))
+    LO.l_debug('{} {}'.format(s,e),logName)
     return exception_api(e,s,logName)
   except UnauthorizedException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print('{} {}'.format(s,e))
+    LO.l_debug('{} {}'.format(s,e),logName)
     return exception_api(e,s,logName)
   except InternalServerErrorException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print('{} {}'.format(s,e))
+    LO.l_debug('{} {}'.format(s,e),logName)
     return exception_api(e,s,logName)
   except BadRequestException(Exception) as e:
     s = 'Update Record has failed for {}'.format(recordID)
-    print('{} {}'.format(s,e))
+    LO.l_debug('{} {}'.format(s,e),logName)
     return exception_api(e,s,logName)
 
 ##############################################

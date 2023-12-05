@@ -97,7 +97,11 @@ def main():
     LSCF.concat_files(records, projects)
     previousTime = TO.print_time(start_time,previousTime,'concat_files')
     LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
-    previousTime=time_clr
+
+    LO.l_info('\n\n## Push records in DB\nNumber of Records {}\n######\n'.format(len(records)))
+    records = LSR.push_leafspectra_records_in_db(records)
+    previousTime = TO.print_time(start_time,previousTime,'push_leafspectra_records_in_db')
+    LO.l_info('\n\nNumber of Valid Records {}\n######\n\n'.format(records.number_of_valid()))
   
   LO.l_info('\n\n## Print records log\nNumber of Records {}\n######\n'.format(len(records)))
   LSR.print_log_records(records)

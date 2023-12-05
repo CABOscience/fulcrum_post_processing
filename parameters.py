@@ -94,6 +94,7 @@ def set_parameters():
     c = get_config(ConfFile)
     set_global_from_config(c)
   get_arguments()
+  print_arguments()
 
 def set_logTitle(s):
   global LogTitle
@@ -213,29 +214,20 @@ def set_global_from_config(c):
     if c.get('DEFAULT','WebsitePath'): WebsitePath = c.get('DEFAULT','WebsitePath')
     if c.get('DEFAULT','WebhookID'): WebhookID = c.get('DEFAULT','WebhookID')
     if c.get('DEFAULT','CaboWebsite'): CaboWebsite = c.get('DEFAULT','CaboWebsite')
-    
-    if Debug == 'True':
-      print('Debug is enabled')
-    else:
-      print('Debug is disable')
-
-    if IsParallel == 'True':
-      print('Parallelisation is enabled')
-    else:
-      print('Parallelisation is disable')
-
-    if TOFA.test_fulcrum_access():
-      print('Fulcrum is accessible')
 
 # Arguments
 ##############################################
 def get_arguments():
+  global Debug
+  global IsParallel
+ 
   parser = argparse.ArgumentParser(description='Options Fulcrum Backup.')
   parser._action_groups.pop()
-  required = parser.add_argument_group('optional arguments')
-  
+
+  #required = parser.add_argument_group('optional arguments')
   #required.add_argument('-a', '--fulcrumApiKey',
   #  dest="fulcrumApiKey", help="Need a fulcrum Api key")
+
   optional = parser.add_argument_group('Optional Arguments')
   optional.add_argument('-a', '--fulcrumApiKey',
     dest="fulcrumApiKey", help="Need a fulcrum Api key")
@@ -247,6 +239,29 @@ def get_arguments():
     dest="path", help="Choose a directory where fulcrum is backuped")
   optional.add_argument('-fi', '--file', type=str,
     dest="file", help="Choose a file for bulk import")
+  
+  '''
+  exclusive1 = parser.add_mutually_exclusive_group()
+  exclusive1.add_argument('--debug', action='store_true',
+    dest="debug", help="Enable debug")
+  exclusive1.add_argument('--no-debug', action='store_false',
+    dest="debug", help="Disable debug")
+  if Debug and ( Debug == "True" or Debug == "False"):
+    parser.set_defaults(debug=Debug)
+  else:
+    parser.set_defaults(debug=False)
+
+  exclusive2 = parser.add_mutually_exclusive_group()
+  exclusive2.add_argument('--parallel', action='store_true',
+    dest="parallel", help="Enable parrallelisation")
+  exclusive2.add_argument('--no-parallel', action='store_false',
+    dest="parallel", help="disable parrallelisation")
+  if IsParallel and ( IsParallel == "True" or IsParallel == "False"):
+    parser.set_defaults(parallel=IsParallel)
+  else:
+    parser.set_defaults(parallel=False)
+  '''
+  
   exclusive = parser.add_mutually_exclusive_group()
   exclusive.add_argument('-f', '--form', nargs='+',
     dest="form", help="Fulcrum Backup: Load all records from Selected Leaf Spectra form(s) and process them")
@@ -256,8 +271,21 @@ def get_arguments():
     dest="records", help="From Fulcrum Backup: Load record(s) and process them")
   exclusive.add_argument('-j', '--projects', nargs='+',
     dest="projects", help="From Fulcrum Backup: Load porject(s) and process them")
+
   args = parser.parse_args()
-  
+
+  '''
+  if args.debug:
+    Debug = "True"
+  elif not args.debug:
+    Debug = "False"
+
+  if args.parallel:
+    IsParallel = "True"
+  elif not args.parallel:
+    IsParallel = "False"
+  '''
+
   if args.form and len(args.form)>0:
     global FulcrumForms
     FulcrumForms = args.form
@@ -313,3 +341,19 @@ def get_arguments():
     else:
       print('ERROR: Fulcrum Bulk File is not a file {}'.format(args.file))
       wrong_parameters()
+
+def print_arguments():
+  if Debug == 'True':
+    print('Debug is enabled')
+  else:
+    print('Debug is disable')
+
+  if IsParallel == 'True':
+    print('Parallelisation is enabled')
+  else:
+    print('Parallelisation is disable')
+
+  if TOFA.test_fulcrum_access():
+    print('Fulcrum is accessible')
+
+

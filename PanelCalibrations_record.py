@@ -421,25 +421,25 @@ def load_panelCalibrations():
 ##############################################
 
 def process_panel_calibrations_records(rec):
-  # parallelisation here
-  
-  output = mp.Queue()
-  pool = mp.Pool(processes=3)
-  results = [pool.apply_async(process_record, args=(record,)) for record in rec.records[:]]
-  pool.close()
-  pool.join()
   panelCalibrations = PanelCalibrations()
-  for r in results:
-    record = r.get()
-    if record:
-      panelCalibrations.add_record(record)
+  if PA.IsParallel == 'True':
+    LO.l_debug("process_panel_calibrations_records parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(process_record, args=(record_raw,)) for record_raw in rec.records[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        panelCalibrations.add_record(record)
+  else:
+    LO.l_debug("process_panel_calibrations_records linear")
+    for record_raw in rec.records[:]:
+      record = process_record(record_raw)
+      if record:
+        panelCalibrations.add_record(record)
   return panelCalibrations
-
-  """
-  for record in rec.records[:]:
-    process_record(record)
-  return PanelCalibrations()
-  """
 
 def process_record(record):
   LO.l_info('Start prepare panel calibration data for record {}'.format(record.id))

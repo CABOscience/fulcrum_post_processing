@@ -94,22 +94,25 @@ def projectinroot(root,projects=[]):
 ##############################################
 
 def create_files(c_list):
-  # parallelisation here
-  output = mp.Queue()
   wraps = []
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(create_files_from_l, args=(l,)) for l in c_list[:]]
-  pool.close()
-  pool.join()
-  for r in results:
-    b = r.get()
-    if b:
-      wraps.append(b)
+  if PA.IsParallel == 'True':
+    LO.l_debug("create_files parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(create_files_from_l, args=(l,)) for l in c_list[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        wraps.append(record)
+  else:
+    LO.l_debug("create_files linear")
+    for l in c_list[:]:
+      record = create_files_from_l(l)
+      if record:
+        wraps.append(record)
   return wraps
-  '''
-  for l in c_list[:]:
-    create_files_from_l(l)
-  '''
 
 def create_files_from_l(l):
   dic = TO.get_directories(l[1],l[0])
@@ -122,17 +125,24 @@ def create_files_from_l(l):
 ##############################################
 
 def create_zip(z_list):
-  # parallelisation here
-  output = mp.Queue()
   wraps = []
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  results = [pool.apply_async(create_zip_from_l, args=(l,)) for l in z_list[:]]
-  pool.close()
-  pool.join()
-  for r in results:
-    b = r.get()
-    if b:
-      wraps.append(b)
+  if PA.IsParallel == 'True':
+    LO.l_debug("create_zip parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(create_zip_from_l, args=(l,)) for l in z_list[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        wraps.append(record)
+  else:
+    LO.l_debug("create_zip linear")
+    for l in z_list[:]:
+      record = create_zip_from_l(l)
+      if record:
+        wraps.append(record)
   return wraps
 
 def create_zip_from_l(l):

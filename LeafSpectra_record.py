@@ -146,14 +146,18 @@ def load_leafspectra_webhook_Records(spectroPanels,forms,projects):
   rec = RE.Records()
   if len(webhookRecords)>0:
     for recTmp in webhookRecords.records[:]:
-      record_raw = RE.get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
-      if leafSpectraFormID not in record_raw.form_id:
-        st = 'The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id)
-        LO.l_debug(st)
-        record_raw.add_toLog(st)
+      rec_fulc = TOFA.get_record(recTmp.id)
+      if rec_fulc:
+        record_raw = RE.get_record_from_raw_record(rec_fulc,forms,projects)
+        if leafSpectraFormID not in record_raw.form_id:
+          st = 'The record {} will not be used because it is not a leaf spectra record'.format(record_raw.id)
+          LO.l_debug(st)
+          record_raw.add_toLog(st)
+        else:
+          RE.update_record_with_dataname(leafSpectraForm.dictKeysDataName,record_raw)
+          rec.add_record(record_raw)
       else:
-        RE.update_record_with_dataname(leafSpectraForm.dictKeysDataName,record_raw)
-        rec.add_record(record_raw)
+        rec.isValid=False
   return get_spectrum(spectroPanels,rec)
 
 def clean_webhook_records(rec):
@@ -184,7 +188,7 @@ def get_spectrum(spectroPanels,rec):
   my_list = add_Records_in_spectrum(spectroPanels,rec)
   my_list2 = []
   if len(my_list)>0:
-    # update measurments
+    # update measurements
     my_list2 = update_leafspectra_records_measurements(my_list)
   if len(my_list2)>0:
     for record in my_list2[:]:
@@ -210,7 +214,7 @@ def add_Records_in_spectrum(calibrations,rec):
   This parallelisation of add_Record_in_spectrum
   """
   my_list = []
-  if PA.IsParallel:
+  if PA.IsParallel == 'True':
     LO.l_debug("add_Record_in_spectrum parallelisation")
     output = mp.Queue()
     pool = mp.Pool(processes=PA.NumberOfProcesses)
@@ -397,7 +401,7 @@ def link_leafspectra_record_and_calibration(spectroPanels,record):
 
 ###
 def validate_leafspectra_record_measurements(record):
-  """ This will validate the leaf spectra record link measurments
+  """ This will validate the leaf spectra record link measurements
   
   :param arg1: a LeafSpectra to be tested
   :type arg1: LeafSpectra
@@ -413,8 +417,8 @@ def validate_leafspectra_record_measurements(record):
   measurements=record.fv_measurements
   wf    = record.fv_working_folder
   
-  measurmentsDone = True
-  tps = 'Start validate record {} measurments'.format(record.id)
+  measurementsDone = True
+  tps = 'Start validate record {} measurements'.format(record.id)
   LO.l_debug(tps)
   record.add_toLog(tps)
   
@@ -422,22 +426,22 @@ def validate_leafspectra_record_measurements(record):
     fName = PA.ProjectWebsitePath+''+pname+'/spectra/raw/'+wf+'/'+measurement.file_name+''+ext
     measurement.file_path = fName
     if not TO.file_is_here(fName):
-      measurmentsDone = False
+      measurementsDone = False
       st =  "The record id {} has not {} available.".format(rid,fName)
       LO.l_war(st)
       record.add_toLog(st)
-  if not measurmentsDone:
+  if not measurementsDone:
     record.isValid = False
 
 #########################
-# Record measurments updated
+# Record measurements updated
 #########################
 def update_leafspectra_records_measurements(records_raw):
   """
   This parallelisation of update_leafspectra_record_measurements
   """
   my_list = []
-  if PA.IsParallel:
+  if PA.IsParallel == 'True':
     LO.l_debug("update_leafspectra_records_measurements parallelisation")
     output = mp.Queue()
     pool = mp.Pool(processes=PA.NumberOfProcesses)
@@ -464,7 +468,7 @@ def update_leafspectra_record_measurements(record):
   :type arg1: LeafSpectra
   
   :return: a record 
-  :rtype: LeafSpectra (with measurments updated)
+  :rtype: LeafSpectra (with measurements updated)
   """
   if record.isValid:
     # from record object
@@ -476,7 +480,7 @@ def update_leafspectra_record_measurements(record):
     measureType = record.fv_measureType
     wf          = record.fv_working_folder
     
-    measurmentsDone = True
+    measurementsDone = True
     for measurement in measurements:
       fName = measurement.file_path
       if TO.file_is_here(fName):
@@ -495,8 +499,8 @@ def update_leafspectra_record_measurements(record):
         st = "The record id {} has not {} available.".format(rid,fName)
         LO.l_war(st)
         record.add_toLog(st)
-        measurmentsDone = False
-    if not measurmentsDone:
+        measurementsDone = False
+    if not measurementsDone:
       st = "The record id {} will not be used because it has not all its spectre available.".format(rid)
       LO.l_war(st)
       record.add_toLog(st)
@@ -511,7 +515,7 @@ def process_leafspectra_records(rec):
   This parallelisation of process_record
   """
   spectrum = LeafSpectrum()
-  if PA.IsParallel:
+  if PA.IsParallel == 'True':
     LO.l_debug("process_leafspectra_records parallelisation")
     output = mp.Queue()
     pool = mp.Pool(processes=PA.NumberOfProcesses)
@@ -665,7 +669,7 @@ def large_leaf_calculation(record):
       record.fv_reflecDiffRef = distA0A1
     else:
       record.isValid = False
-      st = "The record {} haven't the right number of reference measurments to process the reference of reflectance calculation. Number of A measurments = {} (need to be = 2)".format(record.id,len(reflRefs))
+      st = "The record {} haven't the right number of reference measurements to process the reference of reflectance calculation. Number of A measurements = {} (need to be = 2)".format(record.id,len(reflRefs))
       LO.l_war(st)
       record.add_toLog(st)
     # Calculation of (B0/A0):
@@ -675,12 +679,12 @@ def large_leaf_calculation(record):
       record.fv_reflecRef = distB0A1
     else:
       record.isValid = False
-      st = "The record {} have just one reference measurments to process the stray light vs reference. Number of D measurments = {}. Number of B measurments = {} (need to be > 0) and Number of A measurments = {} (need to be > 0).".format(record.id,len(reflStrays),len(reflRefs))
+      st = "The record {} have just one reference measurements to process the stray light vs reference. Number of D measurements = {}. Number of B measurements = {} (need to be > 0) and Number of A measurements = {} (need to be > 0).".format(record.id,len(reflStrays),len(reflRefs))
       LO.l_war(st)
       record.add_toLog(st)
   else:
     record.isValid = False
-    st = "The record {} doesn't have all spectrum measurments to process the reflectance calculation. Number of B measurments = {} (need to be > 0) and Number of A measurments = {} (need to be > 0) and Number of C measurments = {} (need to be > 0).".format(record.id,len(reflStrays),len(reflRefs),len(reflTargets))
+    st = "The record {} doesn't have all spectrum measurements to process the reflectance calculation. Number of B measurements = {} (need to be > 0) and Number of A measurements = {} (need to be > 0) and Number of C measurements = {} (need to be > 0).".format(record.id,len(reflStrays),len(reflRefs),len(reflTargets))
     LO.l_err(st)
     record.add_toLog(st)
   
@@ -713,12 +717,12 @@ def large_leaf_calculation(record):
       record.fv_transDiffRef    = distD0D1
     else:
       record.isValid = False
-      st = "The record {} haven't the right number of reference measurments to process the reference of transmittance calculation. Number of D measurments = {} (need to be = 2).".format(record.id,len(transRefAll))
+      st = "The record {} haven't the right number of reference measurements to process the reference of transmittance calculation. Number of D measurements = {} (need to be = 2).".format(record.id,len(transRefAll))
       LO.l_war(st)
       record.add_toLog(st)
   if pmT and len(transTargets)==0 and len(transRefAll)==0:
     record.isValid = False
-    st = "The record {} doesn't have all spectrum measurments to process the transmittance calculation.  Number of E measurments = {} (need to be > 0) and  Number of D measurments = {} (need to be >0).".format(record.id,len(transTargets),len(transRefAll))
+    st = "The record {} doesn't have all spectrum measurements to process the transmittance calculation.  Number of E measurements = {} (need to be > 0) and  Number of D measurements = {} (need to be >0).".format(record.id,len(transTargets),len(transRefAll))
     LO.l_err(st)
     record.add_toLog(st)
   return record
@@ -859,7 +863,7 @@ def small_leaf_calculation(record):
       record.fv_reflecDiffRef = distA0A1
     else:
       record.isValid = False
-      st = "The record {} have just one reference measurments to process the reference of refletance calculation. Number of A measurments = {} (need to be > 0).".format(record.id,len(RrefA))
+      st = "The record {} have just one reference measurements to process the reference of refletance calculation. Number of A measurements = {} (need to be > 0).".format(record.id,len(RrefA))
       LO.l_war(st)
       record.add_toLog(st)
     # Calculation of (D0 / A0 => put in reference !):
@@ -868,14 +872,14 @@ def small_leaf_calculation(record):
       record.fv_reflecRef = distD0A0
     else:
       record.isValid = False
-      st = "The record {} have just one reference measurments to process the stray light vs reference. Number of A measurments = {} (need to be > 0) and Number of D measurments = {} (need to be > 0).".format(record.id,len(RrefA),len(Rstr))
+      st = "The record {} have just one reference measurements to process the stray light vs reference. Number of A measurements = {} (need to be > 0) and Number of D measurements = {} (need to be > 0).".format(record.id,len(RrefA),len(Rstr))
       LO.l_war(st)
       record.add_toLog(st)
       
   # Reflectance issue
   if pmR and (len(RtarAPi) != len(RtarAi) or len(RtarAPi)<2):
     record.isValid = False
-    st = "The record {} doesn't have all spectrum measurments to process the refletance calculation. Number of D measurments = {} (need to be > 2 and need to be equal to number of G). Number of G measurments = {} (need to be equal to number of D).".format(record.id,len(RtarAPi),len(RtarAi))
+    st = "The record {} doesn't have all spectrum measurements to process the refletance calculation. Number of D measurements = {} (need to be > 2 and need to be equal to number of G). Number of G measurements = {} (need to be equal to number of D).".format(record.id,len(RtarAPi),len(RtarAi))
     LO.l_war(st)
     record.add_toLog(st)
         
@@ -923,14 +927,14 @@ def small_leaf_calculation(record):
       record.fv_transDiffRef = distH0H1
     else:
       record.isValid = False
-      st = "The record {} have just one reference measurments to process  the reference of transmittance calculation. Number of H measurments = {} (need to be > 1)".format(record.id,len(TrefA))
+      st = "The record {} have just one reference measurements to process  the reference of transmittance calculation. Number of H measurements = {} (need to be > 1)".format(record.id,len(TrefA))
       LO.l_war(st)
       record.add_toLog(st)
   
   #Transmittance issue
   if pmT and (len(TtarAi)==0 or len(TrefA)==0):
     record.isValid = False
-    st = "The record {} have doesn't all spectrum measurments to process the transmittance calculation. Number of I measurments = {} (need to be > 0). Number of H measurments = {} (need to be > 0).".format(record.id,len(TtarAi),len(TrefA))
+    st = "The record {} have doesn't all spectrum measurements to process the transmittance calculation. Number of I measurements = {} (need to be > 0). Number of H measurements = {} (need to be > 0).".format(record.id,len(TtarAi),len(TrefA))
     LO.l_war(st)
     record.add_toLog(st)
   return record
@@ -942,14 +946,14 @@ def leafspectra_record_to_csv(record):
   if TO.create_directory(record.fv_processedPath):
     c,l,r = leafspectra_record_to_csv_values(record)
     if len(c)>1:
-      if not PA.FormsProcess:
-        spectra_db_process_all(c)
+      #if not PA.FormsProcess:
+      #  spectra_db_process_all(c)
       TO.write_in_csv(record.fv_processedPath+'/all.csv',c)
     else:
       LO.l_war("c is too small for {}".format(record.id))
     if len(l)>1:
-      if not PA.FormsProcess:
-        spectra_db_process_leaves(l)
+      #if not PA.FormsProcess:
+      #  spectra_db_process_leaves(l)
       TO.write_in_csv(record.fv_processedPath+'/leaves.csv',l)
     else:
       LO.l_war("l is too small for {}".format(record.id))
@@ -1032,7 +1036,7 @@ def update_leafspectra_records(rec):
   This parallelisation of process_record
   """
   spectrum = LeafSpectrum()
-  if PA.IsParallel:
+  if PA.IsParallel == 'True':
     LO.l_debug("update_leafspectra_records parallelisation")
     output = mp.Queue()
     pool = mp.Pool(processes=PA.NumberOfProcesses)
@@ -1063,11 +1067,14 @@ def update_leafspectra_record(record):
       LO.l_debug('Update record {} => No Plots'.format(record.id))
       record.leaves_plot = 'no plots'
     obj = TOFA.get_record(record.id)
-    LO.l_debug('Record {}'.format(obj))
-    obj['form_values'][keyValues['record_is_calculated']]= 'yes'
-    obj['form_values'][keyValues['calculated_record_link']]= record.leaves_plot
-    TOFA.fulcrum_update_record(""+record.id+"",obj)
-    LO.l_debug('Update record {} => Done'.format(record.id))
+    if obj:
+      LO.l_debug('Record {}'.format(obj))
+      obj['form_values'][keyValues['record_is_calculated']]= 'yes'
+      obj['form_values'][keyValues['calculated_record_link']]= record.leaves_plot
+      TOFA.fulcrum_update_record(""+record.id+"",obj)
+      LO.l_debug('Update record {} => Done'.format(record.id))
+    else:
+      record.isValid=False
   return record
 
 
@@ -1096,6 +1103,47 @@ def extract_log_record(record):
 ##############################################
 # Spectra Records to Database
 ##############################################
+def push_leafspectra_records_in_db(rec):
+  """
+  This parallelisation push_leafspectra_records_in_db
+  """
+  spectrum = LeafSpectrum()
+  if PA.IsParallel == 'True':
+    LO.l_debug("push_leafspectra_records_in_db parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(push_leafspectra_record_in_db, args=(record_raw,)) for record_raw in rec.records[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        spectrum.add_record(record)
+  else:
+    LO.l_debug("push_leafspectra_records_in_db linear")
+    for record_raw in rec.records[:]:
+      record = push_leafspectra_record_in_db(record_raw)
+      if record:
+        spectrum.add_record(record)
+  return spectrum
+
+def push_leafspectra_record_in_db(record):
+  """Push a leaf spectra record in DB
+  """
+  if record.isValid:
+    st = 'Start prepare spectrum data for record {}'.format(record.id)
+    LO.l_info(st)
+    record.add_toLog(st)
+    leafspectra_record_to_db(record)
+  return record
+
+def leafspectra_record_to_db(record):
+  if not PA.FormsProcess:
+    c,l,r = leafspectra_record_to_csv_values(record)
+    if len(c)>1:
+      spectra_db_process_all(c)
+    if len(l)>1:
+      spectra_db_process_leaves(l)
 
 def spectra_db_insert(conn, table, fields, values):
   query = "INSERT INTO %s (%s) VALUES %s"

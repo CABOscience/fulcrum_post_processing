@@ -530,14 +530,23 @@ def from_series_to_dataframe(se):
   :return: panda dataframe
   :rtype: dataframe
   '''
-  iname = se.index.name
-  sname = se.name
-  if not iname:
-    iname = "index"
-  if not sname:
-    sname = "value"
-  df = pd.DataFrame(data={iname:se.index,sname:se.values})
-  df = df [[iname,sname]]
+  df = pd.DataFrame()
+  if se.values.size>0:
+    iname = ""
+    sname = ""
+    if hasattr(se,'name'):
+      sname = se.name
+    else:
+      sname = "value"
+
+    if hasattr(se, 'index') and hasattr(se.index, 'name'):
+      iname = se.index.name
+    else:
+      iname = "index"
+    LO.l_debug("index\n\n{}".format(se.index))
+    LO.l_debug("values\n\n{}".format(se.values))
+    df = pd.DataFrame(data={iname:se.index,sname:se.values})
+    df = df [[iname,sname]]
   return df
 
 # From a panda dataframe to a panda serie

@@ -280,10 +280,8 @@ def get_form_from_formid(formId):
   fileUid = TO.get_FormsPath()+"uid"+'/'+formId+'_form.json'
   if TO.file_is_here(fileUid):
     form = load_form_from_json_file(fileUid)
-    return form 
   else:
-    forms = load_forms()
-    form = forms.formsDictID[formId]
+    form = load_form(formId)
   return form
 
 ##############################################
@@ -308,11 +306,15 @@ def load_form_from_json_file(fileName):
 
 # Load from Fulcrum
 def load_form_from_fulcrum():
-  return TOFA.get_fulcrum_forms()
+  forms = TOFA.get_fulcrum_forms()
+  if forms:
+    return forms
+  else:
+    return forms()
 
 # Load Forms From Backuped File
 def load_backuped_json_forms():
-  backupedFiles = TO.get_files_from_path_recu_with_eof(TO.get_FormsPath(),'_form.json')
+  backupedFiles = TO.get_files_from_path_recu_with_eof(TO.get_FormsPath()+'/uid/','_form.json')
   return get_forms_from_form_files_list(backupedFiles)
 
 # Load Forms in json
@@ -322,10 +324,23 @@ def load_fulcrum_formsJson():
   fs = get_forms_from_formsJson(formsJson)
   fs.backup_forms()
   return fs
-  
+
+# load form from formid
+def load_form(formId):
+  form = Form()
+  fs = load_forms()
+  if formId in fs.formsDictID:
+    form = fs.formsDictID[formId]
+  else:
+    fs = load_fulcrum_formsJson()
+    form = fs.formsDictID[formId]
+  return form
+
 # Load Forms
 def load_forms():
-  fs = load_backuped_json_forms()
-  if len(fs.forms) < 1:
-    fs = load_fulcrum_formsJson()
-  return fs
+  return load_fulcrum_formsJson()
+#  fs = load_backuped_json_forms()
+#  if len(fs) < len(fsf):
+#    LO.l_info(">>>>> FORMS used is fulcrum")
+#    fs = fsf 
+#  return fs

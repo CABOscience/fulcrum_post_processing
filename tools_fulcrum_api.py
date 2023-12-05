@@ -136,14 +136,11 @@ def get_fulcrum_forms(logName="main"):
     else:
       for form in formsTmp[:]:
         forms.append(form)
-      
     LO.l_info('The number of backuped forms will be {}'.format(len(forms)))
     return forms
   except (NotFoundException, RateLimitExceededException) as e:
     s = 'Search forms has failed'
-    exception_api(e,s,logName)
-    sys.exit(1)
-
+    return exception_api(e,s,logName)
 
 def find_forms_from_ID(formID,logName="main"):
   try:

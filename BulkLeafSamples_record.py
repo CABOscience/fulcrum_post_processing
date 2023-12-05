@@ -148,18 +148,27 @@ def add_Records_in_BulkLeafSamples(rec):
   """
   This parallelisation of add_Record_in_bulleafsample
   """
-  output = mp.Queue()
   my_list = []
-  pool = mp.Pool(processes=3)
-  results = [pool.apply_async(add_Record_in_BulkLeafSamples, args=(record_raw)) for record_raw in rec.records[:]]
-  pool.close()
-  pool.join()
-  for r in results:
-    b = r.get()
-    if b:
-      my_list.append(b)
+  if PA.IsParallel == 'True':
+    LO.l_debug("add_Records_in_BulkLeafSamples parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(add_Record_in_BulkLeafSamples, args=(record_raw)) for record_raw in rec.records[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        my_list.append(record)
+  else:
+    LO.l_debug("add_Records_in_BulkLeafSamples linear")
+    for record_raw in rec.records[:]:
+      record = add_Record_in_BulkLeafSamples(record_raw)
+      if record:
+        my_list.append(record)
   return my_list
-  
+
+
 def add_Record_in_BulkLeafSamples(record_raw):
   """ This will add a validi bulk leaf spectra record
   

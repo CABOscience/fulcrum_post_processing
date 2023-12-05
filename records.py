@@ -241,7 +241,7 @@ def get_records_from_files_list(listFileRecords):
   records = Records()
   for fileRecord in listFileRecords:
     record_raw = record_from_fileName(fileRecord)
-    if record_raw:
+    if record_raw.isValid:
       records.add_record(record_raw)
   return records
 
@@ -292,9 +292,9 @@ def backup_records_from_webhookforms():
   load = FO.load_webhook_forms()
   webhookForms = load[0]
   webhookFiles = load[1]
-  #for form in formsO.forms[:]:
-  #  mp_backup_records_from_form(form)
-  mp_backup_records_from_forms(webhookForms)
+  for form in formsO.forms[:]:
+    mp_backup_records_from_form(form)
+  #mp_backup_records_from_forms(webhookForms)
   TOFA.print_num_of_request()
   if len(webhookFiles) > 0:
     for f in webhookFiles:
@@ -304,17 +304,24 @@ def mp_backup_records_from_forms(formsO = FO.Forms()):
   """
   This parallelisation of backup_form
   """
-  # parallelisation here
-  output = mp.Queue()
   wraps = []
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  recordsForm = [pool.apply_async(mp_backup_records_from_form, args=(form,)) for form in formsO.forms[:]]
-  pool.close()
-  pool.join()
-  for r in recordsForm:
-    b = r.get()
-    if b:
-      wraps.append(b)
+  if PA.IsParallel == 'True':
+    LO.l_debug("mp_backup_records_from_forms parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(mp_backup_records_from_form, args=(form_raw,)) for form_raw in formsO.forms[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        wraps.append(record)
+  else:
+    LO.l_debug("mp_backup_records_from_forms linear")
+    for form_raw in formsO.forms[:]:
+      record = mp_backup_records_from_form(form_raw)
+      if record:
+        wraps.append(record)
   return wraps
 
 def mp_backup_records_from_form(form = FO.Form()):
@@ -388,14 +395,26 @@ def mp_backup_records_versions_from_forms(formsO = FO.Forms()):
   """
   This parallelisation of backup_form
   """
-  # parallelisation here
-  output = mp.Queue()
   wraps = []
-  pool = mp.Pool(processes=PA.NumberOfProcesses)
-  recordsForm = [pool.apply_async(mp_backup_records_from_form, args=(form,)) for form in formsO.forms[:]]
-  pool.close()
-  pool.join()
-  
+  if PA.IsParallel == 'True':
+    LO.l_debug("mp_backup_records_versions_from_form parallelisation")
+    output = mp.Queue()
+    pool = mp.Pool(processes=PA.NumberOfProcesses)
+    results = [pool.apply_async(mp_backup_records_versions_from_form, args=(form_raw,)) for form_raw in formsO.forms[:]]
+    pool.close()
+    pool.join()
+    for r in results:
+      record = r.get()
+      if record:
+        wraps.append(record)
+  else:
+    LO.l_debug("mp_backup_records_versions_from_form linear")
+    for form_raw in formsO.forms[:]:
+      record = mp_backup_records_versions_from_form(form_raw)
+      if record:
+        wraps.append(record)
+  return wraps
+
 def mp_backup_records_versions_from_form(form = FO.Form()):
   formName = form.fulcrum_name_cleaned
   formID   = form.id
@@ -612,8 +631,10 @@ def load_records_from_form(form):
 ##############################################
 def load_records_from_fulcrum(form):
   records_raw = TOFA.get_fulcrum_records(form.id,form.fulcrum_name_cleaned)
-  return get_records_from_list(records_raw)
-
+  if records_raw:
+    return get_records_from_list(records_raw)
+  else:
+    return records()
 
 ##############################################
 # RECORDS TO DATABASE
@@ -723,20 +744,24 @@ def record_webhook_to_db():
     leafSpectraFormID = leafSpectraForm.id
     projects = PR.load_projects()
     forms = FO.load_forms()
-
     for recTmp in recsTmp.records[:]:
-      record = get_record_from_raw_record(TOFA.get_record(recTmp.id),forms,projects)
-      res = insert_record(prepare_record_values(record))
-      fname = TO.get_WebhookRecordsPath()+record.id+''
-      if not res:
-        LO.l_info("Failed to update DB, File not deleted {}".format(fname))
-      elif record.form_id in leafSpectraFormID:
-        LO.l_info("File will be processed in leafspectra {}".format(fname))
-      elif record.form_id not in leafSpectraFormID:
-        LO.l_info("File to be deleted {}".format(fname))
-        TO.delete_a_file(fname)
+      rec_fulc = TOFA.get_record(recTmp.id)
+      if rec_fulc:
+        record = get_record_from_raw_record(rec_fulc,forms,projects)
+        res = insert_record(prepare_record_values(record))
+        fname = TO.get_WebhookRecordsPath()+record.id+''
+        if not res:
+          LO.l_info("Failed to update DB, File not deleted {}".format(fname))
+        elif record.form_id in leafSpectraFormID:
+          LO.l_info("File will be processed in leafspectra {}".format(fname))
+        elif record.form_id not in leafSpectraFormID:
+          LO.l_info("File to be deleted {}".format(fname))
+          TO.delete_a_file(fname)
+        else:
+          LO.l_info("Unknown Error File will not be deleted {}".format(fname))
       else:
-        LO.l_info("Unknown Error File will not be deleted {}".format(fname))
+        LO.l_info("This record does not exist on fulcrum\nFile to be deleted {}".format(fname))
+        TO.delete_a_file(fname)
 
     for recTmp in recsTmp.recordsInvalid[:]:
       fname = TO.get_WebhookRecordsPath()+recTmp.id+''

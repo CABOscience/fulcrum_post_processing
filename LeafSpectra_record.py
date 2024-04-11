@@ -1128,10 +1128,11 @@ def push_leafspectra_records_in_db(rec):
   return spectrum
 
 def push_leafspectra_record_in_db(record):
-  """Push a leaf spectra record in DB
+  """
+    Push a leaf spectra record in DB
   """
   if record.isValid:
-    st = 'Start prepare spectrum data for record {}'.format(record.id)
+    st = 'Start pushing spectrum data for record {} in the db'.format(record.id)
     LO.l_info(st)
     record.add_toLog(st)
     leafspectra_record_to_db(record)
@@ -1141,8 +1142,14 @@ def leafspectra_record_to_db(record):
   if not PA.FormsProcess:
     c,l,r = leafspectra_record_to_csv_values(record)
     if len(c)>1:
+      st = 'Start pushing spectrum all data for record {} in the db'.format(record.id)
+      LO.l_info(st)
+      record.add_toLog(st)
       spectra_db_process_all(c)
     if len(l)>1:
+      st = 'Start pushing spectrum data leaves for record {} in the db'.format(record.id)
+      LO.l_info(st)
+      record.add_toLog(st)
       spectra_db_process_leaves(l)
 
 def spectra_db_insert(conn, table, fields, values):
@@ -1181,7 +1188,9 @@ def spectra_db_process_all(spectra_csv):
         myrow = tuple(row)
         spectra_db_insert(conn, 'spectra_processed', spectra_processed_fields, myrow)
         i += 1
-    LO.l_debug('Spectra All - Inserted {} rows'.format(i))
+    st = 'Spectra All - Inserted {} rows'.format(i) 
+    LO.l_info(st)
+    record.add_toLog(st)
   else:
     LO.l_war('Could not connect to database')
 
@@ -1198,6 +1207,8 @@ def spectra_db_process_leaves(spectra_csv):
         myrow = tuple(row)
         spectra_db_insert(conn, 'spectra_leaves', spectra_leaves_fields, myrow)
         i += 1
-    LO.l_debug('Spectra Leaves - Inserted {} rows'.format(i))
+    st = 'Spectra Leaves - Inserted {} rows'.format(i)
+    LO.l_info(st)
+    record.add_toLog(st)
   else:
     LO.l_war('Could not connect to database')
